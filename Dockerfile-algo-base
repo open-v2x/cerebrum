@@ -1,0 +1,7 @@
+FROM docker.io/library/python:3.9.12-slim-buster
+
+LABEL purpose="v2x-algo-base"
+
+COPY ./requirements/algo.txt algo.txt
+
+RUN pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r algo.txt

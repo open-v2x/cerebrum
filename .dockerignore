@@ -1,0 +1,29 @@
+#Ignore the logs directory
+
+#Ignoring the password file
+
+#Ignoring build file
+.drone.yaml
+Dockerfile
+.dockerignore
+
+#Ignoring git and cache folders
+.git
+.gitreview
+
+**/__pycache__
+.venv
+.tox
+.stestr
+.stestr.conf
+*.egg-info
+*.code-workspace
+**/*.pyc
+.mypy_cache
+.pytest_cache
+.vscode
+.coverage
+
+#Ignoring all the markdown and class files
+**/*.md
+doc
