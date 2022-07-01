@@ -1,3 +1,17 @@
+#   Copyright 99Cloud, Inc. All Rights Reserved.
+#
+#   Licensed under the Apache License, Version 2.0 (the "License"); you may
+#   not use this file except in compliance with the License. You may obtain
+#   a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#   License for the specific language governing permissions and limitations
+#   under the License.
+
 """Scenario of Sensor Data Sharing."""
 
 import numpy as np
@@ -169,7 +183,7 @@ class SensorDataSharing(Base):
         return geo.Point(
             [
                 self.ego_x - self._transform_info[1],
-                self.ego_y - self._transform_info[2]
+                self.ego_y - self._transform_info[2],
             ]
         ).buffer(2 * self._path_radius)
 
@@ -306,8 +320,8 @@ class SensorDataSharing(Base):
         return traj_list
 
     def _is_speed_enough(self, x, y, t) -> bool:
-        xd = utils.differentiate(x, t/1000)
-        yd = utils.differentiate(y, t/1000)
+        xd = utils.differentiate(x, t / 1000)
+        yd = utils.differentiate(y, t / 1000)
         if max(max(xd), max(yd)) > self._speed_threshold:
             return True
         return False

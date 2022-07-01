@@ -1,3 +1,17 @@
+#   Copyright 99Cloud, Inc. All Rights Reserved.
+#
+#   Licensed under the Apache License, Version 2.0 (the "License"); you may
+#   not use this file except in compliance with the License. You may obtain
+#   a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#   License for the specific language governing permissions and limitations
+#   under the License.
+
 """Scenario of Cooperative Lane Change."""
 
 import numpy as np
@@ -218,7 +232,10 @@ class CooperativeLaneChange(Base):
         if d_angle > 90 / 0.0125:  # 如果是锐角
             if_lead = -1
         dis = self._distance(self.latest_frame[id1], self.latest_frame[id2])
-        ttc = dis / (self._get_v(id2) - self._get_v(id1)) * (if_lead)
+        dv = self._get_v(id2) - self._get_v(id1)
+        if dv == 0:
+            dv = 0.00000001
+        ttc = dis / dv * (if_lead)
         return ttc * 1000
 
     def _risk_judgment(self) -> bool:
@@ -281,7 +298,7 @@ class CooperativeLaneChange(Base):
         if risk:
             self.suggestion = 0
             effect = int(0.1 * self.LaneChangeTime)
-            return self._gener_suggests(effect, [])
+            return self._gener_suggests(effect, []), {}
         v1, heading = self._ref_veh_lmt()
         v2 = self._aim_lane_lmt()
         # 生成建议
@@ -305,7 +322,10 @@ class CooperativeLaneChange(Base):
             )
         ref_speed = self._get_v(self.surround["ref_veh"])
         headway = self._headway_predict(self.vehId, self.surround["ref_veh"])
-        d_heading = np.arctan(3000 / headway / self._get_v(self.vehId))
+        veh_v = self._get_v(self.vehId)
+        d_heading = 1  # 车辆默认换道角度为5度左右
+        if veh_v != 0:
+            d_heading = np.arctan(3000 / headway / veh_v)
         d_heading = d_heading * 180 / np.pi / 0.0125
         if self.msg_VIR["intAndReq"]["currentBehavior"] == 1:
             return (

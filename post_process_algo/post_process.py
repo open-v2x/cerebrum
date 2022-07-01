@@ -1,3 +1,17 @@
+#   Copyright 99Cloud, Inc. All Rights Reserved.
+#
+#   Licensed under the Apache License, Version 2.0 (the "License"); you may
+#   not use this file except in compliance with the License. You may obtain
+#   a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#   License for the specific language governing permissions and limitations
+#   under the License.
+
 """Post-process Algorithm.
 
 1. coordinate_transform
@@ -203,7 +217,7 @@ rsu_info: Dict[str, dict] = {
         "bias_y": 0.0,
         "rotation": 0.0,
         "reverse": False,
-        "scale": 0.09
+        "scale": 0.09,
     },
     "R329329": {
         "pos": {"lon": 118.862336, "lat": 31.929900},
@@ -211,7 +225,7 @@ rsu_info: Dict[str, dict] = {
         "bias_y": 78.91,
         "rotation": 2.0,
         "reverse": True,
-        "scale": 0.09
+        "scale": 0.09,
     },
 }
 
@@ -233,17 +247,55 @@ for rsu in rsu_info.keys():
 # 获取所有RSU的map地图数据
 map_info: Dict[str, dict] = {
     "R328328": {
-        1: -1, 2: 1, 3: 1, 4: -1, 5: -1,
-        6: -1, 7: -1, 8: 1, 9: 1, 10: 1,
-        11: 1, 12: 1, 13: 1, 14: -1, 15: -1,
-        16: 1, 17: 1, 18: 1, 19: 1, 20: -1,
-        21: -1, 22: -1, 23: -1, 24: -1
+        1: -1,
+        2: 1,
+        3: 1,
+        4: -1,
+        5: -1,
+        6: -1,
+        7: -1,
+        8: 1,
+        9: 1,
+        10: 1,
+        11: 1,
+        12: 1,
+        13: 1,
+        14: -1,
+        15: -1,
+        16: 1,
+        17: 1,
+        18: 1,
+        19: 1,
+        20: -1,
+        21: -1,
+        22: -1,
+        23: -1,
+        24: -1,
     },
     "R329329": {
-        1: -1, 2: 1, 3: 1, 4: -1, 5: -1,
-        6: -1, 7: -1, 8: 1, 9: 1, 10: 1,
-        11: 1, 12: 1, 13: 1, 14: -1, 15: -1,
-        16: 1, 17: 1, 18: 1, 19: 1, 20: -1,
-        21: -1, 22: -1, 23: -1, 24: -1
+        1: -1,
+        2: 1,
+        3: 1,
+        4: -1,
+        5: -1,
+        6: -1,
+        7: -1,
+        8: 1,
+        9: 1,
+        10: 1,
+        11: 1,
+        12: 1,
+        13: 1,
+        14: -1,
+        15: -1,
+        16: 1,
+        17: 1,
+        18: 1,
+        19: 1,
+        20: -1,
+        21: -1,
+        22: -1,
+        23: -1,
+        24: -1,
     },
 }

@@ -1,3 +1,17 @@
+#   Copyright 99Cloud, Inc. All Rights Reserved.
+#
+#   Licensed under the Apache License, Version 2.0 (the "License"); you may
+#   not use this file except in compliance with the License. You may obtain
+#   a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#   License for the specific language governing permissions and limitations
+#   under the License.
+
 from pre_process_ai_algo.algo_lib import smooth
 
 
@@ -236,8 +250,8 @@ def test_poly_smooth():
         his_frames, current_frame, last_timestamp
     )
 
-    assert abs(new_current_frame["ab8756de"]["x"] - 130) <= 0.0001
-    assert abs(new_current_frame["ab8756de"]["y"] - 110) <= 0.0001
+    assert abs(new_current_frame["ab8756de"]["x"] - 129.987) <= 0.001
+    assert abs(new_current_frame["ab8756de"]["y"] - 109.99952) <= 0.001
     assert new_current_frame["ab8700de"]["x"] == 130
     assert new_current_frame["ab8700de"]["y"] == 110
     assert len(new_current_frame) == len(his_frames) == 2

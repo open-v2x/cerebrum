@@ -30,6 +30,7 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+*.egg-info/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -38,6 +39,9 @@ bld/
 
 # Visual Studio 2017 auto generated files
 Generated\ Files/
+
+# stestr
+.stestr/
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -140,6 +144,7 @@ _TeamCity*
 # Visual Studio code coverage results
 *.coverage
 *.coveragexml
+*.coverage.*
 
 # NCrunch
 _NCrunch_*
@@ -203,6 +208,9 @@ csx/
 # Microsoft Azure Emulator
 ecf/
 rcf/
+
+# Mac
+*.DS_Store
 
 # Windows Store app package directories and files
 AppPackages/

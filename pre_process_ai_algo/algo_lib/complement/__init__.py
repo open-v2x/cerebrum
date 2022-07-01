@@ -1,3 +1,17 @@
+#   Copyright 99Cloud, Inc. All Rights Reserved.
+#
+#   Licensed under the Apache License, Version 2.0 (the "License"); you may
+#   not use this file except in compliance with the License. You may obtain
+#   a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#   License for the specific language governing permissions and limitations
+#   under the License.
+
 """Complement Algorithm.
 
 1. Interpolation
@@ -7,6 +21,7 @@
 
 import math
 import numpy as np
+import os
 from pre_process_ai_algo.algo_lib.complement.lstm.corenet import RegLSTM
 from pre_process_ai_algo.algo_lib import utils
 import torch
@@ -124,9 +139,9 @@ class Interpolation(Base):
         time_interval = (
             obj_info[index]["timeStamp"] - obj_info[index - 1]["timeStamp"]
         ) / 1000
-        speed_square = math.hypot(dis_x, dis_y) / time_interval
+        speed = math.hypot(dis_x, dis_y) / time_interval
         speed_max = self._speed_dict[obj_info[index]["ptcType"]]
-        return speed_max > speed_square
+        return speed_max > speed
 
     def _complete_obj(
         self, objs_info: list, index: int, delay_sec_mark: int
@@ -195,7 +210,7 @@ class LstmPredict(Base):
 
     def __init__(
         self,
-        model_path: str = "pre_process_ai_algo/algo_lib/complement/lstm/lstm.pkl",  # noqa
+        model_path: str = os.path.dirname(__file__) + "/lstm/lstm.pkl",
         const_stand: int = 200,
         history_num: int = HistoryNum,
         layers: int = Layers,
@@ -317,9 +332,9 @@ class LstmPredict(Base):
         time_interval = (
             obj_info[index]["timeStamp"] - obj_info[index - 1]["timeStamp"]
         ) / 1000
-        speed_square = math.hypot(dis_x, dis_y) / time_interval
+        speed = math.hypot(dis_x, dis_y) / time_interval
         speed_max = self._speed_dict[obj_info[index]["ptcType"]]
-        return speed_max > speed_square
+        return speed_max > speed
 
     def _lstm_predict(
         self, objs_info: list, index: int, delay_sec_mark: int
