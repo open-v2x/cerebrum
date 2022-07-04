@@ -1,0 +1,19 @@
+MD033:
+  allowed_elements:
+    - table
+    - thead
+    - tbody
+    - tr
+    - td
+    - th
+MD013:
+  line_length: 100
+  heading_line_length: 100
+  code_block_line_length: 100
+  code_blocks: true
+  tables: true
+  headings: true
+  headers: true
+  strict: false
+  stern: false
+MD014: false
