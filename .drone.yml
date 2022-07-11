@@ -29,7 +29,7 @@ steps:
       - docker buildx ls
       - docker buildx use cicd
       - echo -n $DOCKER_PASS | docker login $DOCKER_REGISTRY --username $DOCKER_USER --password-stdin
-      - docker buildx build -f Dockerfile --build-arg BRANCH=${DRONE_BRANCH} --build-arg REPO_URL=${DRONE_REPO} --build-arg COMMIT_REF=${DRONE_COMMIT_SHA} -t $DOCKER_REGISTRY/$DOCKER_ORG/v2x-ai-algorithm:$DOCKER_TAG --tag $DOCKER_REGISTRY/$DOCKER_ORG/v2x-ai-algorithm:$DOCKER_TAG-${DRONE_COMMIT_SHA:0:6} --platform=linux/arm64,linux/amd64 . --push
+      - docker buildx build -f Dockerfile --build-arg BRANCH=${DRONE_BRANCH} --build-arg REPO_URL=${DRONE_REPO} --build-arg COMMIT_REF=${DRONE_COMMIT_SHA} -t $DOCKER_REGISTRY/$DOCKER_ORG/cerebrum:$DOCKER_TAG --tag $DOCKER_REGISTRY/$DOCKER_ORG/cerebrum:$DOCKER_TAG-${DRONE_COMMIT_SHA:0:6} --platform=linux/arm64,linux/amd64 . --push
   - name: clean
     environment:
       DOCKER_REGISTRY: docker.io
@@ -44,11 +44,11 @@ steps:
       - cp -rf /root/.ssh ~/
   - name: deploy-to-aliyun
     commands:
-      - ssh v2x-server "docker stop v2x-data-processing || true"
-      - ssh v2x-server "docker rm v2x-data-processing || true"
-      - ssh v2x-server "docker rmi openv2x/v2x-ai-algorithm:latest || true"
-      - ssh v2x-server "docker pull openv2x/v2x-ai-algorithm:latest"
-      - ssh v2x-server "docker run -d -e redis_host=172.17.0.1 -e mqtt_host=172.17.0.1 -e cloud_url=http://172.17.0.1:8888 --name=v2x-data-processing -v /etc/localtime:/etc/localtime openv2x/v2x-ai-algorithm:latest || true"
+      - ssh v2x-release "docker stop v2x-data-processing || true"
+      - ssh v2x-release "docker rm v2x-data-processing || true"
+      - ssh v2x-release "docker rmi openv2x/cerebrum:latest || true"
+      - ssh v2x-release "docker pull openv2x/cerebrum:latest"
+      - ssh v2x-release "docker run -d -e redis_host=172.17.0.1 -e mqtt_host=172.17.0.1 -e cloud_url=http://172.17.0.1:8888 --name=v2x-data-processing -v /etc/localtime:/etc/localtime openv2x/cerebrum:latest || true"
   - name: email on success
     commands:
       - bash -x v2x-email-success.sh ${DRONE_COMMIT} ${DRONE_COMMIT_BRANCH} "${DRONE_COMMIT_AUTHOR_NAME}" ${DRONE_REPO_OWNER} ${DRONE_REPO_NAME} ${DRONE_COMMIT_AUTHOR_EMAIL} ${DRONE_BUILD_NUMBER} ${DRONE_BUILD_STARTED}

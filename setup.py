@@ -8,12 +8,12 @@ except ImportError:
     from setuptools import setup, find_packages
 
 setup(
-    name="v2x-ai-algorithm",
+    name="cerebrum",
     version="0.1",
     description="",
     author="",
     author_email="",
-    test_suite="v2x-ai-algorithm",
+    test_suite="cerebrum",
     zip_safe=False,
     include_package_data=True,
     packages=find_packages(exclude=["ez_setup"]),
