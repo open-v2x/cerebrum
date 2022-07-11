@@ -130,7 +130,7 @@ class Fusion(Base):
         self._structured_frame: Dict[str, Dict] = {}
         if historical_frames != {}:
             self._source_pkg = historical_frames
-            self._format_trans(self._source_pkg)
+            self._format_trans(self._source_pkg, last_timestamp)
         else:
             logging.info("No data input")
             return self._structured_frame, last_timestamp, self._match_pairs
@@ -152,7 +152,7 @@ class Fusion(Base):
 
         return self._structured_frame, last_timestamp, self._match_pairs
 
-    def _format_trans(self, context_frames: dict) -> None:
+    def _format_trans(self, context_frames: dict, last_timestamp: int) -> None:
         # 兼容多设备：增加dict，存储(source, lon, lat)的str = tag
         # 出现新track，检验源tag是否在dict里，如果在说明重复了。
         # 没重复就给dict添加key=tag: only_source = source + 8 * i++
@@ -164,6 +164,8 @@ class Fusion(Base):
             # non-moter object skip fusion
             # if key not in id_set:
             #     continue
+            if context_frames[key][-1]["timeStamp"] < last_timestamp:
+                continue
             if context_frames[key][-1]["ptcType"] != "motor":
                 self._structured_frame.update(
                     {key: context_frames[key][-1]}
