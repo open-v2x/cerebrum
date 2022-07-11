@@ -105,7 +105,7 @@ class CollisionWarning(Base):
             if alarms:
                 self._mqtt.publish(
                     consts.CW_VISUAL_TOPIC.format(rsu),
-                    json.dumps([{"type": "CW", "event_list": alarms}]),
+                    json.dumps(alarms),
                     0,
                 )
                 self._mqtt.publish(
