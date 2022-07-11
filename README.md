@@ -43,9 +43,9 @@ docker run -d --name ${CONTAINER_NAME} ${DOCKER_IMAGE}
 如果容器镜像已存在，可以跳过此步骤
 
 ```bash
-docker build -t v2x-ai-algorithm .
-docker tag v2x-ai-algorithm openv2x/v2x-ai-algorithm:latest
-docker push openv2x/v2x-ai-algorithm:latest
+docker build -t cereburm .
+docker tag cereburm openv2x/cereburm:latest
+docker push openv2x/cereburm:latest
 ```
 
 ### 4.2 手动将容器镜像部署到测试环境
@@ -54,9 +54,9 @@ docker push openv2x/v2x-ai-algorithm:latest
 DEPLOY_HOST=v2x-server
 # DEPLOY_HOST=v2x-test
 
-cat .drone.yml | grep v2x-server | grep -v -E "^\s*#" | grep -E '^\s*-' | sed "s/v2x-server/${DEPLOY_HOST}/g"| sed 's/-//' > /tmp/deploy-v2x-ai-algorithm.sh
+cat .drone.yml | grep v2x-server | grep -v -E "^\s*#" | grep -E '^\s*-' | sed "s/v2x-server/${DEPLOY_HOST}/g"| sed 's/-//' > /tmp/deploy-cereburm.sh
 
-# 然后检查一下 /tmp/deploy-v2x-ai-algorithm.sh 是否有需要修改的地方
-cat /tmp/deploy-v2x-ai-algorithm.sh
-bash /tmp/deploy-v2x-ai-algorithm.sh
+# 然后检查一下 /tmp/deploy-cereburm.sh 是否有需要修改的地方
+cat /tmp/deploy-cereburm.sh
+bash /tmp/deploy-cereburm.sh
 ```
