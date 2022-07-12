@@ -54,7 +54,7 @@ class Interpolation(Base):
 
     def __init__(
         self,
-        lag_time: int = 300,  # ms 至少保证雷达或视频可延时 2-3 帧
+        lag_time: int = 1000,  # ms 至少保证雷达或视频可延时 10 帧
         max_speed_motor: int = 120,  # km/h
         max_speed_non_motor: int = 15,  # km/h
         max_speed_pedestrian: int = 5,  # km/h

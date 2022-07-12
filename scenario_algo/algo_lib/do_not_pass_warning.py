@@ -122,7 +122,7 @@ class DoNotPass(Base):
 
     def _get_direction(self, lane):
         # 用于获取地图车道的方向，这里预先设定，后续要和地图预设链接。
-        return post_process.map_info[self._rsu_id][lane]
+        return post_process.lane_info[self._rsu_id][lane]
 
     def _get_id(self):
         lon = self.msg_VIR["refPos"]["lon"]

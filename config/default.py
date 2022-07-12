@@ -4,7 +4,8 @@ import uuid
 
 DEFAULT_HOST_MQTT = "139.196.13.9"
 DEFAULT_HOST_REDIS = "139.196.13.9"
-DEFAULT_CLOUD_URL = "http://139.196.13.9:28300"
+DEFAULT_HOST_MYSQL = "139.196.13.9"
+DEFAULT_CLOUD_URL = "http://139.196.13.9:28300/api/v1"
 DELIMITER = "/"
 
 redis = {
@@ -22,4 +23,12 @@ mqtt = {
     "password": "abc@1234",
 }
 
+mysql = {
+    "host": DEFAULT_HOST_MYSQL,
+    "port": 3306,
+    "user": "root",
+    "password": "abc@1234",
+    "charset": "utf8",
+    "db": "dandelion",
+}
 cloud_server = os.getenv("cloud_url") or DEFAULT_CLOUD_URL

@@ -49,7 +49,7 @@ class App:
                 "V2X/RSU/+/RSI/UP/+", self.config.DELIMITER
             ): self._mqtt_on_rsi,
             consts.topic_replace(
-                "V2X/RSU/+/RSI/UP", self.config.DELIMITER
+                "V2X/DEVICE/+/RSI/UP", self.config.DELIMITER
             ): self._mqtt_on_rsi,
             consts.topic_replace(
                 "V2X/RSU/+/VIR/UP", self.config.DELIMITER
@@ -57,6 +57,9 @@ class App:
             consts.topic_replace(
                 "V2X/RSU/+/PIP/CFG", self.config.DELIMITER
             ): self._mqtt_on_cfg,
+            consts.topic_replace(
+                "V2X/RSU/REG/TICE", self.config.DELIMITER
+            ): self._mqtt_on_db,
         }
         self.rsm_topic_driver_re = re.compile(
             consts.topic_replace(
@@ -77,7 +80,7 @@ class App:
         )
         self.rsi_topic_std_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/RSI/UP", self.config.DELIMITER
+                r"V2X/DEVICE/(?P<rsuid>[^/]+)/RSI/UP", self.config.DELIMITER
             )
         )
         self.vir_topic_re = re.compile(
@@ -220,6 +223,9 @@ class App:
             self.loop.create_task(self.cfg.run(rsu_id, msg.payload))
         else:
             logger.error("RSU is not registered")
+
+    def _mqtt_on_db(self, client, userdata, msg):
+        post_process.mysql(msg.payload)
 
     def _driver_name(self, topic, msg_type):
         if topic[-2:] == "UP":

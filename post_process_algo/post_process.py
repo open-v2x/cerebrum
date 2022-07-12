@@ -21,7 +21,10 @@
 """
 
 import aiohttp
+from config import devel as cfg
 import math
+import orjson as json
+import pymysql  # type: ignore
 from pyproj import Transformer
 from transform_driver import consts
 from typing import Dict
@@ -195,7 +198,7 @@ async def http_get(url: str, params: dict) -> aiohttp.ClientResponse:
     """Get request data."""
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as response:
-            if response.status != 200:
+            if response.status != 201:
                 raise SystemError("HTTP call error")
             return await response.json()
 
@@ -204,98 +207,157 @@ async def http_post(url: str, body: dict) -> aiohttp.ClientResponse:
     """Send data to the central platform."""
     async with aiohttp.ClientSession() as session:
         async with session.post(url=url, json=body) as response:
-            if response.status != 200:
+            if response.status != 201:
                 raise SystemError("HTTP call error")
             return await response.json()
 
 
-# 获取所有rsu的经纬度信息
-rsu_info: Dict[str, dict] = {
-    "R328328": {
-        "pos": {"lon": 118.8213963998263, "lat": 31.934846637757847},
-        "bias_x": 0.0,
-        "bias_y": 0.0,
-        "rotation": 0.0,
-        "reverse": False,
-        "scale": 0.09,
-    },
-    "R329329": {
-        "pos": {"lon": 118.862336, "lat": 31.929900},
-        "bias_x": 74.67,
-        "bias_y": 78.91,
-        "rotation": 2.0,
-        "reverse": True,
-        "scale": 0.09,
-    },
-}
-
+rsu_info: Dict[str, dict] = {}
+lane_info: Dict[str, dict] = {}
 YOrigin, XOrigin, TfMap = {}, {}, {}
-for rsu in rsu_info.keys():
-    TfMap[rsu] = Transformer.from_crs(
-        "epsg:4326", choose_epsg(rsu_info[rsu]["pos"]["lon"])
-    )
-    if rsu == "R328328":
-        TfMap[rsu] = Transformer.from_crs("epsg:4326", "epsg:2416")
-    YOrigin[rsu], XOrigin[rsu] = coordinate_tf(
-        rsu_info[rsu]["pos"]["lat"] * coord_unit,
-        rsu_info[rsu]["pos"]["lon"] * coord_unit,
-        TfMap[rsu],
-    )
-    XOrigin[rsu] = int(XOrigin[rsu])
-    YOrigin[rsu] = int(YOrigin[rsu])
 
-# 获取所有RSU的map地图数据
-map_info: Dict[str, dict] = {
-    "R328328": {
-        1: -1,
-        2: 1,
-        3: 1,
-        4: -1,
-        5: -1,
-        6: -1,
-        7: -1,
-        8: 1,
-        9: 1,
-        10: 1,
-        11: 1,
-        12: 1,
-        13: 1,
-        14: -1,
-        15: -1,
-        16: 1,
-        17: 1,
-        18: 1,
-        19: 1,
-        20: -1,
-        21: -1,
-        22: -1,
-        23: -1,
-        24: -1,
-    },
-    "R329329": {
-        1: -1,
-        2: 1,
-        3: 1,
-        4: -1,
-        5: -1,
-        6: -1,
-        7: -1,
-        8: 1,
-        9: 1,
-        10: 1,
-        11: 1,
-        12: 1,
-        13: 1,
-        14: -1,
-        15: -1,
-        16: 1,
-        17: 1,
-        18: 1,
-        19: 1,
-        20: -1,
-        21: -1,
-        22: -1,
-        23: -1,
-        24: -1,
-    },
-}
+
+def _generate_transformation_info():
+    """Generate transformation info."""
+    for rsu in rsu_info.keys():
+        TfMap[rsu] = Transformer.from_crs(
+            "epsg:4326", choose_epsg(rsu_info[rsu]["pos"]["lon"])
+        )
+        if rsu == "R328328":
+            TfMap[rsu] = Transformer.from_crs("epsg:4326", "epsg:2416")
+        YOrigin[rsu], XOrigin[rsu] = coordinate_tf(
+            rsu_info[rsu]["pos"]["lat"] * coord_unit,
+            rsu_info[rsu]["pos"]["lon"] * coord_unit,
+            TfMap[rsu],
+        )
+        XOrigin[rsu] = int(XOrigin[rsu])
+        YOrigin[rsu] = int(YOrigin[rsu])
+
+
+def mysql(msg_info):
+    """Get the latitude and longitude information of all rsu."""
+    conn = pymysql.connect(**cfg.mysql)
+    cursor = conn.cursor()
+    if msg_info:
+        rsu_id = json.loads(msg_info)["esn"]
+        sql = (
+            f"select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
+            f"scale,lane_info from rsu where rsu_esn='{rsu_id}'"
+        )
+    else:
+        sql = (
+            "select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
+            "scale,lane_info from rsu"
+        )
+    try:
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        for row in results:
+            rsu_info[row[0]] = {
+                "pos": eval(row[1]),
+                "bias_x": row[2],
+                "bias_y": row[3],
+                "rotation": row[4],
+                "reverse": row[5],
+                "scale": row[6],
+            }
+            lane_info[row[0]] = eval(row[7])
+    except Exception:
+        print("Error: unable to fetch data")
+    conn.close()
+    _generate_transformation_info()
+
+
+mysql(False)
+
+
+# # 获取所有rsu的经纬度信息
+# rsu_info: Dict[str, dict] = {
+#     "R328328": {
+#         "pos": {"lon": 118.8213963998263, "lat": 31.934846637757847},
+#         "bias_x": 0.0,
+#         "bias_y": 0.0,
+#         "rotation": 0.0,
+#         "reverse": False,
+#         "scale": 0.09,
+#     },
+#     "R329329": {
+#         "pos": {"lon": 118.862336, "lat": 31.929900},
+#         "bias_x": 74.67,
+#         "bias_y": 78.91,
+#         "rotation": 2.0,
+#         "reverse": True,
+#         "scale": 0.09,
+#     },
+# }
+#
+# YOrigin, XOrigin, TfMap = {}, {}, {}
+# for rsu in rsu_info.keys():
+#     TfMap[rsu] = Transformer.from_crs(
+#         "epsg:4326", choose_epsg(rsu_info[rsu]["pos"]["lon"])
+#     )
+#     if rsu == "R328328":
+#         TfMap[rsu] = Transformer.from_crs("epsg:4326", "epsg:2416")
+#     YOrigin[rsu], XOrigin[rsu] = coordinate_tf(
+#         rsu_info[rsu]["pos"]["lat"] * coord_unit,
+#         rsu_info[rsu]["pos"]["lon"] * coord_unit,
+#         TfMap[rsu],
+#     )
+#     XOrigin[rsu] = int(XOrigin[rsu])
+#     YOrigin[rsu] = int(YOrigin[rsu])
+#
+# # 获取所有RSU的map地图数据
+# map_info: Dict[str, dict] = {
+#     "R328328": {
+#         1: -1,
+#         2: 1,
+#         3: 1,
+#         4: -1,
+#         5: -1,
+#         6: -1,
+#         7: -1,
+#         8: 1,
+#         9: 1,
+#         10: 1,
+#         11: 1,
+#         12: 1,
+#         13: 1,
+#         14: -1,
+#         15: -1,
+#         16: 1,
+#         17: 1,
+#         18: 1,
+#         19: 1,
+#         20: -1,
+#         21: -1,
+#         22: -1,
+#         23: -1,
+#         24: -1,
+#     },
+#     "R329329": {
+#         1: -1,
+#         2: 1,
+#         3: 1,
+#         4: -1,
+#         5: -1,
+#         6: -1,
+#         7: -1,
+#         8: 1,
+#         9: 1,
+#         10: 1,
+#         11: 1,
+#         12: 1,
+#         13: 1,
+#         14: -1,
+#         15: -1,
+#         16: 1,
+#         17: 1,
+#         18: 1,
+#         19: 1,
+#         20: -1,
+#         21: -1,
+#         22: -1,
+#         23: -1,
+#         24: -1,
+#     },
+# }
