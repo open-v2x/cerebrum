@@ -262,10 +262,10 @@ def mysql(msg_info):
                 "scale": row[6],
             }
             lane_info[row[0]] = eval(row[7])
+            _generate_transformation_info()
     except Exception:
         print("Error: unable to fetch data")
     conn.close()
-    _generate_transformation_info()
 
 
 mysql(False)
