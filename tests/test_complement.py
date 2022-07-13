@@ -157,12 +157,12 @@ def test_complement_interpolation():
     pred = complement.Interpolation()
     pred.run(his_frames, latest_frame, last_timestamp)
 
-    assert len(his_frames["ab8756de"]) == 4
+    assert len(his_frames["ab8756de"]) == 5
     assert len(his_frames["ab8701de"]) == 5
     assert len(his_frames["ab8756an"]) == 4
-    assert his_frames["ab8756de"][2]["x"] == 99.5
+    assert his_frames["ab8756de"][2]["x"] == 99.0
     assert his_frames["ab8756de"][2]["y"] == 100
-    assert his_frames["ab8756de"][2]["secMark"] == 300
+    assert his_frames["ab8756de"][2]["secMark"] == 200
 
 
 def test_complement_lstm():
