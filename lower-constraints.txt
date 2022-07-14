@@ -16,6 +16,7 @@ orjson==3.6.8 # Apache-2.0/MIT
 paho-mqtt==1.6.1 # Eclipse-2.0
 pyproj==3.3.1 # MIT
 redis==4.3.1 # MIT
+pymysql==1.0.2 # MIT
 
 # test-requirements
 pytest==7.1.2 # MIT

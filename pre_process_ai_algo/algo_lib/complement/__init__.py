@@ -54,7 +54,7 @@ class Interpolation(Base):
 
     def __init__(
         self,
-        lag_time: int = 300,  # ms 至少保证雷达或视频可延时 2-3 帧
+        lag_time: int = 200,  # ms 至少保证雷达或视频可延时 1-2 帧
         max_speed_motor: int = 120,  # km/h
         max_speed_non_motor: int = 15,  # km/h
         max_speed_pedestrian: int = 5,  # km/h
@@ -167,7 +167,7 @@ class Interpolation(Base):
         delay_sec_mark = max_sec
         for objs_info in frames.values():
             for fr in objs_info:
-                if fr["timeStamp"] > max_sec - self._lag_time:
+                if fr["timeStamp"] >= max_sec - self._lag_time:
                     delay_sec_mark = min(fr["timeStamp"], delay_sec_mark)
                     break
         return delay_sec_mark
@@ -178,7 +178,7 @@ class Interpolation(Base):
         for objs_info in frames.values():
             sec_mark_list = [fr["timeStamp"] for fr in objs_info]
             index = self._find_nearest(sec_mark_list, delay_sec_mark)
-            if index != 0 and index != len(sec_mark_list) - 1:
+            if index != 0:
                 if self._is_frame_valid(objs_info, index, delay_sec_mark):
                     self._complete_obj(objs_info, index, delay_sec_mark)
                 for i in range(len(objs_info) - 1, -1, -1):
@@ -216,7 +216,7 @@ class LstmPredict(Base):
         layers: int = Layers,
         hidden_sz: int = HiddenSize,
         bidirectional: bool = True,
-        lag_time: int = 300,  # ms 至少保证雷达或视频可延时 2-3 帧
+        lag_time: int = 200,  # ms 至少保证雷达或视频可延时 1-2 帧
         max_speed_motor: int = 120,  # km/h
         max_speed_non_motor: int = 15,  # km/h
         max_speed_pedestrian: int = 5,  # km/h
@@ -374,7 +374,7 @@ class LstmPredict(Base):
         delay_sec_mark = max_sec
         for objs_info in frames.values():
             for fr in objs_info:
-                if fr["timeStamp"] > max_sec - self._lag_time:
+                if fr["timeStamp"] >= max_sec - self._lag_time:
                     delay_sec_mark = min(fr["timeStamp"], delay_sec_mark)
                     break
         return delay_sec_mark
@@ -385,7 +385,7 @@ class LstmPredict(Base):
         for objs_info in frames.values():
             sec_mark_list = [fr["timeStamp"] for fr in objs_info]
             index = self._find_nearest(sec_mark_list, delay_sec_mark)
-            if index != 0 and index != len(sec_mark_list) - 1:
+            if index != 0:
                 if self._is_frame_valid(objs_info, index, delay_sec_mark):
                     self._lstm_predict(objs_info, index, delay_sec_mark)
                 for i in range(len(objs_info) - 1, -1, -1):

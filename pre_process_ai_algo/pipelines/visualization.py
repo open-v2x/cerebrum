@@ -37,6 +37,7 @@ class Visualize(Base):
         # 可视化，修改 x，y 后，返回给 mqtt
         vis = []
         info_dict: Dict[str, Any] = {
+            "moving_motor": 0,
             "motor": 0,
             "non-motor": 0,
             "pedestrian": 0,
@@ -46,12 +47,13 @@ class Visualize(Base):
             frame = fr.copy()
             post_process.convert_for_visual(frame, rsu)
             info_dict[frame["ptcType"]] += 1
-            if frame["ptcType"] == "motor":
+            if frame["ptcType"] == "motor" and frame["speed"] > 70:
+                info_dict["moving_motor"] += 1
                 info_dict["motor_speed"] += frame["speed"] * 0.02 * 3.6
             vis.append(frame)
         info_dict["motor_speed"] = (
-            info_dict["motor_speed"] / info_dict["motor"]
-            if info_dict["motor"]
+            info_dict["motor_speed"] / info_dict["moving_motor"]
+            if info_dict["moving_motor"]
             else 0
         )
         # 获取rsi
