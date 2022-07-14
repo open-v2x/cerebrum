@@ -133,7 +133,7 @@ class DoNotPass(Base):
             if self.latest_frame[veh]["ptcType"] != "motor":
                 continue
             dis = np.sqrt(
-                (lon - self.latest_frame[veh]["lon"]) ** 2
+                (0.8 * (lon - self.latest_frame[veh]["lon"])) ** 2
                 + (lat - self.latest_frame[veh]["lat"]) ** 2
             )
             if dis < min_dis:
@@ -161,12 +161,13 @@ class DoNotPass(Base):
 
     def _distance(self, veh1, veh2):
         dx = veh1["x"] - veh2["x"]
+
         dy = veh1["y"] - veh2["y"]
         return np.sqrt(dx**2 + dy**2)
 
     def _get_v(self, ID):
         if len(self.context_frame[ID]) < self.MinTrackLength:
-            return self.latest_frame[ID]["speed"]
+            return self.latest_frame[ID]["speed"] * 0.02
         dis = self._distance(self.latest_frame[ID], self.context_frame[ID][-3])
         dt = (
             self.latest_frame[ID]["timeStamp"]

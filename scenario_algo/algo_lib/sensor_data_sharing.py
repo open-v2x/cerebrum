@@ -60,7 +60,7 @@ class SensorDataSharing(Base):
         self._polynomial_degree = 2
         self._future_traj_point_num = 30
         self._path_radius = 10
-        self._min_dis = 0.3
+        self._min_dis = 0.8
 
     def run(
         self,

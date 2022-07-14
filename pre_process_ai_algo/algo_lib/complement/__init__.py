@@ -130,7 +130,7 @@ class Interpolation(Base):
     def _is_frame_valid(
         self, obj_info: dict, index: int, delay_sec_mark: int
     ) -> bool:
-        if obj_info[index]["timeStamp"] == delay_sec_mark:
+        if obj_info[index]["timeStamp"] <= delay_sec_mark:
             return False
         # 判断id下一次再出现时是否是位移过远，是否是无效数据
         dis_x = obj_info[index]["x"] - obj_info[index - 1]["x"]
@@ -323,7 +323,7 @@ class LstmPredict(Base):
     def _is_frame_valid(
         self, obj_info: dict, index: int, delay_sec_mark: int
     ) -> bool:
-        if obj_info[index]["timeStamp"] == delay_sec_mark:
+        if obj_info[index]["timeStamp"] <= delay_sec_mark:
             return False
         # 判断id下一次再出现时是否是位移过远，是否是无效数据
         dis_x = obj_info[index]["x"] - obj_info[index - 1]["x"]

@@ -124,7 +124,7 @@ class CooperativeLaneChange(Base):
             if self.latest_frame[veh]["ptcType"] != "motor":
                 continue
             dis = np.sqrt(
-                (lon - self.latest_frame[veh]["lon"]) ** 2
+                (0.8 * (lon - self.latest_frame[veh]["lon"])) ** 2
                 + (lat - self.latest_frame[veh]["lat"]) ** 2
             )
             if dis < min_dis:
@@ -174,7 +174,7 @@ class CooperativeLaneChange(Base):
 
     def _get_v(self, ID):
         if len(self.context_frames[ID]) < self.MinTrackLength:
-            return self.latest_frame[ID]["speed"]
+            return self.latest_frame[ID]["speed"] * 0.02
         dis = self._distance(
             self.latest_frame[ID], self.context_frames[ID][-3]
         )
@@ -263,15 +263,15 @@ class CooperativeLaneChange(Base):
                 "y": float(last_y - self._transform_info[2]),
             }
         )
-        plan_num = 10
+        plan_num = 30
         for i in range(plan_num):
             v = v1 + (v2 - v1) * i / (plan_num - 1)
             h = int(
                 c_heading
                 + (heading - c_heading) * np.sin(np.pi * i / (plan_num - 1))
             )
-            px = last_x - v * 0.5 * np.sin(h * 0.0125 / 180)
-            py = last_y + v * 0.5 * np.cos(h * 0.0125 / 180)
+            px = last_x + v * 0.5 * np.sin(h * 0.0125 / 180 * np.pi)
+            py = last_y - v * 0.5 * np.cos(h * 0.0125 / 180 * np.pi)
             last_x, last_y = px, py
             g_path.append(
                 {
@@ -317,15 +317,17 @@ class CooperativeLaneChange(Base):
         # 限制v1，和heading
         if self.surround["ref_veh"] == -1:
             return (
-                self.latest_frame[self.vehId]["speed"],
+                self.latest_frame[self.vehId]["speed"] * 0.02,
                 self.latest_frame[self.vehId]["heading"],
             )
         ref_speed = self._get_v(self.surround["ref_veh"])
-        headway = self._headway_predict(self.vehId, self.surround["ref_veh"])
+        headway = self._predict_ttc(self.vehId, self.surround["ref_veh"])
+        if headway < 0:
+            headway = 3000
         veh_v = self._get_v(self.vehId)
-        d_heading = 1  # 车辆默认换道角度为5度左右
+        d_heading = 0.087  # 车辆默认换道角度为5度左右
         if veh_v != 0:
-            d_heading = np.arctan(3000 / headway / veh_v)
+            d_heading = min(0.435, np.arctan(3000 / headway / veh_v))
         d_heading = d_heading * 180 / np.pi / 0.0125
         if self.msg_VIR["intAndReq"]["currentBehavior"] == 1:
             return (
@@ -337,7 +339,7 @@ class CooperativeLaneChange(Base):
     def _aim_lane_lmt(self):
         # 限制执行开始t和执行时效t, self.min_headway,用目标车道车辆ID校验建议速度
         if len(self.surround["aim_lane_veh"]) == 0:
-            return self.latest_frame[self.vehId]["speed"]
+            return self.latest_frame[self.vehId]["speed"] * 0.02
         sum_speed = 0
         for k in self.surround["aim_lane_veh"]:
             sum_speed += self._get_v(k)

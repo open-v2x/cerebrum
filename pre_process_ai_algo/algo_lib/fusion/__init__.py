@@ -238,8 +238,8 @@ class Fusion(Base):
         return [a, b, t]
 
     def _eucli_dist(self, obj1: list, row1: list) -> float:
-        p1 = [row1[2], row1[3], row1[4]]
-        p2 = [obj1[1], obj1[2], obj1[3]]
+        p1 = [row1[2], row1[3]]
+        p2 = [obj1[1], obj1[2]]
         dis = math.sqrt(sum([(a - b) ** 2 for (a, b) in zip(p1, p2)]))
         return dis
 
