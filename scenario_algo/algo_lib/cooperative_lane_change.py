@@ -126,7 +126,7 @@ class CooperativeLaneChange(Base):
             dis = np.sqrt(
                 (0.8 * (lon - self.latest_frame[veh]["lon"])) ** 2
                 + (lat - self.latest_frame[veh]["lat"]) ** 2
-            )
+            )  # 单位经纬度代表米范围有差异 (0.8 * lon)/(1 * lat)=1
             if dis < min_dis:
                 min_dis = dis
                 veh_id = veh
@@ -174,6 +174,7 @@ class CooperativeLaneChange(Base):
 
     def _get_v(self, ID):
         if len(self.context_frames[ID]) < self.MinTrackLength:
+            # v(新四跨)* 0.02 = v (m/s)
             return self.latest_frame[ID]["speed"] * 0.02
         dis = self._distance(
             self.latest_frame[ID], self.context_frames[ID][-3]
@@ -317,16 +318,18 @@ class CooperativeLaneChange(Base):
         # 限制v1，和heading
         if self.surround["ref_veh"] == -1:
             return (
+                # v(新四跨)* 0.02 = v (m/s)
                 self.latest_frame[self.vehId]["speed"] * 0.02,
                 self.latest_frame[self.vehId]["heading"],
             )
         ref_speed = self._get_v(self.surround["ref_veh"])
-        headway = self._predict_ttc(self.vehId, self.surround["ref_veh"])
+        headway = self._headway_predict(self.vehId, self.surround["ref_veh"])
         if headway < 0:
             headway = 3000
         veh_v = self._get_v(self.vehId)
         d_heading = 0.087  # 车辆默认换道角度为5度左右
         if veh_v != 0:
+            # 限制最大换道角度为25度
             d_heading = min(0.435, np.arctan(3000 / headway / veh_v))
         d_heading = d_heading * 180 / np.pi / 0.0125
         if self.msg_VIR["intAndReq"]["currentBehavior"] == 1:
@@ -339,6 +342,7 @@ class CooperativeLaneChange(Base):
     def _aim_lane_lmt(self):
         # 限制执行开始t和执行时效t, self.min_headway,用目标车道车辆ID校验建议速度
         if len(self.surround["aim_lane_veh"]) == 0:
+            # v(新四跨)* 0.02 = v (m/s)
             return self.latest_frame[self.vehId]["speed"] * 0.02
         sum_speed = 0
         for k in self.surround["aim_lane_veh"]:

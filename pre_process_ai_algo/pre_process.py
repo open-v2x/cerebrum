@@ -32,17 +32,18 @@ class DataProcessing:
     LOCK_KEY = "v2x.process.lock.{}"
     SM_CFG_KEY = "lastsm_and_cfg.{}"
 
-    def __init__(self, mqtt, kv) -> None:
+    def __init__(self, mqtt, kv, mqtt_conn=None) -> None:
         """Class initialization."""
         self._interpolation = Interpolation(kv)
         self._fusion = Fusion(kv)
         self._exponential_smooth = ExponentialSmooth(kv)
         self._lstm_predict = LstmPredict(kv)
         self._polynomial_smooth = PolynomialSmooth(kv)
-        self._collision_warning = CollisionWarning(kv, mqtt)
-        self._visual = Visualize(kv, mqtt)
+        self._collision_warning = CollisionWarning(kv, mqtt, mqtt_conn)
+        self._visual = Visualize(kv, mqtt, mqtt_conn)
         self._kv = kv
         self._mqtt = mqtt
+        self._mqtt_conn = mqtt_conn
         self._pipelines = [
             "fusion",
             "complement",
