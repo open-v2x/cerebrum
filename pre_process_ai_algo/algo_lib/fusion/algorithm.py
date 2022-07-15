@@ -66,7 +66,7 @@ class KalmanFilter:
         fit_y = np.polyfit(t, y, 1)  # 对横坐标的fit
         p1, p2 = np.poly1d(fit_x), np.poly1d(fit_y)
         if time_squence > 5:
-            # 1s数据涵盖充足运动信息，20个点节省历史数据数量
+            # 1s数据涵盖充足运动信息，10个点节省历史数据数量
             # 插值50为保证kalman迭代高频取点精度
             time_line = np.linspace(
                 t[0], t[time_squence - 1], int(self.Frequency)

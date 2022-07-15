@@ -21,12 +21,10 @@
 """
 
 import aiohttp
-from config import devel as cfg
 import math
-import orjson as json
-import pymysql  # type: ignore
 from pyproj import Transformer
 from transform_driver import consts
+from transform_driver import db
 from typing import Dict
 
 coord_unit = consts.CoordinateUnit
@@ -212,11 +210,6 @@ async def http_post(url: str, body: dict) -> aiohttp.ClientResponse:
             return await response.json()
 
 
-rsu_info: Dict[str, dict] = {}
-lane_info: Dict[str, dict] = {}
-YOrigin, XOrigin, TfMap = {}, {}, {}
-
-
 def _generate_transformation_info():
     """Generate transformation info."""
     for rsu in rsu_info.keys():
@@ -234,42 +227,13 @@ def _generate_transformation_info():
         YOrigin[rsu] = int(YOrigin[rsu])
 
 
-def mysql(msg_info):
-    """Get the latitude and longitude information of all rsu."""
-    conn = pymysql.connect(**cfg.mysql)
-    cursor = conn.cursor()
-    if msg_info:
-        rsu_id = json.loads(msg_info)["esn"]
-        sql = (
-            f"select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
-            f"scale,lane_info from rsu where rsu_esn='{rsu_id}'"
-        )
-    else:
-        sql = (
-            "select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
-            "scale,lane_info from rsu"
-        )
-    try:
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        for row in results:
-            rsu_info[row[0]] = {
-                "pos": eval(row[1]),
-                "bias_x": row[2],
-                "bias_y": row[3],
-                "rotation": row[4],
-                "reverse": row[5],
-                "scale": row[6],
-            }
-            lane_info[row[0]] = eval(row[7])
-            _generate_transformation_info()
-    except Exception:
-        print("Error: unable to fetch data")
-    conn.close()
-
-
-mysql(False)
-
+db.get_rsu_info(False)
+rsu_info = db.rsu_info
+lane_info = db.lane_info
+YOrigin: Dict[str, int] = {}
+XOrigin: Dict[str, int] = {}
+TfMap = {}  # type: ignore
+_generate_transformation_info()
 
 # # 获取所有rsu的经纬度信息
 # rsu_info: Dict[str, dict] = {

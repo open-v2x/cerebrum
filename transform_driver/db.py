@@ -12,13 +12,18 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-"""redis config and data access functions."""
+"""database config and data access functions."""
 
-
+from config import devel as cfg
 import orjson as json
+import pymysql  # type: ignore
+from transform_driver.log import Loggings
 from typing import Any
 from typing import Callable
+from typing import Dict
 import zlib
+
+logger = Loggings()
 
 
 class KVStore:
@@ -60,3 +65,58 @@ class KVStore:
     def redis(self):
         """Redis static method."""
         return self._redis
+
+
+rsu_info: Dict[str, dict] = {}
+lane_info: Dict[str, dict] = {}
+node_id = None
+
+
+def get_rsu_info(msg_info):
+    """Get information of all rsu."""
+    conn = pymysql.connect(**cfg.mysql)
+    cursor = conn.cursor()
+    if msg_info:
+        rsu_id = json.loads(msg_info)["esn"]
+        sql = (
+            f"select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
+            f"scale,lane_info from rsu where rsu_esn='{rsu_id}'"
+        )
+    else:
+        sql = (
+            "select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
+            "scale,lane_info from rsu"
+        )
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    for row in results:
+        try:
+            rsu_info[row[0]] = {
+                "pos": eval(row[1]),
+                "bias_x": row[2],
+                "bias_y": row[3],
+                "rotation": row[4],
+                "reverse": row[5],
+                "scale": row[6],
+            }
+            lane_info[row[0]] = eval(row[7])
+        except Exception:
+            logger.error("unable to fetch data from database")
+    conn.close()
+
+
+def get_mqtt_config():
+    """Get the configuration of mqtt."""
+    global node_id
+    conn = pymysql.connect(**cfg.mysql)
+    cursor = conn.cursor()
+    sql = "select mqtt_config,node_id from system_config"
+    cursor.execute(sql)
+    results = cursor.fetchone()
+    mq_cfg = eval(results[0])
+    node_id = results[1]
+    conn.close()
+    return mq_cfg
+
+
+get_mqtt_config()

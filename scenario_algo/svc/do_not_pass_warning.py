@@ -24,10 +24,11 @@ from transform_driver import consts
 class DoNotPass:
     """Call the do not pass algorithm function."""
 
-    def __init__(self, kv, mqtt) -> None:
+    def __init__(self, kv, mqtt, mqtt_conn=None) -> None:
         """Class initialization."""
         self._kv = kv
         self._mqtt = mqtt
+        self._mqtt_conn = mqtt_conn
         self._exe = do_not_pass_warning.DoNotPass()
 
     async def run(self, params: dict, rsu_id: str, _: list) -> None:
@@ -48,11 +49,12 @@ class DoNotPass:
         )
         if info_for_show:
             post_process.convert_for_visual(info_for_show["ego_point"], rsu_id)
-            self._mqtt.publish(
-                consts.DNP_VISUAL_TOPIC.format(rsu_id),
-                json.dumps([info_for_show]),
-                0,
-            )
+            if self._mqtt_conn:
+                self._mqtt_conn.publish(
+                    consts.DNP_VISUAL_TOPIC.format(rsu_id),
+                    json.dumps([info_for_show]),
+                    0,
+                )
         if msg_rsc:
             self._mqtt.publish(
                 consts.DNP_TOPIC.format(rsu_id),

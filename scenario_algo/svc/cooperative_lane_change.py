@@ -24,10 +24,11 @@ from transform_driver import consts
 class CooperativeLaneChange:
     """Call the cooperative lane change algorithm function."""
 
-    def __init__(self, kv, mqtt) -> None:
+    def __init__(self, kv, mqtt, mqtt_conn=None) -> None:
         """Class initialization."""
         self._kv = kv
         self._mqtt = mqtt
+        self._mqtt_conn = mqtt_conn
         self._exe = cooperative_lane_change.CooperativeLaneChange()
 
     async def run(self, params: dict, rsu_id: str, convert_info: list) -> None:
@@ -57,8 +58,9 @@ class CooperativeLaneChange:
                 post_process.convert_for_visual(i, rsu_id)
             post_process.convert_for_visual(info_for_show["ego_point"], rsu_id)
             # rsu，前端
-            self._mqtt.publish(
-                consts.CLC_VISUAL_TOPIC.format(rsu_id),
-                json.dumps([info_for_show]),
-                0,
-            )
+            if self._mqtt_conn:
+                self._mqtt_conn.publish(
+                    consts.CLC_VISUAL_TOPIC.format(rsu_id),
+                    json.dumps([info_for_show]),
+                    0,
+                )

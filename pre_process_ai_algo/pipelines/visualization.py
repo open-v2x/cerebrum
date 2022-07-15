@@ -27,10 +27,11 @@ from typing import Dict
 class Visualize(Base):
     """Send processed data to rsu and central platform."""
 
-    def __init__(self, kv, mqtt):
+    def __init__(self, kv, mqtt, mqtt_conn=None):
         """Class initialization."""
         super().__init__(kv)
         self._mqtt = mqtt
+        self._mqtt_conn = mqtt_conn
 
     async def run(self, rsu: str, latest_frame: dict, _: dict = {}) -> dict:
         """External call function."""
@@ -73,7 +74,8 @@ class Visualize(Base):
         }
         url = cfg.cloud_server + "/homes/route_info_push"
         await post_process.http_post(url, final_info)
-        self._mqtt.publish(
-            consts.RSM_VISUAL_TOPIC.format(rsu), json.dumps(vis), 0
-        )
+        if self._mqtt_conn:
+            self._mqtt_conn.publish(
+                consts.RSM_VISUAL_TOPIC.format(rsu), json.dumps(vis), 0
+            )
         return latest_frame

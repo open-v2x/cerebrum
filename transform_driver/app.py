@@ -28,6 +28,7 @@ from transform_driver import db
 from transform_driver.driver_lib import drivers
 from transform_driver.log import Loggings
 from transform_driver.rsi_service import RSI
+import uuid
 
 logger = Loggings()
 
@@ -130,9 +131,18 @@ class App:
 
         self.mqtt.username_pw_set(mcfg["username"], mcfg["password"])
         self.mqtt.connect(mcfg["host"], mcfg["port"])
-
-        self.process = DataProcessing(self.mqtt, self.kv)
-        self.svc = Service(self.mqtt, self.kv)
+        try:
+            mcfg_conn = db.get_mqtt_config()
+            self.mqtt_conn = mqtt.Client(client_id=uuid.uuid4().hex)
+            self.mqtt_conn.username_pw_set(
+                mcfg_conn["username"], mcfg_conn["password"]
+            )
+            self.mqtt_conn.connect(mcfg_conn["host"], mcfg_conn["port"])
+            self.process = DataProcessing(self.mqtt, self.kv, self.mqtt_conn)
+            self.svc = Service(self.mqtt, self.kv, self.mqtt_conn)
+        except Exception:
+            self.process = DataProcessing(self.mqtt, self.kv)
+            self.svc = Service(self.mqtt, self.kv)
         self.rsi = RSI(self.mqtt, self.kv)
         self.cfg = Cfg(self.kv)
 
@@ -225,7 +235,7 @@ class App:
             logger.error("RSU is not registered")
 
     def _mqtt_on_db(self, client, userdata, msg):
-        post_process.mysql(msg.payload)
+        db.get_rsu_info(msg.payload)
 
     def _driver_name(self, topic, msg_type):
         if topic[-2:] == "UP":
