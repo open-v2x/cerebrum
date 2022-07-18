@@ -87,10 +87,10 @@ def get_rsu_info(msg_info):
             "select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
             "scale,lane_info from rsu"
         )
-    cursor.execute(sql)
-    results = cursor.fetchall()
-    for row in results:
-        try:
+    try:
+        cursor.execute(sql)
+        results = cursor.fetchall()
+        for row in results:
             rsu_info[row[0]] = {
                 "pos": eval(row[1]),
                 "bias_x": row[2],
@@ -100,8 +100,8 @@ def get_rsu_info(msg_info):
                 "scale": row[6],
             }
             lane_info[row[0]] = eval(row[7])
-        except Exception:
-            logger.error("unable to fetch data from database")
+    except Exception:
+        logger.error("unable to fetch data from database")
     conn.close()
 
 
@@ -111,12 +111,16 @@ def get_mqtt_config():
     conn = pymysql.connect(**cfg.mysql)
     cursor = conn.cursor()
     sql = "select mqtt_config,node_id from system_config"
-    cursor.execute(sql)
-    results = cursor.fetchone()
-    mq_cfg = eval(results[0])
-    node_id = results[1]
-    conn.close()
-    return mq_cfg
+    try:
+        cursor.execute(sql)
+        results = cursor.fetchone()
+        mq_cfg = eval(results[0])
+        node_id = results[1]
+        conn.close()
+        return mq_cfg
+    except Exception:
+        conn.close()
+        logger.error("unable to fetch mqtt configuration from database")
 
 
 get_mqtt_config()
