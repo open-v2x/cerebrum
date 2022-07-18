@@ -44,11 +44,7 @@ steps:
       - cp -rf /root/.ssh ~/
   - name: deploy-to-aliyun
     commands:
-      - ssh v2x-release "docker stop v2x-data-processing || true"
-      - ssh v2x-release "docker rm v2x-data-processing || true"
-      - ssh v2x-release "docker rmi openv2x/cerebrum:latest || true"
-      - ssh v2x-release "docker pull openv2x/cerebrum:latest"
-      - ssh v2x-release "docker run -d -e redis_host=172.17.0.1 -e mqtt_host=172.17.0.1 -e cloud_url=http://172.17.0.1:8888 --name=v2x-data-processing -v /etc/localtime:/etc/localtime openv2x/cerebrum:latest || true"
+      - ssh v2x-release "sh install.sh 139.196.13.9"
   - name: email on success
     commands:
       - bash -x v2x-email-success.sh ${DRONE_COMMIT} ${DRONE_COMMIT_BRANCH} "${DRONE_COMMIT_AUTHOR_NAME}" ${DRONE_REPO_OWNER} ${DRONE_REPO_NAME} ${DRONE_COMMIT_AUTHOR_EMAIL} ${DRONE_BUILD_NUMBER} ${DRONE_BUILD_STARTED}
