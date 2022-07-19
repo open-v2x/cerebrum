@@ -72,8 +72,9 @@ class Visualize(Base):
             "pedestrianTotal": info_dict["pedestrian"],
             "congestion": congestion_info,
         }
-        url = cfg.cloud_server + "/homes/route_info_push"
-        await post_process.http_post(url, final_info)
+        if cfg.cloud_server:
+            url = cfg.cloud_server + "/homes/route_info_push"
+            await post_process.http_post(url, final_info)
         if self._mqtt_conn:
             self._mqtt_conn.publish(
                 consts.RSM_VISUAL_TOPIC.format(rsu), json.dumps(vis), 0

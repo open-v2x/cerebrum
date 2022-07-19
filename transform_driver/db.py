@@ -16,7 +16,14 @@
 
 from config import devel as cfg
 import orjson as json
-import pymysql  # type: ignore
+from sqlalchemy import Column  # type: ignore
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base  # type: ignore
+from sqlalchemy import Float
+from sqlalchemy import Integer
+from sqlalchemy import JSON
+from sqlalchemy.orm import sessionmaker  # type: ignore
+from sqlalchemy import String
 from transform_driver.log import Loggings
 from typing import Any
 from typing import Callable
@@ -24,6 +31,14 @@ from typing import Dict
 import zlib
 
 logger = Loggings()
+rsu_info: Dict[str, dict] = {}
+lane_info: Dict[str, dict] = {}
+node_id = None
+Base = declarative_base()
+configuration = cfg.sqlalchemy_w
+engine = create_engine(configuration.pop("url"), **configuration)
+DBSession = sessionmaker(bind=engine)
+session = DBSession()
 
 
 class KVStore:
@@ -67,15 +82,71 @@ class KVStore:
         return self._redis
 
 
-rsu_info: Dict[str, dict] = {}
-lane_info: Dict[str, dict] = {}
-node_id = None
+class RSU(Base):  # type: ignore
+    """Define the RSU object."""
+
+    __tablename__ = "rsu"
+    id = Column(Integer, primary_key=True)
+    rsu_esn = Column(type_=String(64), nullable=False)
+    location = Column(type_=JSON, nullable=False)
+    bias_x = Column(type_=Float, nullable=False)
+    bias_y = Column(type_=Float, nullable=False)
+    rotation = Column(type_=Float, nullable=False)
+    reverse = Column(type_=Integer, nullable=False)
+    scale = Column(type_=Float, nullable=False)
+    lane_info = Column(type_=JSON, nullable=False)
+
+
+def sqlite():
+    """Initialize rsu data."""
+    Base.metadata.create_all(engine)
+    rsu = RSU(
+        rsu_esn="R328328",
+        location={"lon": 118.8213963998263, "lat": 31.934846637757847},
+        bias_x=0.0,
+        bias_y=0.0,
+        rotation=0.0,
+        reverse=0,
+        scale=0.09,
+        lane_info={
+            1: -1,
+            2: 1,
+            3: 1,
+            4: -1,
+            5: -1,
+            6: -1,
+            7: -1,
+            8: 1,
+            9: 1,
+            10: 1,
+            11: 1,
+            12: 1,
+            13: 1,
+            14: -1,
+            15: -1,
+            16: 1,
+            17: 1,
+            18: 1,
+            19: 1,
+            20: -1,
+            21: -1,
+            22: -1,
+            23: -1,
+            24: -1,
+        },
+    )
+
+    session.add(rsu)
+    session.commit()
+    session.close()
+
+
+if cfg.db_server == "sqlite":
+    sqlite()
 
 
 def get_rsu_info(msg_info):
     """Get information of all rsu."""
-    conn = pymysql.connect(**cfg.mysql)
-    cursor = conn.cursor()
     if msg_info:
         rsu_id = json.loads(msg_info)["esn"]
         sql = (
@@ -88,8 +159,7 @@ def get_rsu_info(msg_info):
             "scale,lane_info from rsu"
         )
     try:
-        cursor.execute(sql)
-        results = cursor.fetchall()
+        results = session.execute(sql).fetchall()
         for row in results:
             rsu_info[row[0]] = {
                 "pos": eval(row[1]),
@@ -102,25 +172,25 @@ def get_rsu_info(msg_info):
             lane_info[row[0]] = eval(row[7])
     except Exception:
         logger.error("unable to fetch data from database")
-    conn.close()
+    session.commit()
+    session.close()
 
 
 def get_mqtt_config():
     """Get the configuration of mqtt."""
     global node_id
-    conn = pymysql.connect(**cfg.mysql)
-    cursor = conn.cursor()
     sql = "select mqtt_config,node_id from system_config"
     try:
-        cursor.execute(sql)
-        results = cursor.fetchone()
+        results = session.execute(sql).fetchone()
         mq_cfg = eval(results[0])
         node_id = results[1]
-        conn.close()
+        session.commit()
+        session.close()
         return mq_cfg
     except Exception:
-        conn.close()
+        session.close()
         logger.error("unable to fetch mqtt configuration from database")
 
 
-get_mqtt_config()
+if cfg.db_server == "mariadb":
+    get_mqtt_config()
