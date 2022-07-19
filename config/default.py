@@ -2,11 +2,11 @@ import os
 import uuid
 
 DEFAULT_HOST_MQTT = "139.196.13.9"
-DEFAULT_PASSOWRD_MQTT = "abc@1234" # user define
+DEFAULT_PASSOWRD_MQTT = "v2x2022" # user define
 DEFAULT_HOST_REDIS = "139.196.13.9"
-DEFAULT_PASSWORD_REDIS = "redis12345" # user define
+DEFAULT_PASSWORD_REDIS = "v2x2022" # user define
 DEFAULT_HOST_MYSQL = "139.196.13.9"
-DEFAULT_PASSOWRD_MYSQL = "abc@1234" # user define
+DEFAULT_PASSOWRD_MYSQL = "v2x2022" # user define
 DEFAULT_CLOUD_URL = "http://139.196.13.9:28300/api/v1"
 DELIMITER = "/"
 
