@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - albany
 
 jobs:
   docker:
@@ -28,7 +28,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: openv2x/cerebrum:latest
+          tags: openv2x/cerebrum:albany
           build-args: |
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/cerebrum

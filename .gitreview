@@ -2,4 +2,4 @@
 host=review.sh.99cloud.net
 port=29418
 project=v2x/cerebrum
-defaultbranch=master
+defaultbranch=albany
