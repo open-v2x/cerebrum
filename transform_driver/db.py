@@ -166,7 +166,7 @@ def get_rsu_info(msg_info):
             RSU.reverse,
             RSU.scale,
             RSU.lane_info,
-        ).filter(RSU.RSU_esn == rsu_id)
+        ).filter(RSU.rsu_esn == rsu_id)
     else:
         results = session.query(
             RSU.rsu_esn,
