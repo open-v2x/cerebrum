@@ -81,6 +81,50 @@ class KVStore:
         return self._redis
 
 
+def sqlite():
+    """Initialize rsu data."""
+    Base.metadata.create_all(engine)
+    rsu = RSU(
+        rsu_esn="R328328",
+        location={"lon": 118.8213963998263, "lat": 31.934846637757847},
+        bias_x=0.0,
+        bias_y=0.0,
+        rotation=0.0,
+        reverse=0,
+        scale=0.09,
+        lane_info={
+            "1": -1,
+            "2": 1,
+            "3": 1,
+            "4": -1,
+            "5": -1,
+            "6": -1,
+            "7": -1,
+            "8": 1,
+            "9": 1,
+            "10": 1,
+            "11": 1,
+            "12": 1,
+            "13": 1,
+            "14": -1,
+            "15": -1,
+            "16": 1,
+            "17": 1,
+            "18": 1,
+            "19": 1,
+            "20": -1,
+            "21": -1,
+            "22": -1,
+            "23": -1,
+            "24": -1,
+        },
+    )
+
+    session.add(rsu)
+    session.commit()
+    session.close()
+
+
 class RSU(Base):  # type: ignore
     """Define the RSU object."""
 
@@ -96,48 +140,13 @@ class RSU(Base):  # type: ignore
     lane_info = Column(type_=JSON, nullable=False)
 
 
-def sqlite():
-    """Initialize rsu data."""
-    Base.metadata.create_all(engine)
-    rsu = RSU(
-        rsu_esn="R328328",
-        location={"lon": 118.8213963998263, "lat": 31.934846637757847},
-        bias_x=0.0,
-        bias_y=0.0,
-        rotation=0.0,
-        reverse=0,
-        scale=0.09,
-        lane_info={
-            1: -1,
-            2: 1,
-            3: 1,
-            4: -1,
-            5: -1,
-            6: -1,
-            7: -1,
-            8: 1,
-            9: 1,
-            10: 1,
-            11: 1,
-            12: 1,
-            13: 1,
-            14: -1,
-            15: -1,
-            16: 1,
-            17: 1,
-            18: 1,
-            19: 1,
-            20: -1,
-            21: -1,
-            22: -1,
-            23: -1,
-            24: -1,
-        },
-    )
+class MQTT(Base):  # type: ignore
+    """Define the MQTT object."""
 
-    session.add(rsu)
-    session.commit()
-    session.close()
+    __tablename__ = "system_config"
+    id = Column(Integer, primary_key=True)
+    node_id = Column(Integer, nullable=True, default=0)
+    mqtt_config = Column(JSON, nullable=True)
 
 
 if cfg.db_server == "sqlite":
@@ -145,30 +154,42 @@ if cfg.db_server == "sqlite":
 
 
 def get_rsu_info(msg_info):
-    """Get information of all rsu."""
+    """Get information of all RSU."""
     if msg_info:
         rsu_id = json.loads(msg_info)["esn"]
-        sql = (
-            f"select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
-            f"scale,lane_info from rsu where rsu_esn='{rsu_id}'"
-        )
+        results = session.query(
+            RSU.rsu_esn,
+            RSU.location,
+            RSU.bias_x,
+            RSU.bias_y,
+            RSU.rotation,
+            RSU.reverse,
+            RSU.scale,
+            RSU.lane_info,
+        ).filter(RSU.RSU_esn == rsu_id)
     else:
-        sql = (
-            "select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
-            "scale,lane_info from rsu"
-        )
+        results = session.query(
+            RSU.rsu_esn,
+            RSU.location,
+            RSU.bias_x,
+            RSU.bias_y,
+            RSU.rotation,
+            RSU.reverse,
+            RSU.scale,
+            RSU.lane_info,
+        ).all()
     try:
-        results = session.execute(sql).fetchall()
         for row in results:
             rsu_info[row[0]] = {
-                "pos": eval(row[1]),
+                "pos": row[1],
                 "bias_x": row[2],
                 "bias_y": row[3],
                 "rotation": row[4],
                 "reverse": row[5],
                 "scale": row[6],
             }
-            for k, v in eval(row[7]).items():
+            lane_info[row[0]] = {}
+            for k, v in row[7].items():
                 lane_info[row[0]][int(k)] = v
     except Exception:
         logger.error("unable to fetch data from database")
@@ -179,10 +200,9 @@ def get_rsu_info(msg_info):
 def get_mqtt_config():
     """Get the configuration of mqtt."""
     global node_id
-    sql = "select mqtt_config,node_id from system_config"
     try:
-        results = session.execute(sql).fetchone()
-        mq_cfg = eval(results[0])
+        results = session.query(MQTT.mqtt_config, MQTT.node_id).first()
+        mq_cfg = results[0]
         node_id = results[1]
         session.commit()
         session.close()
@@ -190,3 +210,7 @@ def get_mqtt_config():
     except Exception:
         session.close()
         logger.error("unable to fetch mqtt configuration from database")
+
+
+if cfg.db_server == "mariadb":
+    get_mqtt_config()
