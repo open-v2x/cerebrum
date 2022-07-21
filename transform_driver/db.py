@@ -168,7 +168,8 @@ def get_rsu_info(msg_info):
                 "reverse": row[5],
                 "scale": row[6],
             }
-            lane_info[row[0]] = eval(row[7])
+            for k, v in eval(row[7]).items():
+                lane_info[row[0]][int(k)] = v
     except Exception:
         logger.error("unable to fetch data from database")
     session.commit()
