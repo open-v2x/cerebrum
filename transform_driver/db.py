@@ -35,8 +35,7 @@ rsu_info: Dict[str, dict] = {}
 lane_info: Dict[str, dict] = {}
 node_id = None
 Base = declarative_base()
-configuration = cfg.sqlalchemy_w
-engine = create_engine(configuration.pop("url"), **configuration)
+engine = create_engine(**cfg.sqlalchemy_w)
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
@@ -190,7 +189,3 @@ def get_mqtt_config():
     except Exception:
         session.close()
         logger.error("unable to fetch mqtt configuration from database")
-
-
-if cfg.db_server == "mariadb":
-    get_mqtt_config()
