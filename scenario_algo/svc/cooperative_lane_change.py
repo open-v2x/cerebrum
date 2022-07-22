@@ -44,7 +44,6 @@ class CooperativeLaneChange:
         current_frame = (
             his_info["latest_frame"] if his_info.get("latest_frame") else {}
         )
-
         msg_rsc, info_for_show = self._exe.run(
             convert_info, context_frames, current_frame, params
         )
@@ -56,7 +55,6 @@ class CooperativeLaneChange:
         if msg_rsc["coordinates"]["driveSuggestion"]["suggestion"] > 0:
             for i in info_for_show["traj_list_for_show"]:
                 post_process.convert_for_visual(i, rsu_id)
-            post_process.convert_for_visual(info_for_show["ego_point"], rsu_id)
             # rsu，前端
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
