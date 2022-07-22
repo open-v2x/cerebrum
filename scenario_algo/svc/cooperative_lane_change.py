@@ -44,7 +44,6 @@ class CooperativeLaneChange:
         current_frame = (
             his_info["latest_frame"] if his_info.get("latest_frame") else {}
         )
-
         msg_rsc, info_for_show = self._exe.run(
             convert_info, context_frames, current_frame, params
         )
