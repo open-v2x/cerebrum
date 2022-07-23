@@ -92,14 +92,16 @@ def get_rsu_info(msg_info):
         results = cursor.fetchall()
         for row in results:
             rsu_info[row[0]] = {
-                "pos": eval(row[1]),
+                "pos": row[1],
                 "bias_x": row[2],
                 "bias_y": row[3],
                 "rotation": row[4],
                 "reverse": row[5],
                 "scale": row[6],
             }
-            lane_info[row[0]] = eval(row[7])
+            lane_info[row[0]] = {}
+            for k, v in row[7].items():
+                lane_info[row[0]][int(k)] = v
     except Exception:
         logger.error("unable to fetch data from database")
     conn.close()
@@ -114,7 +116,7 @@ def get_mqtt_config():
     try:
         cursor.execute(sql)
         results = cursor.fetchone()
-        mq_cfg = eval(results[0])
+        mq_cfg = results[0]
         node_id = results[1]
         conn.close()
         return mq_cfg
