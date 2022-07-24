@@ -60,3 +60,7 @@ cat .drone.yml | grep v2x-server | grep -v -E "^\s*#" | grep -E '^\s*-' | sed "s
 cat /tmp/deploy-cereburm.sh
 bash /tmp/deploy-cereburm.sh
 ```
+
+## Notice
+
+1. Please run "[`dprint fmt`](https://dprint.dev/)" to format markdown files before creating PR.
