@@ -72,27 +72,35 @@ lane_info: Dict[str, dict] = {}
 node_id = None
 
 
+def jsonloads(in_obj):
+    """Transfer input object to json if it is a string."""
+    if isinstance(in_obj, str):
+        in_obj = json.loads(in_obj)
+    return in_obj
+
+
 def get_rsu_info(msg_info):
     """Get information of all rsu."""
     conn = pymysql.connect(**cfg.mysql)
     cursor = conn.cursor()
+
+    sql = (
+        "select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
+        "scale,lane_info from rsu"
+    )
+
     if msg_info:
         rsu_id = json.loads(msg_info)["esn"]
-        sql = (
-            f"select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
-            f"scale,lane_info from rsu where rsu_esn='{rsu_id}'"
-        )
-    else:
-        sql = (
-            "select rsu_esn,location,bias_x,bias_y,rotation,reverse,"
-            "scale,lane_info from rsu"
-        )
+        sql += f" where rsu_esn='{rsu_id}'"
+
     try:
         cursor.execute(sql)
         results = cursor.fetchall()
         for row in results:
+            _pos = jsonloads(row[1])
+            _lane_info = jsonloads(row[7])
             rsu_info[row[0]] = {
-                "pos": row[1],
+                "pos": _pos,
                 "bias_x": row[2],
                 "bias_y": row[3],
                 "rotation": row[4],
@@ -100,11 +108,12 @@ def get_rsu_info(msg_info):
                 "scale": row[6],
             }
             lane_info[row[0]] = {}
-            for k, v in row[7].items():
+            for k, v in _lane_info.items():
                 lane_info[row[0]][int(k)] = v
     except Exception:
         logger.error("unable to fetch data from database")
-    conn.close()
+    finally:
+        conn.close()
 
 
 def get_mqtt_config():
@@ -118,11 +127,13 @@ def get_mqtt_config():
         results = cursor.fetchone()
         mq_cfg = results[0]
         node_id = results[1]
-        conn.close()
-        return mq_cfg
     except Exception:
-        conn.close()
         logger.error("unable to fetch mqtt configuration from database")
+    finally:
+        conn.close()
+
+    mq_cfg = json.loads(mq_cfg)
+    return mq_cfg
 
 
 get_mqtt_config()
