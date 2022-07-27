@@ -45,7 +45,9 @@ class SensorDataSharing:
         rsi = await self._kv.get(rsi_service.RSI.RSI_KEY.format(rsu_id))
 
         # 获取rsu 经纬度
-        sensor_pos = post_process.rsu_info[rsu_id]["pos"]
+        sensor_pos = post_process.rsu_info[rsu_id]["pos"].copy()
+        sensor_pos["lon"] = int(sensor_pos["lon"] * consts.CoordinateUnit)
+        sensor_pos["lat"] = int(sensor_pos["lat"] * consts.CoordinateUnit)
         msg_ssm, info_for_show = self._exe.run(
             motor_traj, vptc_traj, rsi, params, sensor_pos, convert_info
         )
