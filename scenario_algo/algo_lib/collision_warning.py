@@ -65,8 +65,9 @@ class ConflictIndex(Enum):
     FMRD = 2  # Risk Degree Based on Fuzzy Mathematics
 
 
-VehicleDefaultLength = 380  # 文档规定单位为厘米
-VehicleDefaultWidth = 180  # 文档规定单位为厘米
+VehicleDefaultLength = 380  # 文档规定单位为1厘米
+VehicleDefaultWidth = 180  # 文档规定单位为1厘米
+VehicleDefaultHeight = 32  # 文档规定单位为5厘米
 PedestrianDefaultRadius = 50  # 厘米
 NonMotorDefaultRadius = 100  # 厘米
 MinDataDuration = 0.5  # 至少有多少秒的数据才计算车辆的动力学信息
@@ -306,6 +307,7 @@ class CollisionWarning(Base):
                 "timeStamp": [(v["timeStamp"] / 1000) for v in mot],
                 "length": mot[-1].get("length", VehicleDefaultLength) / 100,
                 "width": mot[-1].get("width", VehicleDefaultWidth) / 100,
+                "height": mot[-1].get("height", VehicleDefaultHeight) / 20,
                 "guid": k,
             }
             # 车辆按顺序计算速度加速度、未来轨迹、轨迹航向角以及轨迹足迹（矩形坐标）
@@ -505,8 +507,14 @@ class CollisionWarning(Base):
             ct = CollisionType.ForwardConflict
         cur_sec_mark = (ego["timeStamp"][-1] * 1000) % utils.MaxSecMark
         et = EventType.Vehicle
-        ego_size = {"length": ego["length"], "width": ego["width"]}
-        other_size = {"length": other["length"], "width": other["width"]}
+        ego_size = {
+            "length": int(ego["length"] / 0.01),
+            "width": int(ego["width"] / 0.01),
+        }
+        other_size = {
+            "length": int(other["length"] / 0.01),
+            "width": int(other["width"] / 0.01),
+        }
         info_for_show, info_for_cwm = self._message_generate(
             cur_sec_mark, et, ct, ego, other, ego_size, other_size
         )
@@ -531,8 +539,11 @@ class CollisionWarning(Base):
             ct = CollisionType.SideConflict
         cur_sec_mark = (motor["timeStamp"][-1] * 1000) % utils.MaxSecMark
         et = EventType.VulnerableTrafficParticipant
-        motor_size = {"length": motor["length"], "width": motor["width"]}
-        vptc_size = {"radius": vptc["radius"]}
+        motor_size = {
+            "length": int(motor["length"] / 0.01),
+            "width": int(motor["width"] / 0.01),
+        }
+        vptc_size = {"radius": int(vptc["radius"] / 0.01)}
         info_for_show, info_for_cwm = self._message_generate(
             cur_sec_mark, et, ct, motor, vptc, motor_size, vptc_size
         )
@@ -742,36 +753,43 @@ class CollisionWarning(Base):
             "egoInfo": {
                 "egoId": ego_info["guid"],
                 "egoPos": {
-                    "lat": self._current_frame[ego_info["guid"]]["lat"],
-                    "lon": self._current_frame[ego_info["guid"]]["lon"],
-                    "ele": self._current_frame[ego_info["guid"]]["ele"],
+                    "lat": int(self._current_frame[ego_info["guid"]]["lat"]),
+                    "lon": int(self._current_frame[ego_info["guid"]]["lon"]),
                 },
                 "heading": self._current_frame[ego_info["guid"]]["heading"],
                 "size": ego_size,
                 "kinematicsInfo": {
-                    "speed": float(ego_info["speed"]),
-                    "accelerate": float(
-                        math.hypot(ego_info["acc_x"], ego_info["acc_y"])
+                    "speed": int(ego_info["speed"] / 0.02),
+                    "accelerate": int(
+                        math.hypot(ego_info["acc_x"], ego_info["acc_y"]) / 0.02
                     ),
-                    "angularSpeed": ego_info["angular_speed"],
+                    "angularSpeed": int(ego_info["angular_speed"] / 0.02),
                 },
             },
             "otherInfo": {
                 "otherId": other_info["guid"],
                 "otherPos": {
-                    "lat": self._current_frame[other_info["guid"]]["lat"],
-                    "lon": self._current_frame[other_info["guid"]]["lon"],
-                    "ele": self._current_frame[other_info["guid"]]["ele"],
+                    "lat": int(self._current_frame[other_info["guid"]]["lat"]),
+                    "lon": int(self._current_frame[other_info["guid"]]["lon"]),
                 },
                 "heading": self._current_frame[other_info["guid"]]["heading"],
                 "size": other_size,
                 "kinematicsInfo": {
-                    "speed": float(other_info["speed"]),
-                    "accelerate": float(
+                    "speed": int(other_info["speed"] / 0.02),
+                    "accelerate": int(
                         math.hypot(other_info["acc_x"], other_info["acc_y"])
+                        / 0.02
                     ),
-                    "angularSpeed": other_info["angular_speed"],
+                    "angularSpeed": int(other_info["angular_speed"] / 0.02),
                 },
             },
         }
+        if self._current_frame[ego_info["guid"]].get("ele"):
+            info_for_cwm["egoInfo"]["egoPos"]["ele"] = int(
+                self._current_frame[ego_info["guid"]].get("ele")
+            )
+        if self._current_frame[other_info["guid"]].get("ele"):
+            info_for_cwm["otherInfo"]["otherPos"]["ele"] = int(
+                self._current_frame[other_info["guid"]].get("ele")
+            )
         return info_for_show, info_for_cwm
