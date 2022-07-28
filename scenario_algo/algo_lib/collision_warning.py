@@ -70,7 +70,7 @@ VehicleDefaultWidth = 180  # 文档规定单位为1厘米
 VehicleDefaultHeight = 32  # 文档规定单位为5厘米
 PedestrianDefaultRadius = 50  # 厘米
 NonMotorDefaultRadius = 100  # 厘米
-MinDataDuration = 0.5  # 至少有多少秒的数据才计算车辆的动力学信息
+MinDataDuration = 1.5  # 至少有多少秒的数据才计算车辆的动力学信息
 
 
 class Base:
@@ -305,9 +305,9 @@ class CollisionWarning(Base):
                 "y": [v["y"] for v in mot],
                 "heading": [math.radians(v["heading"] * 0.0125) for v in mot],
                 "timeStamp": [(v["timeStamp"] / 1000) for v in mot],
-                "length": mot[-1].get("length", VehicleDefaultLength) / 100,
-                "width": mot[-1].get("width", VehicleDefaultWidth) / 100,
-                "height": mot[-1].get("height", VehicleDefaultHeight) / 20,
+                "length": mot[-1].get("length", VehicleDefaultLength) * 0.01,
+                "width": mot[-1].get("width", VehicleDefaultWidth) * 0.01,
+                "height": mot[-1].get("height", VehicleDefaultHeight) * 0.05,
                 "guid": k,
             }
             # 车辆按顺序计算速度加速度、未来轨迹、轨迹航向角以及轨迹足迹（矩形坐标）
@@ -332,7 +332,7 @@ class CollisionWarning(Base):
                     math.radians(v["heading"] * 0.0125) for v in non_mot
                 ],
                 "timeStamp": [(v["timeStamp"] / 1000) for v in non_mot],
-                "radius": NonMotorDefaultRadius / 100,
+                "radius": NonMotorDefaultRadius * 0.01,
                 "guid": k,
                 "ptcType": "non_motor",
             }
@@ -351,7 +351,7 @@ class CollisionWarning(Base):
                 "y": [v["y"] for v in ped],
                 "heading": [math.radians(v["heading"] * 0.0125) for v in ped],
                 "timeStamp": [(v["timeStamp"] / 1000) for v in ped],
-                "radius": PedestrianDefaultRadius / 100,
+                "radius": PedestrianDefaultRadius * 0.01,
                 "guid": k,
                 "ptcType": "pedestrian",
             }
