@@ -178,8 +178,11 @@ def get_rsu_info(msg_info):
             RSU.scale,
             RSU.lane_info,
         ).all()
-    try:
-        for row in results:
+    for row in results:
+        try:
+            lane_info[row[0]] = {}
+            for k, v in row[7].items():
+                lane_info[row[0]][int(k)] = v
             rsu_info[row[0]] = {
                 "pos": row[1],
                 "bias_x": row[2],
@@ -188,11 +191,11 @@ def get_rsu_info(msg_info):
                 "reverse": row[5],
                 "scale": row[6],
             }
-            lane_info[row[0]] = {}
-            for k, v in row[7].items():
-                lane_info[row[0]][int(k)] = v
-    except Exception:
-        logger.error("unable to fetch data from database")
+        except Exception:
+            logger.error(
+                "Missing required field data in RSU with serial number "
+                ":{} ".format(row[0])
+            )
     session.commit()
     session.close()
 
@@ -212,5 +215,4 @@ def get_mqtt_config():
         logger.error("unable to fetch mqtt configuration from database")
 
 
-if cfg.db_server == "mariadb":
-    get_mqtt_config()
+get_mqtt_config()
