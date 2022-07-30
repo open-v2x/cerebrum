@@ -138,6 +138,7 @@ class App:
                 mcfg_conn["username"], mcfg_conn["password"]
             )
             self.mqtt_conn.connect(mcfg_conn["host"], mcfg_conn["port"])
+            self.mqtt_conn.loop_start()
             self.process = DataProcessing(self.mqtt, self.kv, self.mqtt_conn)
             self.svc = Service(self.mqtt, self.kv, self.mqtt_conn)
         except Exception:
