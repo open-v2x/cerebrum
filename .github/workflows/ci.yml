@@ -7,9 +7,7 @@ on:
 
 jobs:
   docker:
-
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -33,3 +31,20 @@ jobs:
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/cerebrum
             GIT_COMMIT=${{ github.sha }}
+  ssh:
+    needs: docker
+    runs-on: ubuntu-latest
+    steps:
+      - name: apply to all-in-one environment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.AIO_MASTER_HOST }}
+          username: ${{ secrets.AIO_MASTER_USERNAME }}
+          key: ${{ secrets.AIO_MASTER_KEY }}
+          port: ${{ secrets.AIO_MASTER_PORT }}
+          script: |
+            set -e
+            rm -rf master.zip && wget https://gitee.com/open-v2x/docs/repository/archive/master.zip
+            rm -rf docs-master && unzip master.zip
+            cd docs-master/src/
+            sh install.sh
