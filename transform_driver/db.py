@@ -99,6 +99,9 @@ def get_rsu_info(msg_info):
         for row in results:
             _pos = jsonloads(row[1])
             _lane_info = jsonloads(row[7])
+            lane_info[row[0]] = {}
+            for k, v in _lane_info.items():
+                lane_info[row[0]][int(k)] = v
             rsu_info[row[0]] = {
                 "pos": _pos,
                 "bias_x": row[2],
@@ -107,9 +110,6 @@ def get_rsu_info(msg_info):
                 "reverse": row[5],
                 "scale": row[6],
             }
-            lane_info[row[0]] = {}
-            for k, v in _lane_info.items():
-                lane_info[row[0]][int(k)] = v
     except Exception:
         logger.error("unable to fetch data from database")
     finally:
