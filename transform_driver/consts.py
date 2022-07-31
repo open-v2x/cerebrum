@@ -43,7 +43,7 @@ SDS_TOPIC = topic_replace("V2X/RSU/{}/SDS/DOWN", cfg.DELIMITER)
 CLC_TOPIC = topic_replace("V2X/RSU/{}/CLC/DOWN", cfg.DELIMITER)
 DNP_TOPIC = topic_replace("V2X/RSU/{}/DNP/DOWN", cfg.DELIMITER)
 
-if db.node_id:
+if db.node_id is not None:
     # RSM visual
     RSM_VISUAL_TOPIC = topic_replace(
         "V2X/DEVICE/{}/PARTICIPANT/NODE" + str(db.node_id), cfg.DELIMITER

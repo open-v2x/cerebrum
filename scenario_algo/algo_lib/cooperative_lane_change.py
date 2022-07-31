@@ -253,15 +253,15 @@ class CooperativeLaneChange(Base):
     def _plan_path(self, v1: int, v2: int, heading: int):
         c_heading = self.latest_frame[self.vehId]["heading"]
         curr_t = self.latest_frame[self.vehId]["timeStamp"]
-        t = np.arange(curr_t, curr_t + 8, 0.1)
+        t = np.arange(curr_t, curr_t + 8000, 100)
         last_x = self.latest_frame[self.vehId]["x"]
         last_y = self.latest_frame[self.vehId]["y"]
         path = []
         g_path = []
         g_path.append(
             {
-                "x": float(last_x - self._transform_info[1]),
-                "y": float(last_y - self._transform_info[2]),
+                "x": float(last_x),
+                "y": float(last_y),
             }
         )
         plan_num = 30
@@ -271,8 +271,8 @@ class CooperativeLaneChange(Base):
                 c_heading
                 + (heading - c_heading) * np.sin(np.pi * i / (plan_num - 1))
             )
-            px = last_x + v * 0.5 * np.sin(h * 0.0125 / 180 * np.pi)
-            py = last_y - v * 0.5 * np.cos(h * 0.0125 / 180 * np.pi)
+            px = last_x + v * 0.1 * np.sin(h * 0.0125 / 180 * np.pi)
+            py = last_y - v * 0.1 * np.cos(h * 0.0125 / 180 * np.pi)
             last_x, last_y = px, py
             g_path.append(
                 {
@@ -290,7 +290,7 @@ class CooperativeLaneChange(Base):
                 "pos": {"lon": lon, "lat": lat, "ele": ele},
                 "speed": int(v / 0.02),
                 "heading": h,
-                "estimatedTime": float(t[i]),
+                "estimatedTime": int(t[i]),
             }
             path.append(pathpos)
         return path, g_path
