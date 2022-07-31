@@ -92,13 +92,15 @@ def get_rsu_info(msg_info):
     if msg_info:
         rsu_id = json.loads(msg_info)["esn"]
         sql += f" where rsu_esn='{rsu_id}'"
-
-    try:
-        cursor.execute(sql)
-        results = cursor.fetchall()
-        for row in results:
+    cursor.execute(sql)
+    results = cursor.fetchall()
+    for row in results:
+        try:
             _pos = jsonloads(row[1])
             _lane_info = jsonloads(row[7])
+            lane_info[row[0]] = {}
+            for k, v in _lane_info.items():
+                lane_info[row[0]][int(k)] = v
             rsu_info[row[0]] = {
                 "pos": _pos,
                 "bias_x": row[2],
@@ -107,13 +109,12 @@ def get_rsu_info(msg_info):
                 "reverse": row[5],
                 "scale": row[6],
             }
-            lane_info[row[0]] = {}
-            for k, v in _lane_info.items():
-                lane_info[row[0]][int(k)] = v
-    except Exception:
-        logger.error("unable to fetch data from database")
-    finally:
-        conn.close()
+        except Exception:
+            logger.error(
+                "Missing required field data in RSU with serial number "
+                ":{} ".format(row[0])
+            )
+    conn.close()
 
 
 def get_mqtt_config():
