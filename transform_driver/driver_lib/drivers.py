@@ -97,8 +97,8 @@ def rsm_dawnline(payload: bytes):
                     "lon": int(_info["pos_lon"] * coord_unit),
                     "ele": None,
                 },
-                "speed": int(_info.get("speed") / 0.02),
-                "heading": int(_info["heading"] / 0.0125),
+                "speed": abs(int(_info.get("speed") / 0.02)),
+                "heading": (int(_info["heading"] / 0.0125) + 28800) % 28800,
                 "lane": _info.get("lane"),
             }
             if _info.get("width"):
