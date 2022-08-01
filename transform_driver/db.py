@@ -16,6 +16,7 @@
 
 from config import devel as cfg
 import orjson as json
+from post_process_algo import post_process
 import pymysql  # type: ignore
 from transform_driver.log import Loggings
 from typing import Any
@@ -69,7 +70,6 @@ class KVStore:
 
 rsu_info: Dict[str, dict] = {}
 lane_info: Dict[str, dict] = {}
-node_id = None
 
 
 def jsonloads(in_obj):
@@ -99,6 +99,9 @@ def get_rsu_info(msg_info):
         for row in results:
             _pos = jsonloads(row[1])
             _lane_info = jsonloads(row[7])
+            lane_info[row[0]] = {}
+            for k, v in _lane_info.items():
+                lane_info[row[0]][int(k)] = v
             rsu_info[row[0]] = {
                 "pos": _pos,
                 "bias_x": row[2],
@@ -107,18 +110,15 @@ def get_rsu_info(msg_info):
                 "reverse": row[5],
                 "scale": row[6],
             }
-            lane_info[row[0]] = {}
-            for k, v in _lane_info.items():
-                lane_info[row[0]][int(k)] = v
     except Exception:
         logger.error("unable to fetch data from database")
     finally:
         conn.close()
+        post_process.generate_transformation_info()
 
 
 def get_mqtt_config():
     """Get the configuration of mqtt."""
-    global node_id
     conn = pymysql.connect(**cfg.mysql)
     cursor = conn.cursor()
     sql = "select mqtt_config,node_id from system_config"
@@ -133,7 +133,4 @@ def get_mqtt_config():
         conn.close()
 
     mq_cfg = json.loads(mq_cfg)
-    return mq_cfg
-
-
-get_mqtt_config()
+    return mq_cfg, node_id
