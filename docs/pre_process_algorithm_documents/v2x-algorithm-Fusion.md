@@ -49,8 +49,8 @@ $$ transitionMatrix = \begin{bmatrix} 1 & 0& \Delta t &0\\\ 0 & 1 & 0 & \Delta t
 
 $$ X_{k+1} = transitionMatrix \times X_k $$
 
-其中 $x$，$y$，$v_{x}$，$v_{y}$ 为车辆沿横纵向的位置坐标与速度，$X_{k}$ 为当前帧车辆状态矩阵，$X_{k+1}$ 为未来 $1$
-帧车辆状态矩阵，$transitionMatrix$ 为卡尔曼滤波状态转移矩阵。
+其中 $x$, $y$, $v_{x}$, $v_{y}$ 为车辆沿横纵向的位置坐标与速度, $X_{k}$ 为当前帧车辆状态矩阵, $X_{k+1}$ 为未来 $1$ 帧车辆状态矩阵,
+$transitionMatrix$ 为卡尔曼滤波状态转移矩阵。
 
 ### 算法BenchMark
 
