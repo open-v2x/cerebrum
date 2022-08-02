@@ -510,10 +510,12 @@ class CollisionWarning(Base):
         ego_size = {
             "length": int(ego["length"] / 0.01),
             "width": int(ego["width"] / 0.01),
+            "height": int(ego["height"] / 0.05),
         }
         other_size = {
             "length": int(other["length"] / 0.01),
             "width": int(other["width"] / 0.01),
+            "height": int(other["height"] / 0.05),
         }
         info_for_show, info_for_cwm = self._message_generate(
             cur_sec_mark, et, ct, ego, other, ego_size, other_size
@@ -542,6 +544,7 @@ class CollisionWarning(Base):
         motor_size = {
             "length": int(motor["length"] / 0.01),
             "width": int(motor["width"] / 0.01),
+            "height": int(motor["height"] / 0.05),
         }
         vptc_size = {"radius": int(vptc["radius"] / 0.01)}
         info_for_show, info_for_cwm = self._message_generate(
