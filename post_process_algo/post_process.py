@@ -132,6 +132,8 @@ def frame2rsm(latest_frame: dict, raw_rsm: dict, rsu_id: str) -> dict:
             "heading": latest_info["heading"],
             "lane": latest_info["lane"],
         }
+        if latest_info.get("refPos_ele"):
+            obj_info["pos"]["ele"] = latest_info["refPos_ele"]
         if latest_info.get("width"):
             if not obj_info.get("size"):
                 obj_info["size"] = {}
@@ -184,9 +186,12 @@ def convert_for_collision_visual(info: list, rsu_id: str) -> None:
 
 def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
     """Generate collision warning message."""
+    position_info = rsu_info[rsu_id]["pos"].copy()
+    position_info["lon"] = int(position_info["lon"] * consts.CoordinateUnit)
+    position_info["lat"] = int(position_info["lat"] * consts.CoordinateUnit)
     cwm = {
         "targetRSU": rsu_id,
-        "sensorPos": rsu_info[rsu_id]["pos"],
+        "sensorPos": position_info,
         "content": cwm_list,
     }
     return cwm
@@ -210,7 +215,7 @@ async def http_post(url: str, body: dict) -> aiohttp.ClientResponse:
             return await response.json()
 
 
-def _generate_transformation_info():
+def generate_transformation_info():
     """Generate transformation info."""
     for rsu in rsu_info.keys():
         TfMap[rsu] = Transformer.from_crs(
@@ -227,13 +232,13 @@ def _generate_transformation_info():
         YOrigin[rsu] = int(YOrigin[rsu])
 
 
-db.get_rsu_info(False)
-rsu_info = db.rsu_info
-lane_info = db.lane_info
 YOrigin: Dict[str, int] = {}
 XOrigin: Dict[str, int] = {}
 TfMap = {}  # type: ignore
-_generate_transformation_info()
+rsu_info = db.rsu_info
+lane_info = db.lane_info
+db.get_rsu_info(False)
+
 
 # # 获取所有rsu的经纬度信息
 # rsu_info: Dict[str, dict] = {

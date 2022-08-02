@@ -15,7 +15,6 @@
 """Algorithm service consts and mqtt topic config."""
 
 from config import devel as cfg
-from transform_driver import db
 
 MaxSecMark = 60000  # 新四跨中对secMark的规定中的最大值
 CoordinateUnit = 10**7  # 新四跨协议规定的经纬度单位转换unit
@@ -43,21 +42,20 @@ SDS_TOPIC = topic_replace("V2X/RSU/{}/SDS/DOWN", cfg.DELIMITER)
 CLC_TOPIC = topic_replace("V2X/RSU/{}/CLC/DOWN", cfg.DELIMITER)
 DNP_TOPIC = topic_replace("V2X/RSU/{}/DNP/DOWN", cfg.DELIMITER)
 
-if db.node_id:
-    # RSM visual
-    RSM_VISUAL_TOPIC = topic_replace(
-        "V2X/DEVICE/{}/PARTICIPANT/NODE" + str(db.node_id), cfg.DELIMITER
-    )
-    # scenario visual
-    CW_VISUAL_TOPIC = topic_replace(
-        "V2X/DEVICE/{}/APPLICATION/CW/NODE" + str(db.node_id), cfg.DELIMITER
-    )
-    CLC_VISUAL_TOPIC = topic_replace(
-        "V2X/DEVICE/{}/APPLICATION/CLC/NODE" + str(db.node_id), cfg.DELIMITER
-    )
-    DNP_VISUAL_TOPIC = topic_replace(
-        "V2X/DEVICE/{}/APPLICATION/DNP/NODE" + str(db.node_id), cfg.DELIMITER
-    )
-    SDS_VISUAL_TOPIC = topic_replace(
-        "V2X/DEVICE/{}/APPLICATION/SDS/NODE" + str(db.node_id), cfg.DELIMITER
-    )
+
+RSM_VISUAL_TOPIC = topic_replace(
+    "V2X/DEVICE/{}/PARTICIPANT/NODE{}", cfg.DELIMITER
+)
+# scenario visual
+CW_VISUAL_TOPIC = topic_replace(
+    "V2X/DEVICE/{}/APPLICATION/CW/NODE{}", cfg.DELIMITER
+)
+CLC_VISUAL_TOPIC = topic_replace(
+    "V2X/DEVICE/{}/APPLICATION/CLC/NODE{}", cfg.DELIMITER
+)
+DNP_VISUAL_TOPIC = topic_replace(
+    "V2X/DEVICE/{}/APPLICATION/DNP/NODE{}", cfg.DELIMITER
+)
+SDS_VISUAL_TOPIC = topic_replace(
+    "V2X/DEVICE/{}/APPLICATION/SDS/NODE{}", cfg.DELIMITER
+)
