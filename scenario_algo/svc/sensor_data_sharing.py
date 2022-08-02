@@ -25,11 +25,12 @@ from transform_driver import rsi_service
 class SensorDataSharing:
     """Call the sensor data sharing algorithm function."""
 
-    def __init__(self, kv, mqtt, mqtt_conn=None) -> None:
+    def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None) -> None:
         """Class initialization."""
         self._kv = kv
         self._mqtt = mqtt
         self._mqtt_conn = mqtt_conn
+        self.node_id = node_id
         self._exe = sensor_data_sharing.SensorDataSharing()
 
     async def run(self, params: dict, rsu_id: str, convert_info: list) -> None:
@@ -62,7 +63,7 @@ class SensorDataSharing:
         )
         if self._mqtt_conn:
             self._mqtt_conn.publish(
-                consts.SDS_VISUAL_TOPIC.format(rsu_id),
+                consts.SDS_VISUAL_TOPIC.format(rsu_id, self.node_id),
                 json.dumps([info_for_show]),
                 0,
             )
