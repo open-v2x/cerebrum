@@ -16,6 +16,7 @@
 
 from config import devel as cfg
 import orjson as json
+from post_process_algo import post_process
 from sqlalchemy import Column  # type: ignore
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base  # type: ignore
@@ -30,10 +31,10 @@ from typing import Callable
 from typing import Dict
 import zlib
 
+
 logger = Loggings()
 rsu_info: Dict[str, dict] = {}
 lane_info: Dict[str, dict] = {}
-node_id = None
 Base = declarative_base()
 engine = create_engine(**cfg.sqlalchemy_w)
 DBSession = sessionmaker(bind=engine)
@@ -198,21 +199,18 @@ def get_rsu_info(msg_info):
             )
     session.commit()
     session.close()
+    post_process.generate_transformation_info()
 
 
 def get_mqtt_config():
     """Get the configuration of mqtt."""
-    global node_id
     try:
         results = session.query(MQTT.mqtt_config, MQTT.node_id).first()
         mq_cfg = results[0]
         node_id = results[1]
         session.commit()
         session.close()
-        return mq_cfg
+        return mq_cfg, node_id
     except Exception:
         session.close()
         logger.error("unable to fetch mqtt configuration from database")
-
-
-get_mqtt_config()
