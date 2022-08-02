@@ -505,8 +505,16 @@ class CollisionWarning(Base):
             ct = CollisionType.ForwardConflict
         cur_sec_mark = (ego["timeStamp"][-1] * 1000) % utils.MaxSecMark
         et = EventType.Vehicle
-        ego_size = {"length": ego["length"], "width": ego["width"]}
-        other_size = {"length": other["length"], "width": other["width"]}
+        ego_size = {
+            "length": int(ego["length"] / 0.01),
+            "width": int(ego["width"] / 0.01),
+            "height": int(ego["height"] / 0.05),
+        }
+        other_size = {
+            "length": int(other["length"] / 0.01),
+            "width": int(other["width"] / 0.01),
+            "height": int(other["height"] / 0.05),
+        }
         info_for_show, info_for_cwm = self._message_generate(
             cur_sec_mark, et, ct, ego, other, ego_size, other_size
         )
@@ -531,8 +539,12 @@ class CollisionWarning(Base):
             ct = CollisionType.SideConflict
         cur_sec_mark = (motor["timeStamp"][-1] * 1000) % utils.MaxSecMark
         et = EventType.VulnerableTrafficParticipant
-        motor_size = {"length": motor["length"], "width": motor["width"]}
-        vptc_size = {"radius": vptc["radius"]}
+        motor_size = {
+            "length": int(motor["length"] / 0.01),
+            "width": int(motor["width"] / 0.01),
+            "height": int(motor["height"] / 0.05),
+        }
+        vptc_size = {"radius": int(vptc["radius"] / 0.01)}
         info_for_show, info_for_cwm = self._message_generate(
             cur_sec_mark, et, ct, motor, vptc, motor_size, vptc_size
         )
