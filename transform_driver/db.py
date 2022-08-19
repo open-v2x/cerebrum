@@ -197,7 +197,6 @@ def get_rsu_info(msg_info):
                 "Missing required field data in RSU with serial number "
                 ":{} ".format(row[0])
             )
-    session.commit()
     session.close()
     post_process.generate_transformation_info()
 
@@ -208,7 +207,6 @@ def get_mqtt_config():
         results = session.query(MQTT.mqtt_config, MQTT.node_id).first()
         mq_cfg = results[0]
         node_id = results[1]
-        session.commit()
         session.close()
         return mq_cfg, node_id
     except Exception:
