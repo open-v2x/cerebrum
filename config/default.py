@@ -1,4 +1,5 @@
 import os
+from urllib.parse import quote_plus
 import uuid
 
 DEFAULT_MQTT_HOST = "139.196.13.9"
@@ -26,8 +27,8 @@ if db_server == "mariadb":
     DB_USERNAME = os.getenv("mysql_user") or DEFAULT_MYSQL_USER
     DB_PASSWORD = os.getenv("mysql_password") or DEFAULT_MYSQL_PASSWORD
     sqlalchemy_w = {
-        "url": f"mariadb+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:"
-        f"{DB_PORT}/dandelion?charset=utf8",
+        "url": f"mariadb+pymysql://{DB_USERNAME}:{quote_plus(DB_PASSWORD)}"
+               f"@{DB_HOST}:{DB_PORT}/dandelion?charset=utf8",
         "echo": True,
     }
 
