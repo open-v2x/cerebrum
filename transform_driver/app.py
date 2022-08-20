@@ -207,9 +207,12 @@ class App:
             client.message_callback_add(topic, cb)
 
     def _mqtt_on_rsm_msg(self, client, userdata, msg):
-        driver_name, rsu_id = self._driver_name(msg.topic, "rsm")
-        driver = getattr(drivers, driver_name)
-        miss_flag, rsm, miss_info = driver(msg.payload)
+        try:
+            driver_name, rsu_id = self._driver_name(msg.topic, "rsm")
+            driver = getattr(drivers, driver_name)
+            miss_flag, rsm, miss_info = driver(msg.payload)
+        except Exception:
+            return logger.error("rsm data format error")
         if self._is_valid_rsu_id(rsu_id):
             self.loop.create_task(
                 self.process.run(rsu_id, rsm, miss_flag, miss_info)
@@ -218,25 +221,34 @@ class App:
             logger.error("RSU is not registered")
 
     def _mqtt_on_vir(self, client, userdata, msg):
-        m = self.vir_topic_re.search(msg.topic)
-        rsu_id = m.groupdict()["rsuid"]
+        try:
+            m = self.vir_topic_re.search(msg.topic)
+            rsu_id = m.groupdict()["rsuid"]
+        except Exception:
+            return logger.error("vir data format error")
         if self._is_valid_rsu_id(rsu_id):
             self.loop.create_task(self.svc.run(rsu_id, msg.payload))
         else:
             logger.error("Target RSU is not registered")
 
     def _mqtt_on_rsi(self, client, userdata, msg):
-        driver_name, rsu_id = self._driver_name(msg.topic, "rsi")
-        driver = getattr(drivers, driver_name)
-        rsi, congestion_info = driver(msg.payload)
+        try:
+            driver_name, rsu_id = self._driver_name(msg.topic, "rsi")
+            driver = getattr(drivers, driver_name)
+            rsi, congestion_info = driver(msg.payload)
+        except Exception:
+            return logger.error("rsi data format error")
         if self._is_valid_rsu_id(rsu_id):
             self.loop.create_task(self.rsi.run(rsu_id, rsi, congestion_info))
         else:
             logger.error("RSU is not registered")
 
     def _mqtt_on_cfg(self, client, userdata, msg):
-        m = self.cfg_topic_re.search(msg.topic)
-        rsu_id = m.groupdict()["rsuid"]
+        try:
+            m = self.cfg_topic_re.search(msg.topic)
+            rsu_id = m.groupdict()["rsuid"]
+        except Exception:
+            return logger.error("cfg data format error")
         if self._is_valid_rsu_id(rsu_id):
             self.loop.create_task(self.cfg.run(rsu_id, msg.payload))
         else:
