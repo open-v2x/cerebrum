@@ -24,14 +24,13 @@ from scenario_algo.svc.sensor_data_sharing import SensorDataSharing
 class Service:
     """Match different scene algorithms."""
 
-    def __init__(self, mqtt, kv, mqtt_conn=None) -> None:
+    def __init__(self, mqtt, kv, mqtt_conn=None, node_id=None) -> None:
         """Class initialization."""
         self._kv = kv
         self._mqtt = mqtt
-        self._mqtt_conn = mqtt_conn
-        self._sds = SensorDataSharing(kv, mqtt, mqtt_conn)
-        self._clc = CooperativeLaneChange(kv, mqtt, mqtt_conn)
-        self._dnp = DoNotPass(kv, mqtt, mqtt_conn)
+        self._sds = SensorDataSharing(kv, mqtt, mqtt_conn, node_id)
+        self._clc = CooperativeLaneChange(kv, mqtt, mqtt_conn, node_id)
+        self._dnp = DoNotPass(kv, mqtt, mqtt_conn, node_id)
         self._dispatch = {
             "sensorSharing": self._handle_sds,
             "laneChange": self._handle_clc,

@@ -21,7 +21,7 @@ steps:
         from_secret: DOCKER_PASSWORD
       DOCKER_REGISTRY: docker.io
       DOCKER_ORG: openv2x
-      DOCKER_TAG: latest
+      DOCKER_TAG: albany
     commands:
       - env
       - mkdir -pv $HOMEPATH/.docker/buildx/instances
@@ -61,4 +61,4 @@ trigger:
   event:
     - push
   branch:
-    - master
+    - albany

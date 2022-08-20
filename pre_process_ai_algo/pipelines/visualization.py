@@ -27,11 +27,12 @@ from typing import Dict
 class Visualize(Base):
     """Send processed data to rsu and central platform."""
 
-    def __init__(self, kv, mqtt, mqtt_conn=None):
+    def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None):
         """Class initialization."""
         super().__init__(kv)
         self._mqtt = mqtt
         self._mqtt_conn = mqtt_conn
+        self.node_id = node_id
 
     async def run(self, rsu: str, latest_frame: dict, _: dict = {}) -> dict:
         """External call function."""
@@ -72,10 +73,13 @@ class Visualize(Base):
             "pedestrianTotal": info_dict["pedestrian"],
             "congestion": congestion_info,
         }
-        url = cfg.cloud_server + "/homes/route_info_push"
-        await post_process.http_post(url, final_info)
+        if cfg.cloud_server:
+            url = cfg.cloud_server + "/homes/route_info_push"
+            await post_process.http_post(url, final_info)
         if self._mqtt_conn:
             self._mqtt_conn.publish(
-                consts.RSM_VISUAL_TOPIC.format(rsu), json.dumps(vis), 0
+                consts.RSM_VISUAL_TOPIC.format(rsu, self.node_id),
+                json.dumps(vis),
+                0,
             )
         return latest_frame

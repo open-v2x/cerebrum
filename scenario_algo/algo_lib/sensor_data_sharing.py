@@ -60,7 +60,7 @@ class SensorDataSharing(Base):
         self._polynomial_degree = 2
         self._future_traj_point_num = 30
         self._path_radius = 10
-        self._min_dis = 0.8
+        self._min_dis = 0.3
 
     def run(
         self,
@@ -101,7 +101,7 @@ class SensorDataSharing(Base):
         self._transform_info = transform_info
         self._transformer = self._transform_info[0]
         self._msg_SSM = {
-            "msgCnt": msg_VIR["msgCnt"],
+            "msgCnt": int(msg_VIR["msgCnt"]),
             "id": msg_VIR["intAndReq"]["reqs"]["targetRSU"],
             "equipmentType": 1,
             "sensorPos": sensor_pos,
@@ -113,6 +113,7 @@ class SensorDataSharing(Base):
         }
         self._add_participants(msg_VIR, motor_kinematics, vptc_kinematics)
         self._add_obstacles(rsi)
+        self._time_stamp = int(time.time() * 1000)
 
         return self._msg_SSM, self._info_for_show
 
@@ -253,7 +254,7 @@ class SensorDataSharing(Base):
                 predicted_lat, predicted_lon
             ),
             "ptcTrackTimeStamp": obj_info["timeStamp"][-1],
-            "ptcRadius": obj_info["radius"],
+            "ptcRadius": int(obj_info["radius"] / 0.01),
         }
         return vptc_info
 
@@ -272,11 +273,11 @@ class SensorDataSharing(Base):
             "ptcPredictedTrajectory": self._build_traj_list(
                 predicted_lat, predicted_lon
             ),
-            "ptcTrackTimeStamp": obj_info["timeStamp"][-1],
+            "ptcTrackTimeStamp": self._time_stamp,
             "ptcSize": {
-                "width": obj_info["width"],
-                "length": obj_info["length"],
-                "height": obj_info.get("height"),
+                "width": int(obj_info["width"] / 0.01),
+                "length": int(obj_info["length"] / 0.01),
+                "height": int(obj_info["height"] / 0.05),
             },
             "ptcHeading": int(obj_info["heading"][-1] / 0.0125),
             "ptcAngleSpeed": int(obj_info["angular_speed"] / 0.02),
@@ -315,7 +316,7 @@ class SensorDataSharing(Base):
         traj_list = []
         for i in range(len(lat)):
             traj_dict = {}
-            traj_dict["lat"], traj_dict["lon"] = float(lat[i]), float(lon[i])
+            traj_dict["lat"], traj_dict["lon"] = int(lat[i]), int(lon[i])
             traj_list.append(traj_dict)
         return traj_list
 

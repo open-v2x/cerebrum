@@ -35,12 +35,13 @@ class CollisionWarning(Base):
     AlarmThreshold = 5  # 次数 同一对车至少发现多少次碰撞才预警
     DeleteThreshold = 10
 
-    def __init__(self, kv, mqtt, mqtt_conn=None):
+    def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None):
         """Class initialization."""
         super().__init__(kv)
         self._exe = collision_warning.CollisionWarning()
         self._mqtt = mqtt
         self._mqtt_conn = mqtt_conn
+        self.node_id = node_id
 
     async def _filter_event(self, rsu, events: list, cwm: list) -> tuple:
         # 过滤碰撞事件
@@ -106,7 +107,7 @@ class CollisionWarning(Base):
             if alarms:
                 if self._mqtt_conn:
                     self._mqtt_conn.publish(
-                        consts.CW_VISUAL_TOPIC.format(rsu),
+                        consts.CW_VISUAL_TOPIC.format(rsu, self.node_id),
                         json.dumps(alarms),
                         0,
                     )

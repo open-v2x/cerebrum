@@ -25,11 +25,12 @@ from transform_driver import rsi_service
 class SensorDataSharing:
     """Call the sensor data sharing algorithm function."""
 
-    def __init__(self, kv, mqtt, mqtt_conn=None) -> None:
+    def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None) -> None:
         """Class initialization."""
         self._kv = kv
         self._mqtt = mqtt
         self._mqtt_conn = mqtt_conn
+        self.node_id = node_id
         self._exe = sensor_data_sharing.SensorDataSharing()
 
     async def run(self, params: dict, rsu_id: str, convert_info: list) -> None:
@@ -45,7 +46,9 @@ class SensorDataSharing:
         rsi = await self._kv.get(rsi_service.RSI.RSI_KEY.format(rsu_id))
 
         # 获取rsu 经纬度
-        sensor_pos = post_process.rsu_info[rsu_id]["pos"]
+        sensor_pos = post_process.rsu_info[rsu_id]["pos"].copy()
+        sensor_pos["lon"] = int(sensor_pos["lon"] * consts.CoordinateUnit)
+        sensor_pos["lat"] = int(sensor_pos["lat"] * consts.CoordinateUnit)
         msg_ssm, info_for_show = self._exe.run(
             motor_traj, vptc_traj, rsi, params, sensor_pos, convert_info
         )
@@ -60,7 +63,7 @@ class SensorDataSharing:
         )
         if self._mqtt_conn:
             self._mqtt_conn.publish(
-                consts.SDS_VISUAL_TOPIC.format(rsu_id),
+                consts.SDS_VISUAL_TOPIC.format(rsu_id, self.node_id),
                 json.dumps([info_for_show]),
                 0,
             )
