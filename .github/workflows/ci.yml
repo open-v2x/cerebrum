@@ -44,7 +44,7 @@ jobs:
           port: ${{ secrets.AIO_MASTER_PORT }}
           script: |
             set -e
-            rm -rf master.zip && wget https://gitee.com/open-v2x/docs/repository/archive/master.zip
-            rm -rf docs-master && unzip master.zip
-            cd docs-master/src/
+            rm -rf openv2x-aio-master.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/master/openv2x-aio-master.tar.gz
+            rm -rf src && tar zxvf openv2x-aio-master.tar.gz
+            cd src
             sh install.sh
