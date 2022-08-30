@@ -52,6 +52,7 @@ docker build -t ${DOCKER_IMAGE} .
 docker stop ${CONTAINER_NAME}; docker rm ${CONTAINER_NAME}
 
 docker run -d --net=host --name ${CONTAINER_NAME} -e redis_host=127.0.0.1 -e mqtt_host=127.0.0.1 -e mysql_host=127.0.0.1 -e cloud_url=http://127.0.0.1:28300/api/v1 -e mysql_user=root -e mysql_password=password -e emqx_password=password -e redis_password=password ${DOCKER_IMAGE}
+# docker run -d --name ${CONTAINER_NAME} -e redis_host=172.17.0.1 -e mqtt_host=172.17.0.1 -e mysql_host=172.17.0.1 -e cloud_url=http://172.17.0.1:28300/api/v1 -e mysql_user=root -e mysql_password=password -e emqx_password=password -e redis_password=password ${DOCKER_IMAGE}
 ```
 
 ## Notice
