@@ -205,7 +205,7 @@ class CooperativeLaneChange(Base):
         angle = np.arccos(cos_) * 180 / np.pi / 0.0125  # type: ignore
         angle0 = self.latest_frame[id1]["heading"]
         d_angle = abs(angle - angle0)
-        if d_angle > 90 / 0.0125:  # 如果是锐角
+        if d_angle > 90 / 0.0125:  # 如果不是锐角
             if_lead = False
         dis = self._distance(self.latest_frame[id1], self.latest_frame[id2])
         # 当前距离（前+后-） lanchangingtime * (v2-v1)
@@ -330,7 +330,8 @@ class CooperativeLaneChange(Base):
         d_heading = 0.087  # 车辆默认换道角度为5度左右
         if veh_v != 0:
             # 限制最大换道角度为25度
-            d_heading = min(0.435, np.arctan(3000 / headway / veh_v))
+            # 横向车道: 3m, 速度: v, 车头时距: headway, 时间戳单位换算系数: 1000
+            d_heading = min(0.435, np.arctan(3 * 1000 / headway / veh_v))
         d_heading = d_heading * 180 / np.pi / 0.0125
         if self.msg_VIR["intAndReq"]["currentBehavior"] == 1:
             return (
