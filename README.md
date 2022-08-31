@@ -1,4 +1,4 @@
-# V2X-Data-Processing
+# Cerebrum：OpenV2X Data Processing
 
 ## 1. 本地调试
 
@@ -11,6 +11,23 @@ python3 -m virtualenv .venv
 # 安装依赖
 pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements/algo.txt
 pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
+
+# 安装测试相关依赖
+pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r test-requirements.txt
+pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements/bandit.txt
+pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements/docstyle.txt
+pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements/pep8.txt
+pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements/typecheck.txt
+
+# 配置环境变量
+export redis_host='127.0.0.1'
+export mqtt_host='127.0.0.1'
+export mysql_host='127.0.0.1'
+export cloud_url='http://127.0.0.1:28300/api/v1'
+export mysql_user='root'
+export mysql_password=password
+export emqx_password=password
+export redis_password=password
 
 # 启动数据处理服务
 python main.py
@@ -28,37 +45,14 @@ tox
 # pytorch 基础镜像镜
 # docker build -t 99cloud/v2x-algo-base -f Dockerfile-algo-base .
 
-CONTAINER_NAME=v2x-data-processing
+CONTAINER_NAME=cerebrum
 DOCKER_IMAGE=openv2x/${CONTAINER_NAME}
 
 docker build -t ${DOCKER_IMAGE} .
 docker stop ${CONTAINER_NAME}; docker rm ${CONTAINER_NAME}
-docker run -d --name ${CONTAINER_NAME} ${DOCKER_IMAGE}
-```
 
-## 4. 手动更新
-
-### 4.1 手动制作和上传容器镜像
-
-如果容器镜像已存在，可以跳过此步骤
-
-```bash
-docker build -t cereburm .
-docker tag cereburm openv2x/cereburm:latest
-docker push openv2x/cereburm:latest
-```
-
-### 4.2 手动将容器镜像部署到测试环境
-
-```bash
-DEPLOY_HOST=v2x-server
-# DEPLOY_HOST=v2x-test
-
-cat .drone.yml | grep v2x-server | grep -v -E "^\s*#" | grep -E '^\s*-' | sed "s/v2x-server/${DEPLOY_HOST}/g"| sed 's/-//' > /tmp/deploy-cereburm.sh
-
-# 然后检查一下 /tmp/deploy-cereburm.sh 是否有需要修改的地方
-cat /tmp/deploy-cereburm.sh
-bash /tmp/deploy-cereburm.sh
+docker run -d --net=host --name ${CONTAINER_NAME} -e redis_host=127.0.0.1 -e mqtt_host=127.0.0.1 -e mysql_host=127.0.0.1 -e cloud_url=http://127.0.0.1:28300/api/v1 -e mysql_user=root -e mysql_password=password -e emqx_password=password -e redis_password=password ${DOCKER_IMAGE}
+# docker run -d --name ${CONTAINER_NAME} -e redis_host=172.17.0.1 -e mqtt_host=172.17.0.1 -e mysql_host=172.17.0.1 -e cloud_url=http://172.17.0.1:28300/api/v1 -e mysql_user=root -e mysql_password=password -e emqx_password=password -e redis_password=password ${DOCKER_IMAGE}
 ```
 
 ## Notice
