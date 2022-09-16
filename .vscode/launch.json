@@ -12,9 +12,14 @@
             "console": "integratedTerminal",
             "justMyCode": true,
             "env": {
-                "mqtt_host": "172.17.0.1",
-                "redis_host": "172.17.0.1",
-                "cloud_url": "http://172.17.0.1:8888"
+                "mqtt_host": "127.0.0.1",
+                "redis_host": "127.0.0.1",
+                "mysql_host": "127.0.0.1",
+                "cloud_url": "http://127.0.0.1:28300/api/v1",
+                "mysql_user": "root",
+                "mysql_password": "password",
+                "emqx_password": "password",
+                "redis_password": "password"
             }
         }
     ]

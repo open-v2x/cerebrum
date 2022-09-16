@@ -1,0 +1,19 @@
+- transform_driver
+- pre_process_ai_algo:
+  - complement:
+      enable: true
+      algo: algo1
+  - fusion:
+      enable: true
+      algo: algo2
+  - smooth:
+      enable: true
+      algo: algo3
+- scenario_aglo:
+    collision_warning:
+      enable: true
+      algo: algo4
+- post_process_algo:
+    post_process:
+      enable: true
+      algo: algo5

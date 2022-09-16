@@ -2,14 +2,15 @@ import os
 from urllib.parse import quote_plus
 import uuid
 
-DEFAULT_MQTT_HOST = "139.196.13.9"
+DEFAULT_MQTT_HOST = "172.17.0.1"
 DEFAULT_MQTT_PASSWORD = "v2x2022"  # user define
-DEFAULT_REDIS_HOST = "139.196.13.9"
+DEFAULT_REDIS_HOST = "172.17.0.1"
 DEFAULT_REDIS_PASSWORD = "v2x2022"  # user define
-DEFAULT_MYSQL_HOST = "139.196.13.9"
+DEFAULT_MYSQL_HOST = "172.17.0.1"
 DEFAULT_MYSQL_USER = "dandelion"
 DEFAULT_MYSQL_PASSWORD = "v2x2022"  # user define
-DEFAULT_CLOUD_URL = "http://139.196.13.9:28300/api/v1"
+DEFAULT_CLOUD_URL = "http://172.17.0.1:28300/api/v1"
+DEFAULT_ALGORITHM_YAML = "/etc/cerebrum/algorithm.yaml"
 DELIMITER = "/"
 
 db_server = os.getenv("db_server") or "mariadb"
@@ -28,7 +29,7 @@ if db_server == "mariadb":
     DB_PASSWORD = os.getenv("mysql_password") or DEFAULT_MYSQL_PASSWORD
     sqlalchemy_w = {
         "url": f"mariadb+pymysql://{DB_USERNAME}:{quote_plus(DB_PASSWORD)}"
-               f"@{DB_HOST}:{DB_PORT}/dandelion?charset=utf8",
+        f"@{DB_HOST}:{DB_PORT}/dandelion?charset=utf8",
         "echo": True,
     }
 
@@ -48,3 +49,4 @@ mqtt = {
 }
 
 cloud_server = os.getenv("cloud_url") or DEFAULT_CLOUD_URL
+algorithm_yaml = os.getenv("algorithm_yaml") or DEFAULT_ALGORITHM_YAML
