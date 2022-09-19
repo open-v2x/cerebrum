@@ -16,6 +16,7 @@
 
 import aioredis as redis
 import asyncio
+import os
 import paho.mqtt.client as mqtt  # type: ignore
 from post_process_algo import post_process
 from pre_process_ai_algo.pre_process import Cfg
@@ -29,6 +30,8 @@ from transform_driver.driver_lib import drivers
 from transform_driver.log import Loggings
 from transform_driver.rsi_service import RSI
 import uuid
+import yaml
+from yaml.loader import SafeLoader
 
 logger = Loggings()
 
@@ -39,6 +42,9 @@ class App:
     def __init__(self, config) -> None:
         """Class initialization."""
         self.config = config
+        if os.path.exists(self.config.algorithm_yaml):
+            with open(self.config.algorithm_yaml) as f:
+                self.algorithm_pipeline = yaml.load(f, Loader=SafeLoader)
         self.msg_dispatch = {
             consts.topic_replace(
                 "V2X/RSU/+/RSM/UP", self.config.DELIMITER

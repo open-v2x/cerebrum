@@ -4,3 +4,4 @@
 
 data-science-types>=0.2.23 # Apache-2.0
 mypy>=0.961 # MIT
+types-PyYAML>=6.0.11 # Apache-2.0

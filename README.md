@@ -35,6 +35,12 @@ python main.py
 
 ## 2. 单元测试和代码格式检查
 
+> 注意：[如果是 Ubuntu 环境，需要先安装 libgl 头文件支持](https://github.com/open-v2x/cerebrum/issues/61)
+
+> `apt-get install libgl1-mesa-glx`
+
+简单执行 tox 就行：
+
 ```bash
 tox
 ```
