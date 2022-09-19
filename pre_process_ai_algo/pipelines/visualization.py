@@ -14,11 +14,11 @@
 
 """Send processed data to RSU and central platform."""
 
+from common import consts
 from config import devel as cfg
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines import Base
-from transform_driver import consts
 from transform_driver import rsi_service
 from typing import Any
 from typing import Dict

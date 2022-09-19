@@ -14,7 +14,7 @@
 
 """General shared utilities."""
 
-from transform_driver import consts
+from common import consts
 
 MaxSecMark = consts.MaxSecMark
 # 以下参数根据算法所需数据量确定，算法最多需要2s的历史数据，大于2.5s的数据即可删除

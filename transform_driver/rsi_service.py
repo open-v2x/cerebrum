@@ -14,8 +14,8 @@
 
 """Message forwarder."""
 
+from common import consts
 import orjson as json
-from transform_driver import consts
 
 
 class RSI:

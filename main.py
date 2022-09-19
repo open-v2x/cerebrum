@@ -1,5 +1,5 @@
 from config import devel as cfg
-from transform_driver.app import App
+from common.app import App
 
 
 if __name__ == "__main__":

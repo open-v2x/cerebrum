@@ -14,11 +14,11 @@
 
 """Call the do not pass algorithm function."""
 
+from common import consts
 import orjson as json
 from post_process_algo import post_process
 from scenario_algo.algo_lib import do_not_pass_warning
 from scenario_algo.svc.collision_warning import CollisionWarning
-from transform_driver import consts
 
 
 class DoNotPass:

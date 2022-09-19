@@ -14,9 +14,9 @@
 
 """database config and data access functions."""
 
+from common.log import Loggings
 from config import devel as cfg
 import orjson as json
-from post_process_algo import post_process
 from sqlalchemy import Column  # type: ignore
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base  # type: ignore
@@ -25,7 +25,6 @@ from sqlalchemy import Integer
 from sqlalchemy import JSON
 from sqlalchemy.orm import sessionmaker  # type: ignore
 from sqlalchemy import String
-from transform_driver.log import Loggings
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -192,13 +191,12 @@ def get_rsu_info(msg_info):
                 "reverse": row[5],
                 "scale": row[6],
             }
-        except Exception:
+        except Exception as e:
             logger.error(
-                "Missing required field data in RSU with serial number "
-                ":{} ".format(row[0])
+                f"Missing required field data in RSU with serial number "
+                f":{row[0]}, ERROR: {e}"
             )
     session.close()
-    post_process.generate_transformation_info()
 
 
 def get_mqtt_config():
