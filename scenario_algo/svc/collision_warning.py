@@ -14,11 +14,11 @@
 
 """Call the collision algorithm function."""
 
+from common import consts
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines import Base
 from scenario_algo.algo_lib import collision_warning
-from transform_driver import consts
 
 
 class CollisionWarning(Base):

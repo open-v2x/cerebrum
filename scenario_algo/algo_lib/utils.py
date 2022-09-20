@@ -14,11 +14,11 @@
 
 """General shared utilities."""
 
+from common import consts
 import math
 import numpy as np
 from pre_process_ai_algo.algo_lib import utils
 import shapely.geometry as geo  # type: ignore
-from transform_driver import consts
 
 MaxSecMark = consts.MaxSecMark
 HistoricalInterval = utils.HistoricalInterval

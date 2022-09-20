@@ -21,10 +21,10 @@
 """
 
 import aiohttp
+from common import consts
+from common import db
 import math
 from pyproj import Transformer
-from transform_driver import consts
-from transform_driver import db
 from typing import Dict
 
 coord_unit = consts.CoordinateUnit
@@ -238,6 +238,7 @@ TfMap = {}  # type: ignore
 rsu_info = db.rsu_info
 lane_info = db.lane_info
 db.get_rsu_info(False)
+generate_transformation_info()
 
 
 # # 获取所有rsu的经纬度信息

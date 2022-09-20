@@ -14,6 +14,7 @@
 
 """Algorithm pipeline processing flow."""
 
+from common import consts
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines.complement import Interpolation
@@ -23,7 +24,6 @@ from pre_process_ai_algo.pipelines.smooth import ExponentialSmooth
 from pre_process_ai_algo.pipelines.smooth import PolynomialSmooth
 from pre_process_ai_algo.pipelines.visualization import Visualize
 from scenario_algo.svc.collision_warning import CollisionWarning
-from transform_driver import consts
 
 
 class DataProcessing:

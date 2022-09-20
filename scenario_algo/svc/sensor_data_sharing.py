@@ -14,11 +14,11 @@
 
 """Call the sensor data sharing algorithm function."""
 
+from common import consts
 import orjson as json
 from post_process_algo import post_process
 from scenario_algo.algo_lib import sensor_data_sharing
 from scenario_algo.svc.collision_warning import CollisionWarning
-from transform_driver import consts
 from transform_driver import rsi_service
 
 

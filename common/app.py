@@ -16,6 +16,9 @@
 
 import aioredis as redis
 import asyncio
+from common import consts
+from common import db
+from common.log import Loggings
 import os
 import paho.mqtt.client as mqtt  # type: ignore
 from post_process_algo import post_process
@@ -24,10 +27,7 @@ from pre_process_ai_algo.pre_process import DataProcessing
 import re
 from scenario_algo.scenario_service import Service
 import signal
-from transform_driver import consts
-from transform_driver import db
 from transform_driver.driver_lib import drivers
-from transform_driver.log import Loggings
 from transform_driver.rsi_service import RSI
 import uuid
 import yaml
@@ -262,6 +262,7 @@ class App:
 
     def _mqtt_on_db(self, client, userdata, msg):
         db.get_rsu_info(msg.payload)
+        post_process.generate_transformation_info()
 
     def _mqtt_on_config_db(self, client, userdata, msg):
         self._mqtt_cfg_db()

@@ -14,6 +14,7 @@
 
 """Fusion Algorithm."""
 
+from common.log import Loggings
 from itertools import product
 import math
 import numpy as np
@@ -22,7 +23,6 @@ from pre_process_ai_algo.algo_lib.fusion.algorithm import KalmanFilter
 from pre_process_ai_algo.algo_lib import utils
 from scipy.optimize import leastsq  # type: ignore
 import time
-from transform_driver.log import Loggings
 from typing import Dict
 from typing import List
 
