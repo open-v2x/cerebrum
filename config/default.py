@@ -10,7 +10,34 @@ DEFAULT_MYSQL_HOST = "172.17.0.1"
 DEFAULT_MYSQL_USER = "dandelion"
 DEFAULT_MYSQL_PASSWORD = "v2x2022"  # user define
 DEFAULT_CLOUD_URL = "http://172.17.0.1:28300/api/v1"
-DEFAULT_ALGORITHM_YAML = "/etc/cerebrum/algorithm.yaml"
+DEFAULT_ALGORITHM_YAML_PATH = "/etc/cerebrum/algorithm.yaml"
+DEFAULT_ALGORITHM_YAML = """
+- name: rsi_formatter
+  enable: true
+  algo: "transform_driver.rsi_service"
+- name: pre_process_ai_algo
+  enable: true
+  algos:
+    - name: complement
+      enable: true
+      algo: algo1
+    - name: fusion
+      enable: true
+      algo: algo2
+    - name: smooth
+      enable: true
+      algo: algo3
+- name: scenario_aglo
+  algos:
+    collision_warning:
+        enable: true
+        name: algo4
+- name: post_process_algo
+  algos:
+    post_process:
+        enable: true
+        name: algo5
+"""
 DELIMITER = "/"
 
 db_server = os.getenv("db_server") or "mariadb"
@@ -49,4 +76,4 @@ mqtt = {
 }
 
 cloud_server = os.getenv("cloud_url") or DEFAULT_CLOUD_URL
-algorithm_yaml = os.getenv("algorithm_yaml") or DEFAULT_ALGORITHM_YAML
+algorithm_yaml = os.getenv("algorithm_yaml") or DEFAULT_ALGORITHM_YAML_PATH

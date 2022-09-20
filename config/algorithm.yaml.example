@@ -1,19 +1,25 @@
-- transform_driver
-- pre_process_ai_algo:
-  - complement:
+- name: rsi_formatter
+  enable: true
+  algo: "transform_driver.rsi_service"
+- name: pre_process_ai_algo
+  enable: true
+  algos:
+    - name: complement
       enable: true
       algo: algo1
-  - fusion:
+    - name: fusion
       enable: true
       algo: algo2
-  - smooth:
+    - name: smooth
       enable: true
       algo: algo3
-- scenario_aglo:
+- name: scenario_aglo
+  algos:
     collision_warning:
-      enable: true
-      algo: algo4
-- post_process_algo:
+        enable: true
+        name: algo4
+- name: post_process_algo
+  algos:
     post_process:
-      enable: true
-      algo: algo5
+        enable: true
+        name: algo5

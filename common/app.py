@@ -16,9 +16,12 @@
 
 import aioredis as redis
 import asyncio
+from collections import namedtuple
 from common import consts
 from common import db
 from common.log import Loggings
+from config import default
+import importlib
 import os
 import paho.mqtt.client as mqtt  # type: ignore
 from post_process_algo import post_process
@@ -28,12 +31,30 @@ import re
 from scenario_algo.scenario_service import Service
 import signal
 from transform_driver.driver_lib import drivers
-from transform_driver.rsi_service import RSI
 import uuid
 import yaml
-from yaml.loader import SafeLoader
 
 logger = Loggings()
+algorithms = namedtuple("algorithms", ["rsi_formatter"])
+
+
+def load_algorithm_modules(config) -> None:
+    """Load algorithm modules."""
+    algos = yaml.safe_load(default.DEFAULT_ALGORITHM_YAML)
+
+    algo_yaml = config.algorithm_yaml
+    if os.path.exists(config.algorithm_yaml):
+        with open(algo_yaml) as f:
+            algos = yaml.safe_load(f)
+    for i in algos:
+        logger.trace(f"load argorithm: {i}")
+
+    algos = {i["name"]: i for i in algos}
+
+    if algos["rsi_formatter"]["enable"]:
+        algorithms.rsi_formatter = importlib.import_module(
+            algos["rsi_formatter"]["algo"]
+        )
 
 
 class App:
@@ -42,9 +63,8 @@ class App:
     def __init__(self, config) -> None:
         """Class initialization."""
         self.config = config
-        if os.path.exists(self.config.algorithm_yaml):
-            with open(self.config.algorithm_yaml) as f:
-                self.algorithm_pipeline = yaml.load(f, Loader=SafeLoader)
+        load_algorithm_modules(config=config)
+
         self.msg_dispatch = {
             consts.topic_replace(
                 "V2X/RSU/+/RSM/UP", self.config.DELIMITER
@@ -140,7 +160,7 @@ class App:
         self.mqtt.username_pw_set(mcfg["username"], mcfg["password"])
         self.mqtt.connect(mcfg["host"], mcfg["port"])
         self._mqtt_cfg_db()
-        self.rsi = RSI(self.mqtt, self.kv)
+        self.rsi = algorithms.rsi_formatter.RSI(self.mqtt, self.kv)
         self.cfg = Cfg(self.kv)
 
         for sig in ("SIGINT", "SIGTERM", "SIGUSR2"):
