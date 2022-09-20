@@ -1,0 +1,49 @@
+test_name: testrsm
+paho-mqtt:
+  client:
+    transport: websockets
+    client_id: R4
+  connect:
+    host: 47.100.244.41
+    port: 15675
+    timeout: 3
+  auth:
+    username: root
+    password: abc@1234
+
+stages:
+  - name: testrsm
+    mqtt_publish:
+      topic: V2X/RSU/R328328/RSM/UP/DAWNLINE
+      json:
+        [
+          {
+            "dev_pos": {
+              "lat": 31.934846637757847,
+              "lon": 118.8213963998263
+            },
+            "content": [
+              {
+                "ptcType": "motor",
+                "ptcId": 6,
+                "global_track_id": "ad6de",
+                "timeStamp": 1653016783500,
+                "secMark": 43500,
+                "pos_lat": 31.935221261941393,
+                "pos_lon": 118.82304885831456,
+                "heading": 264.3102381554889,
+                "source": 3,
+                "width": 1.8,
+                "length": 5,
+                "height": 1.5,
+                "speed": 7.8783015905704525,
+                "lane": "eastin_4"
+              }
+            ]
+          }
+        ]
+
+    mqtt_response:
+      topic: V2X/RSU/R328328/RSM/DOWN
+      payload: !anything
+      timeout: 1

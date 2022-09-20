@@ -1,0 +1,104 @@
+name: test
+
+on:
+  pull_request:
+    branches:
+      - 'master'
+env:
+  external_ip: 127.0.0.1
+  redis_root: password
+  mariadb_root: password
+  mariadb_dandelion: password
+  emqx_root: password
+
+jobs:
+
+  function_test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: install pre
+        run: sudo unalias cp 2>/dev/null || true
+      - name: install pre
+        run: sudo rm -rf openv2x-aio-master.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/master/openv2x-aio-master.tar.gz
+      - name: install pre
+        run: sudo rm -rf src && tar zxvf openv2x-aio-master.tar.gz
+      - name: install pre
+        run: sudo sed -i "s/8084/8085/" src/deploy/docker-compose-pre.yaml && sudo sed -i "s/8084/8085/" src/deploy/docker-compose-service.yaml
+      - name: install openv2x
+        run: cd src && chmod +x ./install.sh && sudo -E bash ./install.sh
+      - name: stop cerebrum
+        run: sudo docker stop cerebrum
+
+      - name: pip install virtualenv
+        run: pip install virtualenv
+      - name: create virtual environment
+        run: python -m virtualenv .venv
+      - name: into virtual environment
+        run: . .venv/bin/activate
+      - name: install requirements
+        run: pip install  -r requirements/algo.txt
+      - name: install requirements
+        run: pip install  -r requirements.txt
+      - name: install requirements
+        run: pip install  -r test-requirements.txt
+      - name: install requirements
+        run: pip install  -r requirements/bandit.txt
+      - name: install requirements
+        run: pip install  -r requirements/docstyle.txt
+      - name: install requirements
+        run: pip install  -r requirements/pep8.txt
+      - name: install requirements
+        run: pip install  -r requirements/typecheck.txt
+
+      - name: run cerebrum service
+        env:
+          redis_host: '127.0.0.1'
+          mqtt_host: '127.0.0.1'
+          mysql_host: '127.0.0.1'
+          cloud_url: 'http://127.0.0.1:28300/api/v1'
+          mysql_user: 'root'
+          mysql_password: password
+          emqx_password: password
+          redis_password: password
+        run: python main.py &
+
+      - name: install requirements
+        run: pip install pyyaml
+      - name: install requirements
+        run: pip install pytest
+      - name: install requirements
+        run: pip install tavern[pytest]
+      - name: install requirements
+        run: pip install paho-mqtt
+      - name: install requirements
+        run: pip install pykwalify
+      - name: install requirements
+        run: pip install pykwalify
+      - name: install requirements
+        run: pip install pyjwt
+      - name: install requirements
+        run: pip install requests
+      - name: install requirements
+        run: pip install colorlog
+      - name: install requirements
+        run: pip install uuid
+      - name: install requirements
+        run: pip install loguru
+      - name: install requirements
+        run: pip install pytest-html
+
+      - name: run test cases
+        env:
+          ip: 127.0.0.1
+          emqx_root: password
+        run: sh ./function_test/function_test.sh
