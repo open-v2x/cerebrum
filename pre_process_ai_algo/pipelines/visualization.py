@@ -14,12 +14,12 @@
 
 """Send processed data to RSU and central platform."""
 
+from common import app
 from common import consts
 from config import devel as cfg
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines import Base
-from transform_driver import rsi_service
 from typing import Any
 from typing import Dict
 
@@ -58,9 +58,9 @@ class Visualize(Base):
             if info_dict["moving_motor"]
             else 0
         )
-        # 获取rsi
+        # get rsi
         congestion = await self._kv.get(
-            rsi_service.RSI.CONGESTION_KEY.format(rsu)
+            app.algorithms.rsi_formatter.RSI.CONGESTION_KEY.format(rsu)
         )
         if congestion:
             congestion_info = "congestion"

@@ -14,12 +14,12 @@
 
 """Call the sensor data sharing algorithm function."""
 
+from common import app
 from common import consts
 import orjson as json
 from post_process_algo import post_process
 from scenario_algo.algo_lib import sensor_data_sharing
 from scenario_algo.svc.collision_warning import CollisionWarning
-from transform_driver import rsi_service
 
 
 class SensorDataSharing:
@@ -42,10 +42,12 @@ class SensorDataSharing:
         motor_traj = ptc_traj["motors"] if "motors" in ptc_traj else {}
         vptc_traj = ptc_traj["vptc"] if "vptc" in ptc_traj else {}
 
-        # 获取rsi
-        rsi = await self._kv.get(rsi_service.RSI.RSI_KEY.format(rsu_id))
+        # 获取 rsi
+        rsi = await self._kv.get(
+            app.algorithms.rsi_formatter.RSI.RSI_KEY.format(rsu_id)
+        )
 
-        # 获取rsu 经纬度
+        # 获取 rsu 经纬度
         sensor_pos = post_process.rsu_info[rsu_id]["pos"].copy()
         sensor_pos["lon"] = int(sensor_pos["lon"] * consts.CoordinateUnit)
         sensor_pos["lat"] = int(sensor_pos["lat"] * consts.CoordinateUnit)
