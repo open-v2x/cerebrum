@@ -1,0 +1,50 @@
+test_name: testclc
+paho-mqtt:
+  client:
+    transport: websockets
+    client_id: R1
+  connect:
+    host: 47.100.244.41
+    port: 15675
+    timeout: 3
+  auth:
+    username: root
+    password: abc@1234
+
+stages:
+  - name: testclc
+    mqtt_publish:
+      topic: V2X/RSU/R328328/VIR/UP
+      json:
+        {
+          "msgCnt": "2",
+          "id": "39",
+          "refPos": {
+            "lon": 1188219331,
+            "lat": 319353469,
+            "ele": 100
+          },
+          "secMark": 33400,
+          "timeStamp": 1653016893400,
+          "intAndReq": {
+            "currentBehavior": 2,
+            "reqs": {
+              "reqID": 2,
+              "status": 2,
+              "targetRSU": "R328328",
+              "info": {
+                "laneChange": {
+                  "upstreamNode": "",
+                  "downstreamNode": "",
+                  "targetLane": 1
+                }
+              },
+              "lifeTime": 500
+            }
+          }
+        }
+
+    mqtt_response:
+      topic: V2X/RSU/R328328/CLC/DOWN
+      payload: !anything
+      timeout: 1
