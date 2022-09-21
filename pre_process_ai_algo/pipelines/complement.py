@@ -14,8 +14,10 @@
 
 """Call the complement algorithm function."""
 
-from pre_process_ai_algo.algo_lib import complement
+from common import modules
 from pre_process_ai_algo.pipelines import Base
+
+complement = modules.algorithms.pre_process_complement
 
 
 class Interpolation(Base):

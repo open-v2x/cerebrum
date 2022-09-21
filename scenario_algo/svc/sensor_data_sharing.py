@@ -14,8 +14,8 @@
 
 """Call the sensor data sharing algorithm function."""
 
-from common import app
 from common import consts
+from common import modules
 import orjson as json
 from post_process_algo import post_process
 from scenario_algo.algo_lib import sensor_data_sharing
@@ -44,7 +44,7 @@ class SensorDataSharing:
 
         # 获取 rsi
         rsi = await self._kv.get(
-            app.algorithms.rsi_formatter.RSI.RSI_KEY.format(rsu_id)
+            modules.algorithms.rsi_formatter.RSI.RSI_KEY.format(rsu_id)
         )
 
         # 获取 rsu 经纬度
