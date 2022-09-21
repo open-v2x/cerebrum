@@ -1,0 +1,11 @@
+pyyaml
+pytest
+tavern[pytest]
+paho-mqtt
+pykwalify
+pyjwt
+requests
+colorlog
+uuid
+loguru
+pytest-html
