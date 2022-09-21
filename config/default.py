@@ -24,29 +24,29 @@ pre_process_ai_algo:
       algo: "pre_process_ai_algo.algo_lib.complement"
     fusion:
       enable: true
-      algo: "pre_process_ai_algo.algo_lib.fusion.algorithm"
+      algo: "pre_process_ai_algo.algo_lib.fusion"
     smooth:
       enable: true
       algo: "pre_process_ai_algo.algo_lib.smooth"
-scenario_aglo:
+scenario_algo:
   algos:
     collision_warning:
       enable: true
-      name: "scenario_aglo.algo_lib.collision_warning"
+      algo: "scenario_algo.algo_lib.collision_warning"
     cooperative_lane_change:
       enable: true
-      name: "scenario_aglo.algo_lib.cooperative_lane_change"
+      algo: "scenario_algo.algo_lib.cooperative_lane_change"
     do_not_pass_warning:
       enable: true
-      name: "scenario_aglo.algo_lib.do_not_pass_warning"
+      algo: "scenario_algo.algo_lib.do_not_pass_warning"
     sensor_data_sharing:
       enable: true
-      name: "scenario_aglo.algo_lib.sensor_data_sharing"
+      algo: "scenario_algo.algo_lib.sensor_data_sharing"
 post_process_algo:
   algos:
     post_process:
       enable: true
-      name: "post_process_algo.post_process"
+      algo: "post_process_algo.post_process"
 """
 DELIMITER = "/"
 

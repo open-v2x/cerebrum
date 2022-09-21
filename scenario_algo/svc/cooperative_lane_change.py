@@ -15,10 +15,12 @@
 """Call the cooperative lane change algorithm function."""
 
 from common import consts
+from common import modules
 import orjson as json
 from post_process_algo import post_process
-from scenario_algo.algo_lib import cooperative_lane_change
 from scenario_algo.svc.collision_warning import CollisionWarning
+
+cooperative_lane_change = modules.algorithms.cooperative_lane_change
 
 
 class CooperativeLaneChange:

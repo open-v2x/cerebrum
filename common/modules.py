@@ -27,6 +27,10 @@ algorithms = namedtuple(
         "pre_process_complement",
         "pre_process_fusion",
         "pre_process_smooth",
+        "collision_warning",
+        "cooperative_lane_change",
+        "do_not_pass_warning",
+        "sensor_data_sharing",
     ],
 )
 
@@ -43,6 +47,7 @@ def load_algorithm_modules(config) -> None:
     algorithms.rsi_formatter = importlib.import_module(
         algos["rsi_formatter"]["algo"]
     )
+
     algorithms.pre_process_complement = importlib.import_module(
         algos["pre_process_ai_algo"]["algos"]["complement"]["algo"]
     )
@@ -51,6 +56,19 @@ def load_algorithm_modules(config) -> None:
     )
     algorithms.pre_process_smooth = importlib.import_module(
         algos["pre_process_ai_algo"]["algos"]["smooth"]["algo"]
+    )
+
+    algorithms.collision_warning = importlib.import_module(
+        algos["scenario_algo"]["algos"]["collision_warning"]["algo"]
+    )
+    algorithms.cooperative_lane_change = importlib.import_module(
+        algos["scenario_algo"]["algos"]["cooperative_lane_change"]["algo"]
+    )
+    algorithms.do_not_pass_warning = importlib.import_module(
+        algos["scenario_algo"]["algos"]["do_not_pass_warning"]["algo"]
+    )
+    algorithms.sensor_data_sharing = importlib.import_module(
+        algos["scenario_algo"]["algos"]["sensor_data_sharing"]["algo"]
     )
 
 

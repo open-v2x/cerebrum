@@ -15,12 +15,13 @@
 """LSTM's Weight Training process."""
 
 import argparse
+from common import modules
 import numpy as np
 import os
-from pre_process_ai_algo.algo_lib.complement.lstm.corenet import RegLSTM
-from pre_process_ai_algo.algo_lib.complement.lstm.loader import LstmDataLoader
 import torch
 from tqdm import tqdm  # type: ignore
+
+complement = modules.algorithms.pre_process_complement
 
 
 def train_lstm():
@@ -41,7 +42,7 @@ def train_lstm():
 
     if os.path.exists(opt.source):
         print("loading dataset...")
-        loader = LstmDataLoader(
+        loader = complement.lstm.loader.LstmDataLoader(
             track_length=history_length, batch_size=batch, train_ratio=ratio
         )
         trn_loader, val_loader, test_loader = loader.load_dataset(source)
@@ -53,7 +54,7 @@ def train_lstm():
     trn_num = len(trn_loader.dataset) // batch
     val_num = len(val_loader.dataset) // batch
 
-    rnn = RegLSTM(
+    rnn = complement.lstm.corenet.RegLSTM(
         input_size=INPUT_FEATURES_NUM,
         hidden_size=4,
         output_size=2,

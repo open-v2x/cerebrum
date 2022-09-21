@@ -15,10 +15,12 @@
 """Call the collision algorithm function."""
 
 from common import consts
+from common import modules
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines import Base
-from scenario_algo.algo_lib import collision_warning
+
+collision_warning = modules.algorithms.collision_warning
 
 
 class CollisionWarning(Base):

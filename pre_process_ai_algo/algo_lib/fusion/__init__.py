@@ -14,12 +14,12 @@
 
 """Fusion Algorithm."""
 
+from .algorithm import Hungarian
+from .algorithm import KalmanFilter
 from common.log import Loggings
 from itertools import product
 import math
 import numpy as np
-from pre_process_ai_algo.algo_lib.fusion.algorithm import Hungarian
-from pre_process_ai_algo.algo_lib.fusion.algorithm import KalmanFilter
 from pre_process_ai_algo.algo_lib import utils
 from scipy.optimize import leastsq  # type: ignore
 import time

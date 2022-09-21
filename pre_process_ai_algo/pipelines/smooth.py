@@ -14,8 +14,10 @@
 
 """Call the smooth algorithm function."""
 
-from pre_process_ai_algo.algo_lib import smooth
+from common import modules
 from pre_process_ai_algo.pipelines import Base
+
+smooth = modules.algorithms.pre_process_smooth
 
 
 class PolynomialSmooth(Base):
