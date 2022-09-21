@@ -14,8 +14,10 @@
 
 """Call the fusion algorithm function."""
 
-from pre_process_ai_algo.algo_lib import fusion
+from common import modules
 from pre_process_ai_algo.pipelines import Base
+
+fusion = modules.algorithms.pre_process_fusion
 
 
 class Fusion(Base):

@@ -45,7 +45,20 @@ python main.py
 tox
 ```
 
-## 3. 容器镜像制作和部署
+## 3. 替换算法
+
+默认的内置算法列表参考：[algorithm.yaml.example](/etc/algorithm.yaml.example)
+
+您可以替换其中的算法，比如：
+
+1. `pip install` 一个新的 fusion 算法模块 'new_fusion'
+2. 复制 `algorithm.yaml.example` 到 `/etc/cerebrum/algorithm.yaml`
+3. 将 yaml 文件中的 `pre_process_ai_algo.algo_lib.fusion` 改成 `new_fusion`
+4. 重启 cerebrum 服务，cerebrum 服务在启动时会尝试访问 `/etc/cerebrum/algorithm.yaml` 配置文件，动态加载对应的算法模块
+
+这样就可以可使用 `new_fusion` 算法模块代替内置的 `pre_process_ai_algo.algo_lib.fusion` 算法模块。
+
+## 4. 容器镜像制作和部署
 
 ```bash
 # pytorch 基础镜像镜

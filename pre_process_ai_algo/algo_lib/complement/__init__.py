@@ -19,10 +19,10 @@
 
 """
 
+from . import lstm
 import math
 import numpy as np
 import os
-from pre_process_ai_algo.algo_lib.complement.lstm.corenet import RegLSTM
 from pre_process_ai_algo.algo_lib import utils
 import torch
 from typing import Any
@@ -210,7 +210,9 @@ class LstmPredict(Base):
 
     def __init__(
         self,
-        model_path: str = os.path.dirname(__file__) + "/lstm/lstm.pkl",
+        model_path: str = os.path.join(
+            os.path.dirname(__file__), "lstm", "lstm.pkl"
+        ),
         const_stand: int = 200,
         history_num: int = HistoryNum,
         layers: int = Layers,
@@ -266,7 +268,7 @@ class LstmPredict(Base):
         self._his_num = history_num
         in_feature = self.InputFeatureNum
         self._out_feature = self.OutputFeaturesNum
-        self._lstm_model = RegLSTM(
+        self._lstm_model = lstm.corenet.RegLSTM(
             in_feature * history_num,
             hidden_size=hidden_sz,
             output_size=self._out_feature,

@@ -107,10 +107,7 @@ class DataProcessing:
                     "visual": 1,
                 }
             )
-            if (
-                current_sec_mark <= last_sec_mark
-                and last_sec_mark - current_sec_mark < 50000
-            ):
+            if 0 <= last_sec_mark - current_sec_mark <= 50000:
                 return None
             await self._kv.set(
                 self.SM_CFG_KEY.format(rsu_id),

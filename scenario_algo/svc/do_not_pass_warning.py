@@ -15,10 +15,12 @@
 """Call the do not pass algorithm function."""
 
 from common import consts
+from common import modules
 import orjson as json
 from post_process_algo import post_process
-from scenario_algo.algo_lib import do_not_pass_warning
 from scenario_algo.svc.collision_warning import CollisionWarning
+
+do_not_pass_warning = modules.algorithms.do_not_pass_warning
 
 
 class DoNotPass:

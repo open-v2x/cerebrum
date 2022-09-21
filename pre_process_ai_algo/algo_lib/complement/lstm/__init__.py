@@ -13,3 +13,8 @@
 #   under the License.
 
 """init."""
+
+from . import corenet
+
+
+__all__ = ["corenet"]
