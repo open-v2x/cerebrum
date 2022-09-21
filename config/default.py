@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from urllib.parse import quote_plus
 import uuid
 
@@ -12,31 +13,40 @@ DEFAULT_MYSQL_PASSWORD = "v2x2022"  # user define
 DEFAULT_CLOUD_URL = "http://172.17.0.1:28300/api/v1"
 DEFAULT_ALGORITHM_YAML_PATH = "/etc/cerebrum/algorithm.yaml"
 DEFAULT_ALGORITHM_YAML = """
-- name: rsi_formatter
+rsi_formatter:
   enable: true
   algo: "transform_driver.rsi_service"
-- name: pre_process_ai_algo
+pre_process_ai_algo:
   enable: true
   algos:
-    - name: complement
+    complement:
       enable: true
-      algo: algo1
-    - name: fusion
+      algo: "pre_process_ai_algo.algo_lib.complement"
+    fusion:
       enable: true
-      algo: algo2
-    - name: smooth
+      algo: "pre_process_ai_algo.algo_lib.fusion.algorithm"
+    smooth:
       enable: true
-      algo: algo3
-- name: scenario_aglo
+      algo: "pre_process_ai_algo.algo_lib.smooth"
+scenario_aglo:
   algos:
     collision_warning:
-        enable: true
-        name: algo4
-- name: post_process_algo
+      enable: true
+      name: "scenario_aglo.algo_lib.collision_warning"
+    cooperative_lane_change:
+      enable: true
+      name: "scenario_aglo.algo_lib.cooperative_lane_change"
+    do_not_pass_warning:
+      enable: true
+      name: "scenario_aglo.algo_lib.do_not_pass_warning"
+    sensor_data_sharing:
+      enable: true
+      name: "scenario_aglo.algo_lib.sensor_data_sharing"
+post_process_algo:
   algos:
     post_process:
-        enable: true
-        name: algo5
+      enable: true
+      name: "post_process_algo.post_process"
 """
 DELIMITER = "/"
 
@@ -77,3 +87,10 @@ mqtt = {
 
 cloud_server = os.getenv("cloud_url") or DEFAULT_CLOUD_URL
 algorithm_yaml = os.getenv("algorithm_yaml") or DEFAULT_ALGORITHM_YAML_PATH
+
+
+if __name__ == "__main__":
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    example = os.path.join(BASE_DIR, "etc", "algorithm.yaml.example")
+    with open(example, "w") as f:
+        f.write(DEFAULT_ALGORITHM_YAML.strip() + "\n")

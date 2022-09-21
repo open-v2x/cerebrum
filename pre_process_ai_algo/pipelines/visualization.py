@@ -14,8 +14,8 @@
 
 """Send processed data to RSU and central platform."""
 
-from common import app
 from common import consts
+from common import modules
 from config import devel as cfg
 import orjson as json
 from post_process_algo import post_process
@@ -60,7 +60,7 @@ class Visualize(Base):
         )
         # get rsi
         congestion = await self._kv.get(
-            app.algorithms.rsi_formatter.RSI.CONGESTION_KEY.format(rsu)
+            modules.algorithms.rsi_formatter.RSI.CONGESTION_KEY.format(rsu)
         )
         if congestion:
             congestion_info = "congestion"

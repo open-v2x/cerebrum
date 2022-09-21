@@ -16,13 +16,10 @@
 
 import aioredis as redis
 import asyncio
-from collections import namedtuple
 from common import consts
 from common import db
 from common.log import Loggings
-from config import default
-import importlib
-import os
+from common import modules
 import paho.mqtt.client as mqtt  # type: ignore
 from post_process_algo import post_process
 from pre_process_ai_algo.pre_process import Cfg
@@ -32,29 +29,8 @@ from scenario_algo.scenario_service import Service
 import signal
 from transform_driver.driver_lib import drivers
 import uuid
-import yaml
 
 logger = Loggings()
-algorithms = namedtuple("algorithms", ["rsi_formatter"])
-
-
-def load_algorithm_modules(config) -> None:
-    """Load algorithm modules."""
-    algos = yaml.safe_load(default.DEFAULT_ALGORITHM_YAML)
-
-    algo_yaml = config.algorithm_yaml
-    if os.path.exists(config.algorithm_yaml):
-        with open(algo_yaml) as f:
-            algos = yaml.safe_load(f)
-    for i in algos:
-        logger.trace(f"load argorithm: {i}")
-
-    algos = {i["name"]: i for i in algos}
-
-    if algos["rsi_formatter"]["enable"]:
-        algorithms.rsi_formatter = importlib.import_module(
-            algos["rsi_formatter"]["algo"]
-        )
 
 
 class App:
@@ -63,7 +39,6 @@ class App:
     def __init__(self, config) -> None:
         """Class initialization."""
         self.config = config
-        load_algorithm_modules(config=config)
 
         self.msg_dispatch = {
             consts.topic_replace(
@@ -160,7 +135,7 @@ class App:
         self.mqtt.username_pw_set(mcfg["username"], mcfg["password"])
         self.mqtt.connect(mcfg["host"], mcfg["port"])
         self._mqtt_cfg_db()
-        self.rsi = algorithms.rsi_formatter.RSI(self.mqtt, self.kv)
+        self.rsi = modules.algorithms.rsi_formatter.RSI(self.mqtt, self.kv)
         self.cfg = Cfg(self.kv)
 
         for sig in ("SIGINT", "SIGTERM", "SIGUSR2"):
@@ -262,8 +237,8 @@ class App:
             driver_name, rsu_id = self._driver_name(msg.topic, "rsi")
             driver = getattr(drivers, driver_name)
             rsi, congestion_info = driver(msg.payload)
-        except Exception:
-            return logger.error("rsi data format error")
+        except Exception as e:
+            return logger.error(f"rsi data format error: {e}")
         if self._is_valid_rsu_id(rsu_id):
             self.loop.create_task(self.rsi.run(rsu_id, rsi, congestion_info))
         else:
