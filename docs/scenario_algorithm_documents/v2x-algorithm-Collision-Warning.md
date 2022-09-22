@@ -13,13 +13,13 @@
     - [_目录_](#目录)
     - [难点与挑战](#难点与挑战)
     - [实现概览](#实现概览)
-    - [算法BenchMark](#算法benchmark)
+    - [算法 BenchMark](#算法-benchmark)
   - [碰撞预警算法及其对应版本](#碰撞预警算法及其对应版本)
     - [继承关系](#继承关系)
     - [调用](#调用)
   - [代码流程及框架](#代码流程及框架)
   - [碰撞预警算法解析](#碰撞预警算法解析)
-    - [1. 碰撞算法实现框架: run函数](#1-碰撞算法实现框架-run函数)
+    - [1. 碰撞算法实现框架: run 函数](#1-碰撞算法实现框架-run-函数)
     - [2. 算法模块逻辑](#2-算法模块逻辑)
       - [2.1 自适应未来轨迹推演](#21-自适应未来轨迹推演)
       - [2.2 未来轨迹碰撞冲突检查 _predict_motor_pair](#22-未来轨迹碰撞冲突检查-_predict_motor_pair)
@@ -43,14 +43,16 @@
 开发了多场景 V2X 碰撞风险研判与预警算法，实现了自适应未来轨迹推演、未来轨迹碰撞冲突检查、碰撞指标与危险度估计以及碰撞指标阈值判别与预警信息生成四大功能。 最后，碰撞预警算法流程均在 `run`
 函数中，之后对算法流程讲解都从 `run` 开始
 
-### 算法BenchMark
+### 算法 BenchMark
 
 测试数据结构：每辆车及其 $10$ 帧历史数据信息
 
-主要影响变量：data amount，每一帧数据包含的车辆数，data amount 由 $1$ 增至 $100$， 算法 $1$ 秒内运算次数由 $500$ 降至接近 $10$，运行单次算法耗时由
-$2$ 毫秒增至 $40$ 毫秒。 导致耗时增加速率下降，主要由于车辆数增多，遍历配对运算数指数增长。 此算法满足在线要求。
+主要影响变量：data amount，每一帧数据包含的车辆数，data amount 由 $1$ 增至 $100$，算法 $1$ 秒内运算次数由 $500$ 降至接近 $10$，运行单次算法耗时由
+$2$ 毫秒增至 $40$ 毫秒。导致耗时增加速率下降，主要由于车辆数增多，遍历配对运算数指数增长。此算法满足在线要求。
 
-![](images/collision_algo_benchmark_fps.png) ![](images/collision_algo_benchmark_time.png)
+![](images/collision_algo_benchmark_fps.png)
+
+![](images/collision_algo_benchmark_time.png)
 
 ## 碰撞预警算法及其对应版本
 
@@ -72,7 +74,7 @@ class V2xPrediction(Base):
 
 ### 调用
 
-主要描述逆向超车算法如何创建和调用
+主要描述碰撞预警算法如何创建和调用
 
 ① 初始化过程调用初始化函数，创建方式如下
 
@@ -88,7 +90,7 @@ pred = collision.V2xPrediction(
 )
 ```
 
-② 调用过程由run函数执行，调用方式如下
+② 调用过程由 run 函数执行，调用方式如下
 
 ```python
 # 调用车辆碰撞预警
@@ -150,48 +152,48 @@ event_list, last_timestamp, _, _ = pred.run(
 
 ## 碰撞预警算法解析
 
-### 1. 碰撞算法实现框架: run函数
+### 1. 碰撞算法实现框架: run 函数
 
 - 参数初始化
 
-```python
-id_set, last_timestamp = process_tools.frames_combination(
-            context_frames, self._current_frame, last_timestamp
-        )
-ptc_info: dict = {"motors": {}, "non_motors": {}, "pedestrians": {}}
-```
+      ```python
+      id_set, last_timestamp = process_tools.frames_combination(
+          context_frames, self._current_frame, last_timestamp
+      )
+      ptc_info: dict = {"motors": {}, "non_motors": {}, "pedestrians": {}}
+      ```
 
 - 分别计算机动车、非机动车、行人的运动学信息，用于检查未来碰撞情况
 
-```python
-motors, non_motors, pedestrians = self._filter_ptcs(
-            context_frames, last_timestamp, id_set
-        )
-        for ptc_type in check_ptc:
-            ptc_info[ptc_type + "_kinematics"] = getattr(
-                self, "_prepare_{}_kinematics".format(ptc_type)
-            )(locals()[ptc_type])
-        vptc_kinematics = {
-            **ptc_info["non_motors_kinematics"],
-            **ptc_info["pedestrians_kinematics"],
-        }
-```
+      ```python
+      motors, non_motors, pedestrians = self._filter_ptcs(
+          context_frames, last_timestamp, id_set
+      )
+      for ptc_type in check_ptc:
+          ptc_info[ptc_type + "_kinematics"] = getattr(
+              self, "_prepare_{}_kinematics".format(ptc_type)
+          )(locals()[ptc_type])
+      vptc_kinematics = {
+          **ptc_info["non_motors_kinematics"],
+          **ptc_info["pedestrians_kinematics"],
+      }
+      ```
 
-- 各车辆不重复的两两配对，检查碰撞情况与迫切情况，并生成事件数据
+- 各车辆不重复地两两配对，检查碰撞情况与迫切情况，并生成事件数据
 
-```python
-self._v2v_collision_check(ptc_info["motors_kinematics"])
-        self._v2vptc_collision_check(
-            ptc_info["motors_kinematics"], vptc_kinematics
-        )
-        return (
-            self._collision_warning_message,
-            self._event_list,
-            last_timestamp,
-            ptc_info["motors_kinematics"],
-            vptc_kinematics,
-        )
-```
+      ```python
+      self._v2v_collision_check(ptc_info["motors_kinematics"])
+      self._v2vptc_collision_check(
+          ptc_info["motors_kinematics"], vptc_kinematics
+      )
+      return (
+          self._collision_warning_message,
+          self._event_list,
+          last_timestamp,
+          ptc_info["motors_kinematics"],
+          vptc_kinematics,
+      )
+      ```
 
 ### 2. 算法模块逻辑
 
@@ -274,6 +276,7 @@ self._v2v_collision_check(ptc_info["motors_kinematics"])
    判断是否使用考虑加速度的 CA（Constant Acceleration）类模型。具体代码实现如下：
 
    函数 `self._calc_traj_heading_ctr` 为考虑恒定转向速率计算轨迹航向角
+
    ```python
    def _calc_traj_heading_ctr(self, kinematics: dict) -> None:
        # 当前航向角
@@ -290,6 +293,7 @@ self._v2v_collision_check(ptc_info["motors_kinematics"])
    ```
 
    函数 `self._calc_traj_heading_nctr` 为考虑非恒定转向速率计算轨迹航向角
+
    ```python
    def _calc_traj_heading_nctr(self, kinematics: dict) -> None:
        # 轨迹点元组列表
@@ -346,60 +350,58 @@ self._v2v_collision_check(ptc_info["motors_kinematics"])
 
   ```python
   def _predict_motor_pair(self, ego: dict, other: dict) -> tuple:
-          if not self._is_valid(ego, other):
-              return {}, {}
-          ego_traj, other_traj = (
-              np.array(ego["traj_point"]),
-              np.array(other["traj_point"]),
-          )
-          ego_fp, other_fp = ego["traj_footprint"], other["traj_footprint"]
-          dis = abs(ego_traj - other_traj)
-          # 逐轨迹点的时间顺序，判断碰撞，碰撞指两矩形重叠
-          for k in range(self._num_of_traj_points):
-              if any(
-                  [
-                      dis[k][0] < self._displacement_threshold,
-                      dis[k][1] < self._displacement_threshold,
-                  ]
-              ):
-                  if utils.is_rects_overlapped(ego_fp[k], other_fp[k]):
-                      need_w = self._need_warning(ego, k)
-                      if need_w:
-                          return self._build_v2v_event(ego, other, k)
-          return {}, {}
+    if not self._is_valid(ego, other):
+        return {}, {}
+    ego_traj, other_traj = (
+        np.array(ego["traj_point"]),
+        np.array(other["traj_point"]),
+    )
+    ego_fp, other_fp = ego["traj_footprint"], other["traj_footprint"]
+    dis = abs(ego_traj - other_traj)
+    # 逐轨迹点的时间顺序，判断碰撞，碰撞指两矩形重叠
+    for k in range(self._num_of_traj_points):
+        if any([
+            dis[k][0] < self._displacement_threshold,
+            dis[k][1] < self._displacement_threshold,
+        ]):
+            if utils.is_rects_overlapped(ego_fp[k], other_fp[k]):
+                need_w = self._need_warning(ego, k)
+                if need_w:
+                    return self._build_v2v_event(ego, other, k)
+    return {}, {}
 
    def _predict_vptc_pair(self, motor: dict, vptc: dict) -> tuple:
-          if not self._is_valid(motor, vptc):
-              return {}, {}
-          motor_traj_np = np.array(motor["traj_point"])
-          vptc_traj_np = np.array(vptc["traj_point"])
-          dis = np.linalg.norm(  # type: ignore
-              motor_traj_np - vptc_traj_np, axis=1
-          )
-          motor_fp = motor["traj_footprint"]
+        if not self._is_valid(motor, vptc):
+            return {}, {}
+        motor_traj_np = np.array(motor["traj_point"])
+        vptc_traj_np = np.array(vptc["traj_point"])
+        dis = np.linalg.norm(  # type: ignore
+            motor_traj_np - vptc_traj_np, axis=1
+        )
+        motor_fp = motor["traj_footprint"]
 
-          overlapped = False
-          for k in range(self._num_of_traj_points):
-              if dis[k] < self._displacement_threshold:
-                  if utils.is_rect_and_circle_overlapped(
-                      motor_fp[k], vptc["traj_point"][k], vptc["radius"]
-                  ):
-                      overlapped = True
-                      break
-          if self._v2vptc_conflict_index.name == "FMRD":
-              TTC = (
-                  (k + 1) * self._predict_interval
-                  if overlapped
-                  else 1.5 * self._ttc_threshold
-              )
-              need_w = self._warning_FMRD(motor, dis, TTC)
-              if need_w:
-                  return self._build_v2vptc_event(motor, vptc, k)
-          elif overlapped:
-              need_w = self._need_warning(motor, k)
-              if need_w:
-                  return self._build_v2vptc_event(motor, vptc, k)
-          return {}, {}
+        overlapped = False
+        for k in range(self._num_of_traj_points):
+            if dis[k] < self._displacement_threshold:
+                if utils.is_rect_and_circle_overlapped(
+                    motor_fp[k], vptc["traj_point"][k], vptc["radius"]
+                ):
+                    overlapped = True
+                    break
+        if self._v2vptc_conflict_index.name == "FMRD":
+            TTC = (
+                (k + 1) * self._predict_interval
+                if overlapped
+                else 1.5 * self._ttc_threshold
+            )
+            need_w = self._warning_FMRD(motor, dis, TTC)
+            if need_w:
+                return self._build_v2vptc_event(motor, vptc, k)
+        elif overlapped:
+            need_w = self._need_warning(motor, k)
+            if need_w:
+                return self._build_v2vptc_event(motor, vptc, k)
+        return {}, {}
   ```
 
 #### 2.3 碰撞指标与危险度估计 _need_warning
@@ -471,29 +473,29 @@ $$ MSD = \frac{v^2}{2a_{max}} $$
 
 ```python
 def _warning_FMRD(self, ego: dict, dis, TTC: float) -> bool:
-        TTC_membership = utils.TTCMembership(TTC, self._ttc_threshold)
-        # MMD is min_meeting_distance
-        MMD_index = np.argmin(dis)
-        MMD_membership = utils.MMDMembership(
-            float(dis[MMD_index]), ego["speed"], self._psd_max_dece
+    TTC_membership = utils.TTCMembership(TTC, self._ttc_threshold)
+    # MMD is min_meeting_distance
+    MMD_index = np.argmin(dis)
+    MMD_membership = utils.MMDMembership(
+        float(dis[MMD_index]), ego["speed"], self._psd_max_dece
+    )
+    # MMS is min_meeting_speed
+    MMS = (
+        float(dis[MMD_index] - dis[MMD_index - 1]) / self._predict_interval
+        if MMD_index != 0
+        else -10
+    )
+    MMS_membership = utils.MMSMembership(MMS, ego["speed"])
+    membership = np.mat(  # type: ignore
+        [TTC_membership, MMD_membership, MMS_membership]
         )
-        # MMS is min_meeting_speed
-        MMS = (
-            float(dis[MMD_index] - dis[MMD_index - 1]) / self._predict_interval
-            if MMD_index != 0
-            else -10
-        )
-        MMS_membership = utils.MMSMembership(MMS, ego["speed"])
-        membership = np.mat(  # type: ignore
-            [TTC_membership, MMD_membership, MMS_membership]
-        )
-        fused_membership = self._fmrd_weight * membership
-        fused_membership = fused_membership.getA()[0]
-        if fused_membership[1] > fused_membership[0]:
-            scaled_fused_membership = (fused_membership[1] - 0.5) / 0.5
-            if scaled_fused_membership > self._fmrd_threshold:
+    fused_membership = self._fmrd_weight * membership
+    fused_membership = fused_membership.getA()[0]
+    if fused_membership[1] > fused_membership[0]:
+        scaled_fused_membership = (fused_membership[1] - 0.5) / 0.5
+        if scaled_fused_membership > self._fmrd_threshold:
                 return True
-        return False
+    return False
 ```
 
 方案提出了基于模糊数学的碰撞危险度指标（Fuzzy Mathematics Based Risk Degree,
