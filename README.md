@@ -74,6 +74,18 @@ docker run -d --net=host --name ${CONTAINER_NAME} -e redis_host=127.0.0.1 -e mqt
 # docker run -d --name ${CONTAINER_NAME} -e redis_host=172.17.0.1 -e mqtt_host=172.17.0.1 -e mysql_host=172.17.0.1 -e cloud_url=http://172.17.0.1:28300/api/v1 -e mysql_user=root -e mysql_password=password -e emqx_password=password -e redis_password=password ${DOCKER_IMAGE}
 ```
 
+## 5. 算法功能自动化测试
+
+```bash
+# 安装依赖
+pip3 install -r test-function-requirements.txt
+
+# 执行
+export ip='127.0.0.1'
+export emqx_root=password
+sh ./function_test/function_test.sh
+```
+
 ## Notice
 
 1. Please run "[`dprint fmt`](https://dprint.dev/)" to format markdown files before creating PR.
