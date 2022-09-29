@@ -101,7 +101,7 @@ class DataProcessing:
                 if sm_and_cfg.get("cfg")
                 else {
                     "fusion": 0,
-                    "complement": 1,
+                    "complement": 1, # TODO(wu.wenxiang) read config from yaml
                     "smooth": 1,
                     "collision": 1,
                     "visual": 1,
