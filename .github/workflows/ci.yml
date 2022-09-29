@@ -48,4 +48,3 @@ jobs:
             rm -rf src && tar zxvf openv2x-aio-master.tar.gz
             cd src
             sh install.sh
-            docker images | grep none | awk '{print $3}' | xargs -I{} docker rmi {}
