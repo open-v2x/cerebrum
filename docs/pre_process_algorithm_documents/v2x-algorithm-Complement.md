@@ -39,12 +39,12 @@
 
 目前的补全算法以插值补全和拟合补全为主，高度依赖车辆轨迹信息的准确性。在线插值轨迹补全算法通过牺牲 3-5 帧（12-20 ms）的实时性，获取车辆的历史轨迹点，实现对中间缺失值的差值补全。
 
-LSTM模型采用 4 个隐藏层，每个隐藏层含 4 个神经元。训练过程使用数据3万条，覆盖多向车流直行、换道、交织等交通动作。LSTM 训练过程 30 epoches，测试 loss 采用
+LSTM 模型采用 4 个隐藏层，每个隐藏层含 4 个神经元。训练过程使用数据3万条，覆盖多向车流直行、换道、交织等交通动作。LSTM 训练过程 30 epoches，测试 loss 采用
 BCEloss，由 $0.02$ 降至 $5 * 10 ^ {-7}$ 测试实现预测精度较好。LSTM 结构图如图所示。
 
 ![](images/lstm.png)
 
-### 算法BenchMark
+### 算法 BenchMark
 
 测试数据结构：每辆车及其 10 帧历史数据信息
 
@@ -86,7 +86,7 @@ class LstmPredict(Base):
 # 创建插值补全车辆轨迹
 Inter_C = Interpolation(lag_time, max_speed_motor, max_speed_non_motor, max_speed_pedestrian)
 
-# 创建LSTM补全车辆轨迹
+# 创建 LSTM 补全车辆轨迹
 LSTM_C = LstmPredict(model_path, const_stand, history_num, layers, hidden_sz, bidirectional, lag_time, coefficient, max_speed_motor, max_speed_non_motor, max_speed_pedestrian)
 ```
 
@@ -96,8 +96,8 @@ LSTM_C = LstmPredict(model_path, const_stand, history_num, layers, hidden_sz, bi
 # 调用插值补全车辆轨迹
 updated_latest_frame = Inter_C.run(context_frames, current_frame, last_timestamp)
 
-# 调用LSTM补全车辆轨迹
-updated_latest_frame = LSTM_C。run(context_frames, current_frame, last_timestamp)
+# 调用 LSTM 补全车辆轨迹
+updated_latest_frame = LSTM_C.run(context_frames, current_frame, last_timestamp)
 ```
 
 ## 在线轨迹补全代码流程及框架
@@ -119,7 +119,7 @@ updated_latest_frame = LSTM_C。run(context_frames, current_frame, last_timestam
 3. 通过 `delay_secMark` 前后两帧数据的坐标，进行差值处理
 4. 若通过前后两帧坐标计算的速度大于所设阈值，则放弃补全
 
-- AI补全算法（LSTM Complement)
+- AI 补全算法（LSTM Complement)
 
 1. 基于当前的 `secMark`，向前推迟 `lag_time`，得到需要补全的 `delay_secMark` 时刻
 2. 对于每一辆车，寻找是否具有 `delay_secMark` 刻的轨迹点数据，若缺失则进行补全
@@ -251,7 +251,7 @@ $t_{k-1}$、$t_{k-1}$ 为缺失时间前后帧时间戳。
 def _complete_obj(
     self, objs_info: list, index: int, delay_sec_mark: int
 ) -> None:
-    # 补全指定的帧号下指定 id的轨迹点
+    # 补全指定的帧号下指定 id 的轨迹点
     objs_info.insert(index, objs_info[index].copy())
     for i in ("x", "y"):
         objs_info[index][i] = objs_info[index - 1][i] + (
@@ -274,7 +274,7 @@ def _complete_obj(
 def _lstm_predict(
     self, objs_info: list, index: int, delay_sec_mark: int
 ) -> None:
-    # 补全指定的帧号下指定 id在idx除轨迹点xy
+    # 补全指定的帧号下指定 id 在 idx 除轨迹点 xy
     objs_info.insert(index, objs_info[index].copy())
     features: Union[Any] = []
     for i in range(self._his_num - 1, -1, -1):
