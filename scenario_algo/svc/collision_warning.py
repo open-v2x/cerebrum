@@ -20,7 +20,7 @@ import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines import Base
 
-collision_warning = modules.algorithms.collision_warning
+collision_warning = modules.algorithms.collision_warning.module
 
 
 class CollisionWarning(Base):

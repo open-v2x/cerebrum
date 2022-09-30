@@ -17,7 +17,7 @@
 from common import modules
 from pre_process_ai_algo.pipelines import Base
 
-fusion = modules.algorithms.pre_process_fusion
+fusion = modules.algorithms.fusion.module
 
 
 class Fusion(Base):
