@@ -135,7 +135,8 @@ class App:
         self.mqtt.username_pw_set(mcfg["username"], mcfg["password"])
         self.mqtt.connect(mcfg["host"], mcfg["port"])
         self._mqtt_cfg_db()
-        self.rsi = modules.algorithms.rsi_formatter.RSI(self.mqtt, self.kv)
+        rsi_formatter = modules.algorithms.rsi_formatter.module
+        self.rsi = rsi_formatter.RSI(self.mqtt, self.kv)
         self.cfg = Cfg(self.kv)
 
         for sig in ("SIGINT", "SIGTERM", "SIGUSR2"):

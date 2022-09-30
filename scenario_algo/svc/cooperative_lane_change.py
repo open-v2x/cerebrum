@@ -20,7 +20,7 @@ import orjson as json
 from post_process_algo import post_process
 from scenario_algo.svc.collision_warning import CollisionWarning
 
-cooperative_lane_change = modules.algorithms.cooperative_lane_change
+cooperative_lane_change = modules.algorithms.cooperative_lane_change.module
 
 
 class CooperativeLaneChange:

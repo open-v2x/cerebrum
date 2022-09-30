@@ -20,7 +20,7 @@ import orjson as json
 from post_process_algo import post_process
 from scenario_algo.svc.collision_warning import CollisionWarning
 
-sensor_data_sharing = modules.algorithms.sensor_data_sharing
+sensor_data_sharing = modules.algorithms.sensor_data_sharing.module
 
 
 class SensorDataSharing:
@@ -44,9 +44,8 @@ class SensorDataSharing:
         vptc_traj = ptc_traj["vptc"] if "vptc" in ptc_traj else {}
 
         # 获取 rsi
-        rsi = await self._kv.get(
-            modules.algorithms.rsi_formatter.RSI.RSI_KEY.format(rsu_id)
-        )
+        rsi_formatter = modules.algorithms.rsi_formatter.module
+        rsi = await self._kv.get(rsi_formatter.RSI.RSI_KEY.format(rsu_id))
 
         # 获取 rsu 经纬度
         sensor_pos = post_process.rsu_info[rsu_id]["pos"].copy()

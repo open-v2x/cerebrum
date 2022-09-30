@@ -15,6 +15,7 @@
 """Algorithm pipeline processing flow."""
 
 from common import consts
+from common import modules
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines.complement import Interpolation
@@ -53,26 +54,26 @@ class DataProcessing:
             "collision",
         ]
         self._fusion_dispatch = {
-            0: False,
-            1: self._fusion,
+            "disable": False,
+            "fusion": self._fusion,
         }
         self._smooth_dispatch = {
-            0: False,
-            1: self._exponential_smooth,
-            2: self._polynomial_smooth,
+            "disable": False,
+            "exponential": self._exponential_smooth,
+            "polynomial": self._polynomial_smooth,
         }
         self._complement_dispatch = {
-            0: False,
-            1: self._interpolation,
-            2: self._lstm_predict,
+            "disable": False,
+            "interpolation": self._interpolation,
+            "lstm_predict": self._lstm_predict,
         }
         self._visual_dispatch = {
-            0: False,
-            1: self._visual,
+            "disable": False,
+            "visual": self._visual,
         }
         self._collision_dispatch = {
-            0: False,
-            1: self._collision_warning,
+            "disable": False,
+            "collision_warning": self._collision_warning,
         }
 
     async def run(
@@ -96,15 +97,33 @@ class DataProcessing:
             current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
             sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(rsu_id))
             last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
+
             pipe_cfg = (
+                # TODO(wu.wenxiang) document how to read config from mqtt
                 sm_and_cfg["cfg"]
                 if sm_and_cfg.get("cfg")
                 else {
-                    "fusion": 0,
-                    "complement": 1, # TODO(wu.wenxiang) read config from yaml
-                    "smooth": 1,
-                    "collision": 1,
-                    "visual": 1,
+                    "fusion": (
+                        modules.algorithms.fusion.algo
+                        if modules.algorithms.fusion.enable
+                        else "disable"
+                    ),
+                    "complement": (
+                        modules.algorithms.complement.algo
+                        if modules.algorithms.complement.enable
+                        else "disable"
+                    ),
+                    "smooth": (
+                        modules.algorithms.smooth.algo
+                        if modules.algorithms.smooth.enable
+                        else "disable"
+                    ),
+                    "collision": (
+                        modules.algorithms.collision_warning.algo
+                        if modules.algorithms.collision_warning.enable
+                        else "disable"
+                    ),
+                    "visual": "visual",
                 }
             )
             if 0 <= last_sec_mark - current_sec_mark <= 50000:
@@ -114,6 +133,7 @@ class DataProcessing:
                 {"sm": current_sec_mark, "cfg": pipe_cfg},
             )
             pipelines = [
+                # TODO(wu.wenxiang) check p not exist
                 getattr(self, "_{}_dispatch".format(p))[pipe_cfg[p]]
                 for p in self._pipelines
             ]

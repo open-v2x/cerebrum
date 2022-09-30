@@ -17,7 +17,7 @@
 from common import modules
 from pre_process_ai_algo.pipelines import Base
 
-smooth = modules.algorithms.pre_process_smooth
+smooth = modules.algorithms.smooth.module
 
 
 class PolynomialSmooth(Base):

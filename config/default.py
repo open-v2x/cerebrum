@@ -14,39 +14,51 @@ DEFAULT_CLOUD_URL = "http://172.17.0.1:28300/api/v1"
 DEFAULT_ALGORITHM_YAML_PATH = "/etc/cerebrum/algorithm.yaml"
 DEFAULT_ALGORITHM_YAML = """
 rsi_formatter:
-  enable: true
-  algo: "transform_driver.rsi_service"
+  algos:
+    rsi_formatter:
+      enable: true
+      module: "transform_driver.rsi_service"
+      algo: ""
 pre_process_ai_algo:
-  enable: true
   algos:
     complement:
       enable: true
-      algo: "pre_process_ai_algo.algo_lib.complement"
+      module: "pre_process_ai_algo.algo_lib.complement"
+      algo: "interpolation"
+      # algo: "lstm_predict"
     fusion:
-      enable: true
-      algo: "pre_process_ai_algo.algo_lib.fusion"
+      enable: false
+      module: "pre_process_ai_algo.algo_lib.fusion"
+      algo: "fusion"
     smooth:
       enable: true
-      algo: "pre_process_ai_algo.algo_lib.smooth"
+      module: "pre_process_ai_algo.algo_lib.smooth"
+      algo: "exponential"
+      # algo: "polynomial"
 scenario_algo:
   algos:
     collision_warning:
       enable: true
-      algo: "scenario_algo.algo_lib.collision_warning"
+      module: "scenario_algo.algo_lib.collision_warning"
+      algo: "collision_warning"
     cooperative_lane_change:
       enable: true
-      algo: "scenario_algo.algo_lib.cooperative_lane_change"
+      module: "scenario_algo.algo_lib.cooperative_lane_change"
+      algo: ""
     do_not_pass_warning:
       enable: true
-      algo: "scenario_algo.algo_lib.do_not_pass_warning"
+      module: "scenario_algo.algo_lib.do_not_pass_warning"
+      algo: ""
     sensor_data_sharing:
       enable: true
-      algo: "scenario_algo.algo_lib.sensor_data_sharing"
+      module: "scenario_algo.algo_lib.sensor_data_sharing"
+      algo: ""
 post_process_algo:
   algos:
     post_process:
       enable: true
-      algo: "post_process_algo.post_process"
+      module: "post_process_algo.post_process"
+      algo: ""
 """
 DELIMITER = "/"
 

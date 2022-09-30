@@ -20,7 +20,7 @@ import orjson as json
 from post_process_algo import post_process
 from scenario_algo.svc.collision_warning import CollisionWarning
 
-do_not_pass_warning = modules.algorithms.do_not_pass_warning
+do_not_pass_warning = modules.algorithms.do_not_pass_warning.module
 
 
 class DoNotPass:

@@ -17,7 +17,7 @@
 from common import modules
 from pre_process_ai_algo.pipelines import Base
 
-complement = modules.algorithms.pre_process_complement
+complement = modules.algorithms.complement.module
 
 
 class Interpolation(Base):

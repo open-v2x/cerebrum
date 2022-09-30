@@ -49,7 +49,9 @@ tox
 
 默认的内置算法列表参考：[algorithm.yaml.example](/etc/algorithm.yaml.example)
 
-您可以替换其中的算法，比如：
+### 3.1 替换算法模块
+
+您可以替换某一个算法模块，比如：
 
 1. `pip install` 一个新的 fusion 算法模块 'new_fusion'
 2. 复制 `algorithm.yaml.example` 到 `/etc/cerebrum/algorithm.yaml`
@@ -57,6 +59,26 @@ tox
 4. 重启 cerebrum 服务，cerebrum 服务在启动时会尝试访问 `/etc/cerebrum/algorithm.yaml` 配置文件，动态加载对应的算法模块
 
 这样就可以可使用 `new_fusion` 算法模块代替内置的 `pre_process_ai_algo.algo_lib.fusion` 算法模块。
+
+### 3.2 替换使用模块中的某个具体算法
+
+您也可以替换某一算法模块中的不同算法，比如：
+
+1. 将 yaml 文件中的 `pre_process_ai_algo.algo_lib.complement.enable` 改成 false，这样该模块会禁用
+2. 将 yaml 文件中的 `pre_process_ai_algo.algo_lib.complement.algo` 改成 `lstm_predict`，这样该算法会代替原来的
+   `interpolation`
+
+您也可以发配置消息，动态替换模块中的具体算法（发送 `V2X/RSU/(?P<rsuid>[^/]+)/PIP/CFG` 消息，里面带 cfg 字段）：
+
+```json
+"cfg": {
+    "fusion": "disable",
+    "complement": "interpolation",
+    "smooth": "exponential",
+    "collision": "collision_warning",
+    "visual": "visual"
+}
+```
 
 ## 4. 容器镜像制作和部署
 

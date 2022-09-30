@@ -21,7 +21,7 @@ import os
 import torch
 from tqdm import tqdm  # type: ignore
 
-complement = modules.algorithms.pre_process_complement
+complement = modules.algorithms.complement.module
 
 
 def train_lstm():
