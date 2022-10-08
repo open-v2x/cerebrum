@@ -8,7 +8,7 @@
 
 <!-- code_chunk_output -->
 
-- [逆向超车预警(Do Not Pass Warning)](#逆向超车预警 do-not-pass-warning)
+- [逆向超车预警(Do Not Pass Warning)](#逆向超车预警-do-not-pass-warning)
   - [1. 概览](#概览)
     - [1.1 算法目标](#算法目标)
     - [1.2 难点与挑战](#难点与挑战)
