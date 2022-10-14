@@ -5,11 +5,11 @@ on:
     branches:
       - 'albany'
 env:
-  external_ip: 127.0.0.1
-  redis_root: password
-  mariadb_root: password
-  mariadb_dandelion: password
-  emqx_root: password
+  OPENV2X_EXTERNAL_IP: 127.0.0.1
+  OPENV2X_REDIS_ROOT: password
+  OPENV2X_MARIADB_ROOT: password
+  OPENV2X_MARIADB_DANDELION: password
+  OPENV2X_EMQX_ROOT: password
   redis_host: '127.0.0.1'
   mqtt_host: '127.0.0.1'
   mysql_host: '127.0.0.1'
