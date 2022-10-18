@@ -58,6 +58,9 @@ jobs:
 
       - name: run cerebrum service
         run: python main.py &
+      
+      - name: make pytest-cov invalid in tox.ini
+        run: sed -i "s/^  --cov=pre_process_ai_algo/#&/" tox.ini
 
       - name: pip install test-function-requirements
         run: pip install -r test-function-requirements.txt
