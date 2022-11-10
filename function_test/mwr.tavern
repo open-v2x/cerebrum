@@ -1,0 +1,86 @@
+test_name: testmwr
+paho-mqtt:
+  client:
+    transport: websockets
+    client_id: R1
+  connect:
+    host: 47.100.244.41
+    port: 15675
+    timeout: 3
+  auth:
+    username: root
+    password: abc@1234
+
+stages:
+  - name: testmwr
+    mqtt_publish:
+      topic: V2X/RADAR/R328328/TRACK/UP
+      json:
+        {
+        "number": 3,
+        "targets": [{
+          "acceleration": 0.6915832,
+          "confidenceLevel": 100,
+          "headingAngle": 164.0589,
+          "height": 0.0,
+          "laneNo": 3,
+          "latitude": 39.07405763574003,
+          "longitude": 115.93972548198795,
+          "rcs": 3235230540,
+          "speed": -23.999228,
+          "targetHeight": 1.5,
+          "targetId": 26219,
+          "targetLength": 4.5,
+          "targetType": 3,
+          "targetWidth": 1.8
+        }, {
+          "acceleration": 0.0,
+          "confidenceLevel": 0,
+          "headingAngle": 162.0,
+          "height": 0.0,
+          "laneNo": 3,
+          "latitude": 39.07496685046208,
+          "longitude": 115.93933403433506,
+          "rcs": 1081229720,
+          "speed": 0.0,
+          "targetHeight": 1.5,
+          "targetId": 26212,
+          "targetLength": 4.5,
+          "targetType": 3,
+          "targetWidth": 0.5
+        }, {
+          "acceleration": 0.0,
+          "confidenceLevel": 0,
+          "headingAngle": 162.0,
+          "height": 0.0,
+          "laneNo": 1,
+          "latitude": 39.074955208271426,
+          "longitude": 115.93927112018854,
+          "rcs": 1030473328,
+          "speed": 0.0,
+          "targetHeight": 1.5,
+          "targetId": 26215,
+          "targetLength": 4.5,
+          "targetType": 3,
+          "targetWidth": 1.8
+        }],
+        "deviceId": "N6W107HMBLD",
+        "system": "caikong",
+        "device_type": "rad",
+        "device_id": "N6W107HMBLD",
+        "data_class": "track",
+        "lamp_id": "N6W107",
+        "lamp_longitude": "115.951464",
+        "lamp_latitude": "39.075345",
+        "cross_id": "N6-E12",
+        "cross_name": "渥城北路-八于街",
+        "cross_longitude": "115.939841",
+        "cross_latitude": "39.073942",
+        "report_time": "2022-10-31 15:39:22.000",
+        "timeStamp": "2022-10-31 15:33:47"
+      }
+
+    mqtt_response:
+      topic: V2X/DEVICE/R328328/RADAR/DOWN
+      payload: !anything
+      timeout: 1

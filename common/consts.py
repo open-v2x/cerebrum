@@ -59,3 +59,7 @@ DNP_VISUAL_TOPIC = topic_replace(
 SDS_VISUAL_TOPIC = topic_replace(
     "V2X/DEVICE/{}/APPLICATION/SDS/NODE{}", cfg.DELIMITER
 )
+
+
+# Millimeter wave radar
+RADAR_VISUAL_TOPIC = topic_replace("V2X/DEVICE/{}/RADAR/DOWN", cfg.DELIMITER)
