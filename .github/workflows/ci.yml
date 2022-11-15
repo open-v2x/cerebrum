@@ -31,11 +31,31 @@ jobs:
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/cerebrum
             GIT_COMMIT=${{ github.sha }}
-  ssh:
+
+  acr:
     needs: docker
     runs-on: ubuntu-latest
     steps:
-      - name: apply to all-in-one environment & sync image to ACR
+      - name: sync image to ACR
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.FQ_HOST }}
+          username: ${{ secrets.FQ_USERNAME }}
+          key: ${{ secrets.FQ_KEY }}
+          port: ${{ secrets.FQ_PORT }}
+          script: |
+            set -e
+
+            (docker images | grep none | awk '{print $3}' | xargs -I{} docker rmi -f {}) || true
+            docker pull openv2x/cerebrum:latest
+            docker tag openv2x/cerebrum:latest registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:latest
+            docker push registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:latest
+
+  ssh:
+    needs: acr
+    runs-on: ubuntu-latest
+    steps:
+      - name: apply to all-in-one environment
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.AIO_MASTER_HOST }}
@@ -48,5 +68,3 @@ jobs:
             rm -rf src && tar zxvf openv2x-aio-master.tar.gz
             cd src
             sh install.sh
-            docker tag openv2x/cerebrum:latest registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:latest
-            docker push registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:latest
