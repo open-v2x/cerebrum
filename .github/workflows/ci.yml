@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - beihai
 
 jobs:
   docker:
@@ -26,7 +26,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: openv2x/cerebrum:latest
+          tags: openv2x/cerebrum:beihai
           build-args: |
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/cerebrum
@@ -47,9 +47,9 @@ jobs:
             set -e
 
             (docker images | grep none | awk '{print $3}' | xargs -I{} docker rmi -f {}) || true
-            docker pull openv2x/cerebrum:latest
-            docker tag openv2x/cerebrum:latest registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:latest
-            docker push registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:latest
+            docker pull openv2x/cerebrum:beihai
+            docker tag openv2x/cerebrum:beihai registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:beihai
+            docker push registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:beihai
 
   ssh:
     needs: acr
@@ -58,13 +58,13 @@ jobs:
       - name: apply to all-in-one environment
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.AIO_MASTER_HOST }}
-          username: ${{ secrets.AIO_MASTER_USERNAME }}
-          key: ${{ secrets.AIO_MASTER_KEY }}
-          port: ${{ secrets.AIO_MASTER_PORT }}
+          host: ${{ secrets.AIO_ALBANY_HOST }}
+          username: ${{ secrets.AIO_ALBANY_USERNAME }}
+          key: ${{ secrets.AIO_ALBANY_KEY }}
+          port: ${{ secrets.AIO_ALBANY_PORT }}
           script: |
             set -e
-            rm -rf openv2x-aio-master.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/master/openv2x-aio-master.tar.gz
-            rm -rf src && tar zxvf openv2x-aio-master.tar.gz
+            rm -rf openv2x-aio-beihai.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/beihai/openv2x-aio-beihai.tar.gz
+            rm -rf src && tar zxvf openv2x-aio-beihai.tar.gz
             cd src
             sh install.sh
