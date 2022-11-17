@@ -3,7 +3,7 @@ name: tox
 on:
   push:
     branches:
-      - master
+      - beihai
   pull_request:
     types: [opened, synchronize]
 
