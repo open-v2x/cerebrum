@@ -20,10 +20,12 @@ from common import consts
 from common import db
 from common.log import Loggings
 from common import modules
+import json
 import paho.mqtt.client as mqtt  # type: ignore
 from post_process_algo import post_process
 from pre_process_ai_algo.pre_process import Cfg
 from pre_process_ai_algo.pre_process import DataProcessing
+from radar.radar_service import RadarServer
 import re
 from scenario_algo.scenario_service import Service
 import signal
@@ -65,6 +67,26 @@ class App:
             consts.topic_replace(
                 "V2X/CONFIG/UPDATE/NOTICE", self.config.DELIMITER
             ): self._mqtt_on_config_db,
+            # Millimeter wave radar
+            consts.topic_replace(
+                "V2X/RADAR/+/TRACK/UP", self.config.DELIMITER
+            ): self._mqtt_on_radar,
+            # Millimeter wave radar
+            consts.topic_replace(
+                "V2X/RADAR/+/CROSS/UP", self.config.DELIMITER
+            ): self._mqtt_on_radar,
+            # Millimeter wave radar
+            consts.topic_replace(
+                "V2X/RADAR/+/STATUS/UP", self.config.DELIMITER
+            ): self._mqtt_on_radar,
+            # Millimeter wave radar
+            consts.topic_replace(
+                "V2X/RADAR/+/FLOW/UP", self.config.DELIMITER
+            ): self._mqtt_on_radar,
+            # Millimeter wave radar
+            consts.topic_replace(
+                "V2X/RADAR/+/EVENT/UP", self.config.DELIMITER
+            ): self._mqtt_on_radar
         }
         self.rsm_topic_driver_re = re.compile(
             consts.topic_replace(
@@ -101,6 +123,13 @@ class App:
         self.cfg_topic_re = re.compile(
             consts.topic_replace(
                 r"V2X/RSU/(?P<rsuid>[^/]+)/PIP/CFG", self.config.DELIMITER
+            )
+        )
+        self.radar_topic_re = re.compile(
+            consts.topic_replace(
+            r"V2X/RADAR/(?P<rsuid>[^/]+)/(?:TRACK\
+            |CROSS|STATUS|FLOW|EVENT)/UP",
+            self.config.DELIMITER,
             )
         )
         self.stop = False
@@ -158,9 +187,18 @@ class App:
                 self.mqtt, self.kv, self.mqtt_conn, node_id
             )
             self.svc = Service(self.mqtt, self.kv, self.mqtt_conn, node_id)
+            # Millimeter wave radar
+            self.radar = RadarServer(
+                self.mqtt, self.kv, self.mqtt_conn, node_id
+            )
+
         except Exception:
             self.process = DataProcessing(self.mqtt, self.kv)
             self.svc = Service(self.mqtt, self.kv)
+            # Millimeter wave radar
+            self.radar = RadarServer(
+                self.mqtt, self.kv, self.mqtt_conn, node_id
+            )
 
     async def _stop(self):
         await self.kv.redis.close()
@@ -255,6 +293,18 @@ class App:
             self.loop.create_task(self.cfg.run(rsu_id, msg.payload))
         else:
             logger.error("RSU is not registered")
+
+    def _mqtt_on_radar(self, client, userdata, msg):
+        try:
+            m = self.radar_topic_re.search(msg.topic)
+            rsu_id = m.groupdict()["rsuid"]
+        except Exception:
+            return logger.error("radar data format error")
+        if self._is_valid_rsu_id(rsu_id):
+            self.loop.create_task(self.radar.run(rsu_id, json.loads(msg.payload)))
+        else:
+            logger.error("Target RSU is not registered")
+        pass
 
     def _mqtt_on_db(self, client, userdata, msg):
         db.get_rsu_info(msg.payload)
