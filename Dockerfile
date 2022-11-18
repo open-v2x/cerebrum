@@ -1,4 +1,4 @@
-FROM docker.io/openv2x/v2x-cerebrum-base:latest
+FROM docker.io/openv2x/cerebrum-base:latest
 
 LABEL purpose="cerebrum"
 
