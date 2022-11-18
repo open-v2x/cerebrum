@@ -1,0 +1,14 @@
+FROM docker.io/library/python:3.9.12-slim-buster
+
+LABEL purpose="cerebrum-base"
+
+COPY ./requirements/algo.txt algo.txt
+# COPY ./sources.list sources.list
+
+# RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak \
+#     && cp sources.list /etc/apt/
+
+RUN apt-get update -y \
+    && apt-get install -y wget libgl1-mesa-glx libglib2.0-dev libgeos-dev curl build-essential \
+    # && pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r algo.txt
+    && pip install -r algo.txt
