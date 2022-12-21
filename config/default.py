@@ -18,47 +18,71 @@ rsi_formatter:
     rsi_formatter:
       enable: true
       module: "transform_driver.rsi_service"
-      algo: ""
+      algo: "rsi"
+      version:
+      - rsi
 pre_process_ai_algo:
   algos:
     complement:
       enable: true
       module: "pre_process_ai_algo.algo_lib.complement"
       algo: "interpolation"
-      # algo: "lstm_predict"
+      version: 
+      - interpolation
+      - lstm_predict
     fusion:
       enable: false
       module: "pre_process_ai_algo.algo_lib.fusion"
       algo: "fusion"
+      version:
+      - fusion
     smooth:
       enable: true
       module: "pre_process_ai_algo.algo_lib.smooth"
       algo: "exponential"
-      # algo: "polynomial"
+      version:
+      - exponential
+      - polynomial
+    visual:
+      enable: true
+      module: "pre_process_ai_algo.pipelines.visualization"
+      algo: "visual"
+      version:
+      - visual
 scenario_algo:
   algos:
     collision_warning:
       enable: true
       module: "scenario_algo.algo_lib.collision_warning"
       algo: "collision_warning"
+      version:
+      - collision_warning
     cooperative_lane_change:
       enable: true
       module: "scenario_algo.algo_lib.cooperative_lane_change"
-      algo: ""
+      algo: "cooperative_lane_change"
+      version:
+      - cooperative_lane_change
     do_not_pass_warning:
       enable: true
       module: "scenario_algo.algo_lib.do_not_pass_warning"
-      algo: ""
+      algo: "do_not_pass_warning"
+      version:
+      - do_not_pass_warning
     sensor_data_sharing:
       enable: true
       module: "scenario_algo.algo_lib.sensor_data_sharing"
-      algo: ""
+      algo: "sensor_data_sharing"
+      version:
+      - sensor_data_sharing
 post_process_algo:
   algos:
     post_process:
       enable: true
       module: "post_process_algo.post_process"
-      algo: ""
+      algo: "post_process"
+      version:
+      - post_process
 """
 DELIMITER = "/"
 
