@@ -13,23 +13,24 @@
 #   under the License.
 
 """database config and data access functions."""
+import yaml
 
 from common.log import Loggings
 from config import devel as cfg
 import orjson as json
-from sqlalchemy import Column  # type: ignore
+from sqlalchemy import Column, ForeignKey  # type: ignore
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base  # type: ignore
-from sqlalchemy import Float
+from sqlalchemy import Float, Boolean
 from sqlalchemy import Integer
 from sqlalchemy import JSON
-from sqlalchemy.orm import sessionmaker  # type: ignore
+from sqlalchemy.orm import sessionmaker, relationship  # type: ignore
 from sqlalchemy import String
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import List
 import zlib
-
 
 logger = Loggings()
 rsu_info: Dict[str, dict] = {}
@@ -210,3 +211,58 @@ def get_mqtt_config():
     except Exception:
         session.close()
         logger.error("unable to fetch mqtt configuration from database")
+
+
+class AlgoVersion(Base):  # type: ignore
+    """Define the Algo version object."""
+
+    __tablename__ = "algo_version"
+
+    id = Column(Integer, primary_key=True)
+    algo = Column(String(64), ForeignKey("algo_name.name"))
+    version = Column(String(64), nullable=False)
+    version_path = Column(String(64), nullable=True)
+
+
+class AlgoName(Base):  # type: ignore
+    """Define the Algo object."""
+
+    __tablename__ = "algo_name"
+
+    id = Column(Integer, primary_key=True)
+    module = Column(String(64), ForeignKey("algo_module.module"))
+    name = Column(String(64), nullable=False, index=True)
+    enable = Column(Boolean, nullable=False, default=False)
+    module_path = Column(String(64), nullable=False)
+    in_use = Column(String(64), nullable=True)
+    algo_versions: List[AlgoVersion] = relationship(
+        "AlgoVersion", backref="algo_name"
+    )
+
+
+def get_algo_config():
+    """Get algo config from database."""
+    algo_config_in_db = session.query(AlgoName).all()
+    algo_config = yaml.safe_load(cfg.DEFAULT_ALGORITHM_YAML)
+    for algo_name_in_db in algo_config_in_db:
+        algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
+            "enable"
+        ] = algo_name_in_db.enable
+        algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
+            "algo"
+        ] = algo_name_in_db.in_use
+        algo_version_dict = {
+            version.version: version.version_path
+            for version in algo_name_in_db.algo_versions
+        }
+        algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
+            "version"
+        ].extend(algo_version_dict.keys())
+        if algo_name_in_db.in_use in algo_version_dict.keys():
+            algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
+                "module"
+            ] = algo_version_dict.get(algo_name_in_db.in_use)
+    return yaml.safe_dump(algo_config, sort_keys=False)
+
+
+cfg.DEFAULT_ALGORITHM_YAML = get_algo_config()

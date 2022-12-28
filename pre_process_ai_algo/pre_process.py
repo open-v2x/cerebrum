@@ -14,9 +14,13 @@
 
 """Algorithm pipeline processing flow."""
 
+import yaml
+
 from common import consts
 from common import modules
 import orjson as json
+
+from config import default
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines.complement import Interpolation
 from pre_process_ai_algo.pipelines.complement import LstmPredict
@@ -51,7 +55,7 @@ class DataProcessing:
             "complement",
             "smooth",
             "visual",
-            "collision",
+            "collision_warning",
         ]
         self._fusion_dispatch = {
             "disable": False,
@@ -71,7 +75,7 @@ class DataProcessing:
             "disable": False,
             "visual": self._visual,
         }
-        self._collision_dispatch = {
+        self._collision_warning_dispatch = {
             "disable": False,
             "collision_warning": self._collision_warning,
         }
@@ -97,7 +101,6 @@ class DataProcessing:
             current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
             sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(rsu_id))
             last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
-
             pipe_cfg = (
                 # TODO(wu.wenxiang) document how to read config from mqtt
                 sm_and_cfg["cfg"]
@@ -118,7 +121,7 @@ class DataProcessing:
                         if modules.algorithms.smooth.enable
                         else "disable"
                     ),
-                    "collision": (
+                    "collision_warning": (
                         modules.algorithms.collision_warning.algo
                         if modules.algorithms.collision_warning.enable
                         else "disable"
@@ -157,10 +160,16 @@ class Cfg:
 
     async def run(self, rsu_id: str, cfg_info: bytes) -> None:
         """External call function."""
-        cfg_info = json.loads(cfg_info)
+        cfg_info_dict = json.loads(cfg_info)
+        yaml_info = cfg_info_dict.get("yaml_info")
+        default.DEFAULT_ALGORITHM_YAML = yaml.safe_dump(
+            yaml_info, sort_keys=False
+        )
+        modules.load_algorithm_modules(default)
+        redis_info = cfg_info_dict.get("redis_info")
         sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(rsu_id))
         last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
         await self._kv.set(
             self.SM_CFG_KEY.format(rsu_id),
-            {"sm": last_sec_mark, "cfg": cfg_info},
+            {"sm": last_sec_mark, "cfg": redis_info},
         )
