@@ -248,9 +248,10 @@ def get_algo_config():
         algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
             "enable"
         ] = algo_name_in_db.enable
-        algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
-            "algo"
-        ] = algo_name_in_db.in_use
+        if algo_name_in_db.in_use:
+            algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
+                "algo"
+            ] = algo_name_in_db.in_use
         algo_version_dict = {
             version.version: version.version_path
             for version in algo_name_in_db.algo_versions
@@ -258,7 +259,7 @@ def get_algo_config():
         algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
             "version"
         ].extend(algo_version_dict.keys())
-        if algo_name_in_db.in_use in algo_version_dict.keys():
+        if algo_name_in_db.in_use in algo_version_dict.keys() and algo_version_dict.get(algo_name_in_db.in_use):
             algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
                 "module"
             ] = algo_version_dict.get(algo_name_in_db.in_use)
@@ -266,3 +267,4 @@ def get_algo_config():
 
 
 cfg.DEFAULT_ALGORITHM_YAML = get_algo_config()
+print(cfg.DEFAULT_ALGORITHM_YAML)
