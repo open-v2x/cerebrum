@@ -237,7 +237,37 @@ XOrigin: Dict[str, int] = {}
 TfMap = {}  # type: ignore
 rsu_info = db.rsu_info
 lane_info = db.lane_info
+map_info = db.map_info
+map_lane_info:Dict[str,dict]={}
+db.get_map_info()
 db.get_rsu_info(False)
+
+
+"""
+将 map.json 添加进 rsu 的信息
+1. 替换pos(以map的为准)
+2. 计算rsu与map之间的关系
+"""
+
+def update_rsu_info():
+    """Update rsu info."""
+    for k,v in rsu_info.items():
+        for k_map,v_map in map_info.items():
+            if v["intersection_code"]==v_map["intersection_code"]:
+                # 取出来 map 对应的经纬度，进行替换
+                rsu_info[k]["pos"]=map_info[k_map]['pos']
+                # rsu与lane
+                map_lane_info[k]=map_info[k_map]["lane_info"]
+
+
+    # map.json 计算出来的车道线信息 替换 原 车道线信息（map信息存在的情况下）
+    for key,value in lane_info.items():
+        for key1,value1 in map_lane_info.items():
+            if key==key1:
+                lane_info[key]=map_lane_info[key1]
+
+
+update_rsu_info()
 generate_transformation_info()
 
 
