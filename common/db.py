@@ -15,17 +15,23 @@
 """database config and data access functions."""
 import yaml
 
+import collections
+from common import consts
 from common.log import Loggings
 from config import devel as cfg
-import orjson as json
+from copy import deepcopy
+from datetime import datetime
+import orjson as json # type: ignore
 from sqlalchemy import Column, ForeignKey  # type: ignore
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine # type: ignore
+from sqlalchemy import DateTime # type: ignore
 from sqlalchemy.ext.declarative import declarative_base  # type: ignore
-from sqlalchemy import Float, Boolean
-from sqlalchemy import Integer
-from sqlalchemy import JSON
+from sqlalchemy.orm import deferred # type: ignore
+from sqlalchemy import Float, Boolean # type: ignore
+from sqlalchemy import Integer # type: ignore
+from sqlalchemy import JSON # type: ignore
 from sqlalchemy.orm import sessionmaker, relationship  # type: ignore
-from sqlalchemy import String
+from sqlalchemy import String # type: ignore
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -35,6 +41,7 @@ import zlib
 logger = Loggings()
 rsu_info: Dict[str, dict] = {}
 lane_info: Dict[str, dict] = {}
+map_info: Dict[str,dict]={}
 Base = declarative_base()
 engine = create_engine(**cfg.sqlalchemy_w)
 DBSession = sessionmaker(bind=engine)
@@ -126,6 +133,18 @@ def sqlite():
     session.close()
 
 
+class DandelionBase:  # type: ignore
+    """Basic class."""
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    create_time = Column(DateTime, nullable=False, default=lambda: datetime.utcnow())
+    update_time = Column(
+        DateTime,
+        nullable=False,
+        default=lambda: datetime.utcnow(),
+        onupdate=lambda: datetime.utcnow(),
+    )
+
 class RSU(Base):  # type: ignore
     """Define the RSU object."""
 
@@ -139,6 +158,8 @@ class RSU(Base):  # type: ignore
     reverse = Column(type_=Integer, nullable=False)
     scale = Column(type_=Float, nullable=False)
     lane_info = Column(type_=JSON, nullable=False)
+    intersection_code = Column(String(64),\
+         ForeignKey("intersection.code"))
 
 
 class MQTT(Base):  # type: ignore
@@ -148,6 +169,70 @@ class MQTT(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     node_id = Column(Integer, nullable=True, default=0)
     mqtt_config = Column(JSON, nullable=True)
+
+class Optional(object):  # type: ignore
+    """Optional."""
+
+    def __init__(self, val):
+        """Init."""
+        self.val = val
+
+    @staticmethod
+    def none(val):
+        """none."""
+        return Optional(val)
+
+    def map(self, func):
+        """map."""
+        if self.val is None:
+            return self
+        self.val = func(self.val)
+        return self
+
+    def get(self):
+        """get."""
+        return self.val
+
+    def orElse(self, val_):
+        """orElse."""
+        if self.val is None:
+            return val_
+        return self.get()
+
+
+class Map(Base, DandelionBase):  # type: ignore
+    """Map."""
+
+    __tablename__ = "map"
+
+    name = Column(String(64), nullable=False, index=True, unique=True)
+    intersection_code = Column(String(64),\
+         ForeignKey("intersection.code")) # type: ignore
+    desc = Column(String(255), nullable=False, default="")
+    lat = Column(Float, nullable=False)
+    lng = Column(Float, nullable=False)
+    data = deferred(Column(JSON, nullable=True))
+    bitmap_filename = Column(String(64), nullable=True)
+
+    def __repr__(self) -> str:
+        """Repr."""
+        return f"<Map(name='{self.name}')>"
+
+    def to_dict(self):
+        """To dict."""
+        return {
+            **dict(
+                id=self.id,
+                intersection_code=self.intersection_code,
+                name=self.name,
+                desc=self.desc,
+                amount=len(self.rsus),
+                lat=self.lat,
+                lng=self.lng,
+                createTime=self.create_time,
+            ),
+            **Optional.none(self.intersection).map(lambda v: v.to_all()).orElse({}),
+        }
 
 
 if cfg.db_server == "sqlite":
@@ -167,6 +252,7 @@ def get_rsu_info(msg_info):
             RSU.reverse,
             RSU.scale,
             RSU.lane_info,
+            RSU.intersection_code
         ).filter(RSU.rsu_esn == rsu_id)
     else:
         results = session.query(
@@ -178,6 +264,7 @@ def get_rsu_info(msg_info):
             RSU.reverse,
             RSU.scale,
             RSU.lane_info,
+            RSU.intersection_code
         ).all()
     for row in results:
         try:
@@ -191,12 +278,70 @@ def get_rsu_info(msg_info):
                 "rotation": row[4],
                 "reverse": row[5],
                 "scale": row[6],
+                "intersection_code":row[8]
             }
         except Exception as e:
             logger.error(
                 f"Missing required field data in RSU with serial number "
                 f":{row[0]}, ERROR: {e}"
             )
+    session.close()
+
+def get_map_info():
+    """Get information of all Map."""
+    results = session.query(
+        Map.name,
+        Map.intersection_code,
+        Map.data
+    ).all()
+    for row in results:
+        try:
+            # 计算 map.json 中每条车道的 +1 -1
+            link_dict={}
+            map_lane_info0={}
+            for item in row[2]["nodes"]["Node"]:
+                for link in item["inLinks"]["Link"]:
+                    lane_list=[]
+                    for lane in link["lanes"]["Lane"]:
+                        lane_list.append(lane["laneID"])
+                    lanes=deepcopy(lane_list)
+                    link_dict[link["name"]]=lanes
+
+            key_list = [key.split("-")[-1] for key in link_dict.keys()]
+            center_node=[item for item, count in collections.Counter(key_list).items() if count > 1]
+
+            # 取中心节点的参考经纬度
+            for node in row[2]["nodes"]["Node"]:
+                if node["name"]==center_node[0]:
+                    del node["refPos"]["elevation"]
+                    node["refPos"]["lon"] = int(node["refPos"].pop("long"))/consts.CoordinateUnit
+                    node["refPos"]["lat"] = int(node["refPos"]["lat"])/consts.CoordinateUnit
+                    refPos=node["refPos"]
+
+            for num,link in enumerate(link_dict):
+                if link.split("-")[-1] == center_node[0]:
+                    dict0 = dict([(int(v),+1) for i,v in enumerate(link_dict[link])])
+                    new_dict0=deepcopy(dict0)
+                    map_lane_info0.update(new_dict0)
+                    pass
+                else:
+                    dict1 = dict([(int(v),-1) for i,v in enumerate(link_dict[link])])
+                    new_dict1=deepcopy(dict1)
+                    map_lane_info0.update(new_dict1)
+                    pass
+
+
+            map_info[row[0]] = {
+                "intersection_code": row[1],  # type: ignore [no-redef]
+                "pos": refPos,  # type: ignore
+                "lane_info": map_lane_info0  # type: ignore
+            }
+
+        except Exception as e:
+            logger.error(  # type: ignore
+                "Missing required field data in Map with serial number"   # type: ignore
+            )  # type: ignore
+
     session.close()
 
 
@@ -207,10 +352,11 @@ def get_mqtt_config():
         mq_cfg = results[0]
         node_id = results[1]
         session.close()
-        return mq_cfg, node_id
+        return mq_cfg, node_id  # type: ignore
     except Exception:
         session.close()
-        logger.error("unable to fetch mqtt configuration from database")
+        logger.error("unable to \
+            fetch mqtt configuration from database")
 
 
 class AlgoVersion(Base):  # type: ignore
