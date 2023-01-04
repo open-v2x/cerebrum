@@ -41,6 +41,7 @@ CW_TOPIC = topic_replace("V2X/RSU/{}/CWM/DOWN", cfg.DELIMITER)
 SDS_TOPIC = topic_replace("V2X/RSU/{}/SDS/DOWN", cfg.DELIMITER)
 CLC_TOPIC = topic_replace("V2X/RSU/{}/CLC/DOWN", cfg.DELIMITER)
 DNP_TOPIC = topic_replace("V2X/RSU/{}/DNP/DOWN", cfg.DELIMITER)
+RDW_TOPIC = topic_replace("V2X/RSU/{}/RDW/DOWN", cfg.DELIMITER)
 
 
 RSM_VISUAL_TOPIC = topic_replace(
@@ -58,6 +59,9 @@ DNP_VISUAL_TOPIC = topic_replace(
 )
 SDS_VISUAL_TOPIC = topic_replace(
     "V2X/DEVICE/{}/APPLICATION/SDS/NODE{}", cfg.DELIMITER
+)
+RDW_VISUAL_TOPIC = topic_replace(
+    "V2X/DEVICE/{}/APPLICATION/RDW/NODE{}", cfg.DELIMITER
 )
 
 # Millimeter wave radar

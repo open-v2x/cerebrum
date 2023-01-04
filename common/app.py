@@ -86,7 +86,7 @@ class App:
             # Millimeter wave radar
             consts.topic_replace(
                 "V2X/RADAR/+/EVENT/UP", self.config.DELIMITER
-            ): self._mqtt_on_radar
+            ): self._mqtt_on_radar,
         }
         self.rsm_topic_driver_re = re.compile(
             consts.topic_replace(
@@ -127,9 +127,9 @@ class App:
         )
         self.radar_topic_re = re.compile(
             consts.topic_replace(
-            r"V2X/RADAR/(?P<rsuid>[^/]+)/(?:TRACK\
+                r"V2X/RADAR/(?P<rsuid>[^/]+)/(?:TRACK\
             |CROSS|STATUS|FLOW|EVENT)/UP",
-            self.config.DELIMITER,
+                self.config.DELIMITER,
             )
         )
         self.stop = False
@@ -301,7 +301,9 @@ class App:
         except Exception:
             return logger.error("radar data format error")
         if self._is_valid_rsu_id(rsu_id):
-            self.loop.create_task(self.radar.run(rsu_id, json.loads(msg.payload)))
+            self.loop.create_task(
+                self.radar.run(rsu_id, json.loads(msg.payload))
+            )
         else:
             logger.error("Target RSU is not registered")
         pass
