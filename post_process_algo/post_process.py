@@ -196,6 +196,18 @@ def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
     }
     return cwm
 
+def generate_cgm(cgm_list: list, rsu_id: str) -> dict:
+    """Generate collision warning message."""
+    position_info = rsu_info[rsu_id]["pos"].copy()
+    position_info["lon"] = int(position_info["lon"] * consts.CoordinateUnit)
+    position_info["lat"] = int(position_info["lat"] * consts.CoordinateUnit)
+    cgm = {
+        "targetRSU": rsu_id,
+        "sensorPos": position_info,
+        "content": cgm_list,
+    }
+    return cgm
+
 
 def generate_rdw(rdw_list: list, rsu_id: str) -> dict:
     """Generate reverse driving warning message."""

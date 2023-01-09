@@ -432,4 +432,3 @@ def get_algo_config():
 
 
 cfg.DEFAULT_ALGORITHM_YAML = get_algo_config()
-print(cfg.DEFAULT_ALGORITHM_YAML)

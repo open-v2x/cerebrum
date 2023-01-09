@@ -12,30 +12,31 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-"""Call the reverse driving warning algorithm function."""
-
+"""Call the congestion algorithm function."""
 from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
 from scenario_algo.svc.collision_warning import CollisionWarning
 
-reverse_driving_warning = modules.algorithms.reverse_driving_warning.module
+congestion_warning = modules.algorithms.congestion_warning.module
 
 
-class ReverseDriving:
-    """Call the reverse driving warning algorithm function."""
 
-    def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None):
+class Congestion:
+    """Call the congestion algorithm function."""
+
+    def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None) -> None:
         """Class initialization."""
         self._kv = kv
-        self._exe = reverse_driving_warning.ReverseDriving()
         self._mqtt = mqtt
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
+        self._exe = congestion_warning.CongestionWarning()
 
     async def run(self, rsu_id: str, latest_frame: dict, _: dict = {}) -> dict:
         """External call function."""
+        # 获取traj
         his_info = await self._kv.get(
             CollisionWarning.HIS_INFO_KEY.format(rsu_id)
         )
@@ -45,24 +46,26 @@ class ReverseDriving:
             else {}
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
-        rdw, show_info, last_ts = self._exe.run(
+        cgw, show_info, last_ts = self._exe.run(
             context_frames, latest_frame, last_ts, rsu_id
+           
         )
 
-        reverse_driving_warning_message = post_process.generate_rdw(
-            rdw, rsu_id
+        congestion_warning_message = post_process.generate_cgm(
+            cgw, rsu_id
         )
-        
-        if rdw and show_info:
+
+        if cgw and show_info:
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.RDW_VISUAL_TOPIC.format(rsu_id, self.node_id),
+                    consts.CGW_VISUAL_TOPIC.format(rsu_id, self.node_id),
                     json.dumps(show_info),
                     0,
                 )
                 self._mqtt.publish(
-                    consts.RDW_TOPIC.format(rsu_id),
-                    json.dumps(reverse_driving_warning_message),
+                    consts.CGW_TOPIC.format(rsu_id),
+                    json.dumps(congestion_warning_message),
                     0,
                 )
+                
         return latest_frame
