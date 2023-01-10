@@ -1,6 +1,14 @@
 FROM docker.io/openv2x/cerebrum-base:latest
 
-LABEL purpose="cerebrum"
+ARG GIT_BRANCH
+ARG GIT_COMMIT
+ARG RELEASE_VERSION
+ARG REPO_URL
+
+LABEL cerebrum.build_branch=${GIT_BRANCH} \
+      cerebrum.build_commit=${GIT_COMMIT} \
+      cerebrum.release_version=${RELEASE_VERSION} \
+      cerebrum.repo_url=${REPO_URL}
 
 WORKDIR /home/www/cerebrum
 COPY . /home/www/cerebrum
