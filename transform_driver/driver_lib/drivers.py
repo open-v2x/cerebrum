@@ -120,6 +120,7 @@ def rsm_dawnline(payload: bytes):
                     msg_info = f"Missing rsm optional key: {optional_key}"
             rsm_info["participants"].append(participant)
         rsm_format["content"]["rsms"].append(rsm_info)
+
     if miss_optional_flag:
         logging.warning(msg_info)
         return "miss_optional_key", rsm_format, msg_info

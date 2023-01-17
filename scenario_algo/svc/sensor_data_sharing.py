@@ -58,11 +58,13 @@ class SensorDataSharing:
             for i in info_for_show["other_cars"]:
                 post_process.convert_for_visual(i, rsu_id)
             post_process.convert_for_visual(info_for_show["ego_point"], rsu_id)
+
         self._mqtt.publish(
             consts.SDS_TOPIC.format(rsu_id),
             json.dumps(msg_ssm),
             0,
         )
+        
         if self._mqtt_conn:
             self._mqtt_conn.publish(
                 consts.SDS_VISUAL_TOPIC.format(rsu_id, self.node_id),

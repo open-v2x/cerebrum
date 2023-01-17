@@ -20,6 +20,7 @@ from pre_process_ai_algo.algo_lib.utils import MaxSecMark
 from scenario_algo.algo_lib import utils
 import shapely.geometry as geo  # type: ignore
 import time
+from typing import List
 
 
 class Base:
@@ -301,7 +302,11 @@ class SensorDataSharing(Base):
         return his_x, his_x, his_lat, his_lon, predicted_lat, predicted_lon
 
     def _build_obstacle_info(self, rsi: dict) -> list:
-        obstacle_list = []
+        obstacle_list: List = []
+
+        if not rsi.get("content"):
+            return obstacle_list
+
         for event_info in rsi["content"]["rsiDatas"][0]["rtes"]:
             if event_info["eventType"] in [401, 406]:  # ThrowingObject Animal
                 obstacle_list.append(

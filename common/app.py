@@ -44,19 +44,19 @@ class App:
 
         self.msg_dispatch = {
             consts.topic_replace(
-                "V2X/RSU/+/RSM/UP", self.config.DELIMITER
+                "V2X/RSU/+/+/RSM/UP", self.config.DELIMITER
             ): self._mqtt_on_rsm_msg,
             consts.topic_replace(
-                "V2X/RSU/+/RSM/UP/+", self.config.DELIMITER
+                "V2X/RSU/+/+/RSM/UP/+", self.config.DELIMITER
             ): self._mqtt_on_rsm_msg,
             consts.topic_replace(
-                "V2X/RSU/+/RSI/UP/+", self.config.DELIMITER
+                "V2X/RSU/+/+/RSI/UP/+", self.config.DELIMITER
             ): self._mqtt_on_rsi,
             consts.topic_replace(
-                "V2X/DEVICE/+/RSI/UP", self.config.DELIMITER
+                "V2X/DEVICE/+/+/RSI/UP", self.config.DELIMITER
             ): self._mqtt_on_rsi,
             consts.topic_replace(
-                "V2X/RSU/+/VIR/UP", self.config.DELIMITER
+                "V2X/RSU/+/+/VIR/UP", self.config.DELIMITER
             ): self._mqtt_on_vir,
             consts.topic_replace(
                 "V2X/RSU/+/PIP/CFG", self.config.DELIMITER
@@ -69,39 +69,39 @@ class App:
             ): self._mqtt_on_config_db,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/TRACK/UP", self.config.DELIMITER
+                "V2X/RADAR/+/+/TRACK/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/CROSS/UP", self.config.DELIMITER
+                "V2X/RADAR/+/+/CROSS/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/STATUS/UP", self.config.DELIMITER
+                "V2X/RADAR/+/+/STATUS/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/FLOW/UP", self.config.DELIMITER
+                "V2X/RADAR/+/+/FLOW/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/EVENT/UP", self.config.DELIMITER
+                "V2X/RADAR/+/+/EVENT/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
         }
         self.rsm_topic_driver_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/RSM/UP/(?P<driver>[^/]+)",
+                r"V2X/RSU/(?P<rsuid>[^/]+)/(?P<intersectionid>[^/]+)/RSM/UP/(?P<driver>[^/]+)",
                 self.config.DELIMITER,
             )
         )
         self.rsm_topic_std_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/RSM/UP", self.config.DELIMITER
+                r"V2X/RSU/(?P<rsuid>[^/]+)/(?P<intersectionid>[^/]+)/RSM/UP", self.config.DELIMITER
             )
         )
         self.rsi_topic_driver_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/RSI/UP/(?P<driver>[^/]+)",
+                r"V2X/RSU/(?P<rsuid>[^/]+)/(?P<intersectionid>[^/]+)/RSI/UP/(?P<driver>[^/]+)",
                 self.config.DELIMITER,
             )
         )
@@ -112,7 +112,7 @@ class App:
         )
         self.vir_topic_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/VIR/UP", self.config.DELIMITER
+                r"V2X/RSU/(?P<rsuid>[^/]+)/(?P<intersectionid>[^/]+)/VIR/UP", self.config.DELIMITER
             )
         )
         self.rsi_topic_re = re.compile(
@@ -127,8 +127,8 @@ class App:
         )
         self.radar_topic_re = re.compile(
             consts.topic_replace(
-                r"V2X/RADAR/(?P<rsuid>[^/]+)/(?:TRACK\
-            |CROSS|STATUS|FLOW|EVENT)/UP",
+r"V2X/RADAR/(?P<rsuid>[^/]+)\/(?P<intersectionid>[^/]+)/(?:TRACK|\
+        CROSS|STATUS|FLOW|EVENT)/UP",
                 self.config.DELIMITER,
             )
         )
@@ -253,7 +253,8 @@ class App:
             miss_flag, rsm, miss_info = driver(msg.payload)
         except Exception:
             return logger.error("rsm data format error")
-        if self._is_valid_rsu_id(rsu_id):
+        if self._is_valid_intersection_id(rsu_id):
+
             self.loop.create_task(
                 self.process.run(rsu_id, rsm, miss_flag, miss_info)
             )
@@ -263,10 +264,10 @@ class App:
     def _mqtt_on_vir(self, client, userdata, msg):
         try:
             m = self.vir_topic_re.search(msg.topic)
-            rsu_id = m.groupdict()["rsuid"]
+            rsu_id = m.groupdict()["intersectionid"]
         except Exception:
             return logger.error("vir data format error")
-        if self._is_valid_rsu_id(rsu_id):
+        if self._is_valid_intersection_id(rsu_id):
             self.loop.create_task(self.svc.run(rsu_id, msg.payload))
         else:
             logger.error("Target RSU is not registered")
@@ -278,7 +279,7 @@ class App:
             rsi, congestion_info = driver(msg.payload)
         except Exception as e:
             return logger.error(f"rsi data format error: {e}")
-        if self._is_valid_rsu_id(rsu_id):
+        if self._is_valid_intersection_id(rsu_id):
             self.loop.create_task(self.rsi.run(rsu_id, rsi, congestion_info))
         else:
             logger.error("RSU is not registered")
@@ -289,7 +290,7 @@ class App:
             rsu_id = m.groupdict()["rsuid"]
         except Exception:
             return logger.error("cfg data format error")
-        if self._is_valid_rsu_id(rsu_id):
+        if self._is_valid_intersection_id(rsu_id):
             self.loop.create_task(self.cfg.run(rsu_id, msg.payload))
         else:
             logger.error("RSU is not registered")
@@ -297,10 +298,10 @@ class App:
     def _mqtt_on_radar(self, client, userdata, msg):
         try:
             m = self.radar_topic_re.search(msg.topic)
-            rsu_id = m.groupdict()["rsuid"]
+            rsu_id = m.groupdict()["intersectionid"]
         except Exception:
             return logger.error("radar data format error")
-        if self._is_valid_rsu_id(rsu_id):
+        if self._is_valid_intersection_id(rsu_id):
             self.loop.create_task(
                 self.radar.run(rsu_id, json.loads(msg.payload))
             )
@@ -318,15 +319,20 @@ class App:
     def _driver_name(self, topic, msg_type):
         if topic[-2:] == "UP":
             m = getattr(self, "{}_topic_std_re".format(msg_type)).search(topic)
-            rsu_id = m.groupdict()["rsuid"]
+            rsu_id = m.groupdict()["intersectionid"]
             driver_name = msg_type + "_std"
         else:
             m = getattr(self, "{}_topic_driver_re".format(msg_type)).search(
                 topic
             )
-            rsu_id = m.groupdict()["rsuid"]
+            rsu_id = m.groupdict()["intersectionid"]
             driver_name = msg_type + "_" + m.groupdict()["driver"].lower()
         return driver_name, rsu_id
+
+    def _is_valid_intersection_id(self,intersection_id):
+        if intersection_id in post_process.intersection_info:
+            return True
+        return False
 
     def _is_valid_rsu_id(self, rsu_id):
         if rsu_id in post_process.rsu_info:

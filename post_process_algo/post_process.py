@@ -230,19 +230,16 @@ async def http_post(url: str, body: dict) -> aiohttp.ClientResponse:
 
 def generate_transformation_info():
     """Generate transformation info."""
-    for rsu in rsu_info.keys():
-        TfMap[rsu] = Transformer.from_crs(
-            "epsg:4326", choose_epsg(rsu_info[rsu]["pos"]["lon"])
+    for intersection in intersection_info.keys():
+        TfMap[intersection] = Transformer.from_crs("epsg:4326", "epsg:2416")
+
+        YOrigin[intersection], XOrigin[intersection] = coordinate_tf(
+            intersection_info[intersection]["pos"]["lat"] * coord_unit,
+            intersection_info[intersection]["pos"]["lon"] * coord_unit,
+            TfMap[intersection],
         )
-        if rsu == "R328328":
-            TfMap[rsu] = Transformer.from_crs("epsg:4326", "epsg:2416")
-        YOrigin[rsu], XOrigin[rsu] = coordinate_tf(
-            rsu_info[rsu]["pos"]["lat"] * coord_unit,
-            rsu_info[rsu]["pos"]["lon"] * coord_unit,
-            TfMap[rsu],
-        )
-        XOrigin[rsu] = int(XOrigin[rsu])
-        YOrigin[rsu] = int(YOrigin[rsu])
+        XOrigin[intersection] = int(XOrigin[intersection])
+        YOrigin[intersection] = int(YOrigin[intersection])
 
 
 YOrigin: Dict[str, int] = {}
@@ -252,35 +249,31 @@ rsu_info = db.rsu_info
 lane_info = db.lane_info
 map_info = db.map_info
 map_lane_info: Dict[str, dict] = {}
-db.get_map_info()
+intersection_info = db.intersection_info
 db.get_rsu_info(False)
+db.get_map_info()
+db.get_intersection_info()
 
 
-"""
-将 map.json 添加进 rsu 的信息
-1. 替换pos(以map的为准)
-2. 计算rsu与map之间的关系
-"""
-
+for k, v in intersection_info.items():
+    intersection_info[k] = rsu_info["R328328"]
+    lane_info[k]=lane_info["R328328"]
+rsu_info = intersection_info
 
 def update_rsu_info():
     """Update rsu info."""
     for k, v in rsu_info.items():
         for k_map, v_map in map_info.items():
             if v["intersection_code"] == v_map["intersection_code"]:
-                # 取出来 map 对应的经纬度，进行替换
                 rsu_info[k]["pos"] = map_info[k_map]["pos"]
-                # rsu与lane
                 map_lane_info[k] = map_info[k_map]["lane_info"]
-
-    # map.json 计算出来的车道线信息 替换 原 车道线信息（map信息存在的情况下）
-    for key, value in lane_info.items():
-        for key1, value1 in map_lane_info.items():
-            if key == key1:
-                lane_info[key] = map_lane_info[key1]
 
 
 update_rsu_info()
+if map_lane_info != {}:
+    lane_info = map_lane_info
+
+
 generate_transformation_info()
 
 

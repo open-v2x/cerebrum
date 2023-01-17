@@ -76,7 +76,7 @@ scenario_algo:
       version:
       - sensor_data_sharing
     reverse_driving_warning:
-      enable: true
+      enable: false
       module: "scenario_algo.algo_lib.reverse_driving_warning"
       algo: "reverse_driving_warning"
       version:
