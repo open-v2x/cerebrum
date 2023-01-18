@@ -19,7 +19,7 @@ from common import modules
 from config import devel as cfg
 import orjson as json
 from post_process_algo import post_process
-from pre_process_ai_algo.pipelines import Base
+from scenario_algo.svc import Base
 from typing import Any
 from typing import Dict
 
@@ -34,7 +34,7 @@ class Visualize(Base):
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
 
-    async def run(self, rsu: str, latest_frame: dict, _: dict = {}) -> dict:
+    async def run(self, rsu: str, latest_frame: dict, node_id: int, _: dict = {}) -> dict:
         """External call function."""
         # 可视化，修改 x，y 后，返回给 mqtt
         vis = []
@@ -79,7 +79,7 @@ class Visualize(Base):
             await post_process.http_post(url, final_info)
         if self._mqtt_conn:
             self._mqtt_conn.publish(
-                consts.RSM_VISUAL_TOPIC.format(rsu, self.node_id),
+                consts.RSM_VISUAL_TOPIC.format(rsu, node_id),
                 json.dumps(vis),
                 0,
             )

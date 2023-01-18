@@ -174,6 +174,34 @@ class MQTT(Base):  # type: ignore
     mqtt_config = Column(JSON, nullable=True)
 
 
+class EdgeNodeRSU(Base, DandelionBase):  # type: ignore
+    """EdgeNodeRSU."""
+    
+    __tablename__ = "edge_node_rsu"
+
+    edge_node_id = Column(Integer, ForeignKey("edge_node.id"))
+    intersection_code = Column(String(64), ForeignKey("intersection.code"))
+    name = Column(String(64), nullable=False, index=True)
+    esn = Column(String(64), nullable=False, index=True)
+    location = Column(JSON, nullable=False)
+    edge_rsu_id = Column(Integer, nullable=False)
+
+    def to_all_dict(self):
+        """To all dict."""
+        return dict(
+            id=self.id,
+            name=self.name,
+            esn=self.esn,
+            location=self.location,
+            createTime=self.create_time,
+            edge_rsu_id=self.edge_rsu_id,
+        )
+
+    def __repr__(self) -> str:
+        """repr."""
+        return f"<EdgeNodeRSU(name='{self.name}', esn='{self.esn}')>"
+
+
 class Optional(object):  # type: ignore
     """Optional."""
 
@@ -206,6 +234,7 @@ class Optional(object):  # type: ignore
 
 class Map(Base, DandelionBase):  # type: ignore
     """Map."""
+
     __tablename__ = "map"
 
     name = Column(String(64), nullable=False, index=True, unique=True)
@@ -247,6 +276,7 @@ if cfg.db_server == "sqlite":
 
 class Intersection(Base, DandelionBase):  # type: ignore
     """Intersection."""
+
     __tablename__ = "intersection"
 
     code = Column(String(64), unique=True, index=True, nullable=False)
@@ -381,13 +411,11 @@ def get_map_info():
     session.close()
 
 
-
-
 def get_intersection_info():
     """Get information of all Intersection."""
     results = session.query(
         Intersection.code,
-        ).all()
+    ).all()
     for row in results:
         try:
             intersection_info[row[0]] = {}
@@ -399,22 +427,47 @@ def get_intersection_info():
     session.close()
 
 
-
-
 def get_mqtt_config():
     """Get the configuration of mqtt."""
     try:
         results = session.query(MQTT.mqtt_config, MQTT.node_id).first()
         mq_cfg = results[0]
-        node_id = results[1]
+
+        results = session.query(
+            EdgeNodeRSU.esn,
+            EdgeNodeRSU.edge_node_id
+        ).all()
+        rsu_nodeid: Dict = {}
+        for item in results:
+            rsu_nodeid[item[0]] = item[1]
         session.close()
-        return mq_cfg, node_id  # type: ignore
+        return mq_cfg, rsu_nodeid  # type: ignore
     except Exception:
         session.close()
         logger.error(
             "unable to \
             fetch mqtt configuration from database"
         )
+
+def put_rsu_nodeid():
+    """Put the configuration of nodeid."""
+    try:
+        results = session.query(
+            EdgeNodeRSU.esn,
+            EdgeNodeRSU.edge_node_id
+        ).all()
+        rsu_nodeid: Dict = {}
+        for item in results:
+            rsu_nodeid[item[0]] = item[1]
+        session.close()
+        return rsu_nodeid  # type: ignore
+    except Exception:
+        session.close()
+        logger.error(
+            "unable to \
+            fetch nodeid configuration from database"
+        )
+    pass
 
 
 class AlgoVersion(Base):  # type: ignore

@@ -34,7 +34,7 @@ class ReverseDriving:
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
 
-    async def run(self, rsu_id: str, latest_frame: dict, _: dict = {}) -> dict:
+    async def run(self, rsu_id: str, latest_frame: dict, node_id: int, _: dict = {}) -> dict:
         """External call function."""
         his_info = await self._kv.get(
             CollisionWarning.HIS_INFO_KEY.format(rsu_id)
@@ -54,7 +54,7 @@ class ReverseDriving:
         if rdw and show_info:
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.RDW_VISUAL_TOPIC.format(rsu_id, self.node_id),
+                    consts.RDW_VISUAL_TOPIC.format(rsu_id, node_id),
                     json.dumps(show_info),
                     0,
                 )

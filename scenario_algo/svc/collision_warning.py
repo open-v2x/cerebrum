@@ -18,7 +18,7 @@ from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
-from pre_process_ai_algo.pipelines import Base
+from scenario_algo.svc import Base
 
 collision_warning = modules.algorithms.collision_warning.module
 
@@ -76,7 +76,7 @@ class CollisionWarning(Base):
         await self._kv.set(self.EVENT_PAIR_KEY.format(rsu), events_count)
         return alarms, filtered_cwm
 
-    async def run(self, rsu: str, latest_frame: dict, _: dict = {}) -> dict:
+    async def run(self, rsu: str, latest_frame: dict, node_id: int, _: dict = {}) -> dict:
         """External call function."""
         his_info = await self._kv.get(self.HIS_INFO_KEY.format(rsu))
         context_frames = (
@@ -109,7 +109,7 @@ class CollisionWarning(Base):
             if alarms:
                 if self._mqtt_conn:
                     self._mqtt_conn.publish(
-                        consts.CW_VISUAL_TOPIC.format(rsu, self.node_id),
+                        consts.CW_VISUAL_TOPIC.format(rsu, node_id),
                         json.dumps(alarms),
                         0,
                     )
