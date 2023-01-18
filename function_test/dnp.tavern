@@ -14,7 +14,7 @@ paho-mqtt:
 stages:
   - name: testdnp
     mqtt_publish:
-      topic: V2X/RSU/R328328/VIR/UP
+      topic: V2X/RSU/R328328/32011501/VIR/UP
       json:
         {
           "msgCnt": "2",
@@ -47,6 +47,6 @@ stages:
 
 
     mqtt_response:
-      topic: V2X/RSU/R328328/DNP/DOWN
+      topic: V2X/RSU/32011501/DNP/DOWN
       payload: !anything
       timeout: 1

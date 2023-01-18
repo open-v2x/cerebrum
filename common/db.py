@@ -39,6 +39,7 @@ from typing import List
 import zlib
 
 logger = Loggings()
+intersection_info: Dict[str, dict] = {}
 rsu_info: Dict[str, dict] = {}
 lane_info: Dict[str, dict] = {}
 map_info: Dict[str, dict] = {}
@@ -205,7 +206,6 @@ class Optional(object):  # type: ignore
 
 class Map(Base, DandelionBase):  # type: ignore
     """Map."""
-
     __tablename__ = "map"
 
     name = Column(String(64), nullable=False, index=True, unique=True)
@@ -243,6 +243,28 @@ class Map(Base, DandelionBase):  # type: ignore
 
 if cfg.db_server == "sqlite":
     sqlite()
+
+
+class Intersection(Base, DandelionBase):  # type: ignore
+    """Intersection."""
+    __tablename__ = "intersection"
+
+    code = Column(String(64), unique=True, index=True, nullable=False)
+
+    def __repr__(self) -> str:
+        """repr."""
+        return f"<Intersection(code='{self.code}', name='{self.name}')>"
+
+    def to_dict(self):
+        """to_dict."""
+        return dict(
+            id=self.id,
+            code=self.code,
+            name=self.name,
+            lng=self.lng,
+            lat=self.lat,
+            **self.to_area(),
+        )
 
 
 def get_rsu_info(msg_info):
@@ -357,6 +379,26 @@ def get_map_info():
             )  # type: ignore
 
     session.close()
+
+
+
+
+def get_intersection_info():
+    """Get information of all Intersection."""
+    results = session.query(
+        Intersection.code,
+        ).all()
+    for row in results:
+        try:
+            intersection_info[row[0]] = {}
+        except Exception as e:
+            logger.error(
+                f"Missing required field data in Intersection with serial number "
+                f":{row[0]}, ERROR: {e}"
+            )
+    session.close()
+
+
 
 
 def get_mqtt_config():

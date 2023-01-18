@@ -14,7 +14,7 @@ paho-mqtt:
 stages:
   - name: testmwr
     mqtt_publish:
-      topic: V2X/RADAR/R328328/FLOW/UP
+      topic: V2X/RADAR/R328328/32011501/FLOW/UP
       json:
         {
         "number": 3,
@@ -81,6 +81,6 @@ stages:
       }
 
     mqtt_response:
-      topic: V2X/DEVICE/R328328/RADAR/DOWN
+      topic: V2X/DEVICE/32011501/RADAR/DOWN
       payload: !anything
       timeout: 1
