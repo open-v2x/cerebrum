@@ -34,7 +34,7 @@ class CooperativeLaneChange:
         self.node_id = node_id
         self._exe = cooperative_lane_change.CooperativeLaneChange()
 
-    async def run(self, params: dict, rsu_id: str, convert_info: list) -> None:
+    async def run(self, params: dict, rsu_id: str, convert_info: list, node_id: int) -> None:
         """External call function."""
         his_info = await self._kv.get(
             CollisionWarning.HIS_INFO_KEY.format(rsu_id)
@@ -62,7 +62,7 @@ class CooperativeLaneChange:
             # rsu，前端
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.CLC_VISUAL_TOPIC.format(rsu_id, self.node_id),
+                    consts.CLC_VISUAL_TOPIC.format(rsu_id, node_id),
                     json.dumps([info_for_show]),
                     0,
                 )

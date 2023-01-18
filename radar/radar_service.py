@@ -37,7 +37,7 @@ class RadarServer:
         self.node_id = node_id
         self._exe = millimeter_wave_radar
 
-    async def run(self, rsu: str, data: dict, _: dict = {}) -> dict:  # type: ignore
+    async def run(self, rsu: str, data: dict, rsu_id: int, _: dict = {}) -> dict:  # type: ignore
         """External call function."""
         # ret= self._exe.run()
         ret = data  # type: ignore

@@ -58,6 +58,8 @@ class DataProcessing:
             "fusion",
             "complement",
             "smooth",
+        ]
+        self._nodeid_pipelines = [
             "visual",
             "collision_warning",
             "reverse_driving_warning",
@@ -90,7 +92,7 @@ class DataProcessing:
         }
 
     async def run(
-        self, rsu_id: str, raw_rsm: dict, miss_flag: str, miss_info: str
+        self, rsu_id: str, raw_rsm: dict, miss_flag: str, miss_info: str, node_id: int
     ) -> None:
         """External call function."""
         async with self._kv.lock(self.LOCK_KEY.format(rsu_id)):
@@ -154,9 +156,19 @@ class DataProcessing:
                 getattr(self, "_{}_dispatch".format(p))[pipe_cfg[p]]
                 for p in self._pipelines
             ]
-            for p in pipelines:
+            for p1 in pipelines:
+                if p1:
+                    latest = await p1.run(rsu_id, latest)
+            nodeid_pipelines = [
+                # TODO(wu.wenxiang) check p not exist
+                getattr(self, "_{}_dispatch".format(p))[pipe_cfg[p]]
+                for p in self._nodeid_pipelines
+            ]
+
+            for p in nodeid_pipelines:
                 if p:
-                    latest = await p.run(rsu_id, latest)
+                    latest = await p.run(rsu_id, latest, node_id)
+
             rsm = post_process.frame2rsm(latest, raw_rsm, rsu_id)
             self._mqtt.publish(
                 consts.RSM_DOWN_TOPIC.format(rsu_id), json.dumps(rsm), 0

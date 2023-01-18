@@ -34,7 +34,7 @@ class DoNotPass:
         self.node_id = node_id
         self._exe = do_not_pass_warning.DoNotPass()
 
-    async def run(self, params: dict, rsu_id: str, _: list) -> None:
+    async def run(self, params: dict, rsu_id: str, _: list, node_id: int) -> None:
         """External call function."""
         his_info = await self._kv.get(
             CollisionWarning.HIS_INFO_KEY.format(rsu_id)
@@ -54,7 +54,7 @@ class DoNotPass:
             post_process.convert_for_visual(info_for_show["ego_point"], rsu_id)
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.DNP_VISUAL_TOPIC.format(rsu_id, self.node_id),
+                    consts.DNP_VISUAL_TOPIC.format(rsu_id, node_id),
                     json.dumps([info_for_show]),
                     0,
                 )
