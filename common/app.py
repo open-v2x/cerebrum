@@ -45,19 +45,19 @@ class App:
 
         self.msg_dispatch = {
             consts.topic_replace(
-                "V2X/RSU/+/+/RSM/UP", self.config.DELIMITER
+                "V2X/RSU/+/RSM/UP", self.config.DELIMITER
             ): self._mqtt_on_rsm_msg,
             consts.topic_replace(
-                "V2X/RSU/+/+/RSM/UP/+", self.config.DELIMITER
+                "V2X/RSU/+/RSM/UP/+", self.config.DELIMITER
             ): self._mqtt_on_rsm_msg,
             consts.topic_replace(
-                "V2X/RSU/+/+/RSI/UP/+", self.config.DELIMITER
+                "V2X/RSU/+/RSI/UP/+", self.config.DELIMITER
             ): self._mqtt_on_rsi,
             consts.topic_replace(
-                "V2X/DEVICE/+/+/RSI/UP", self.config.DELIMITER
+                "V2X/DEVICE/+/RSI/UP", self.config.DELIMITER
             ): self._mqtt_on_rsi,
             consts.topic_replace(
-                "V2X/RSU/+/+/VIR/UP", self.config.DELIMITER
+                "V2X/RSU/+/VIR/UP", self.config.DELIMITER
             ): self._mqtt_on_vir,
             consts.topic_replace(
                 "V2X/RSU/+/PIP/CFG", self.config.DELIMITER
@@ -70,39 +70,39 @@ class App:
             ): self._mqtt_on_config_db,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/+/TRACK/UP", self.config.DELIMITER
+                "V2X/RADAR/+/TRACK/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/+/CROSS/UP", self.config.DELIMITER
+                "V2X/RADAR/+/CROSS/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/+/STATUS/UP", self.config.DELIMITER
+                "V2X/RADAR/+/STATUS/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/+/FLOW/UP", self.config.DELIMITER
+                "V2X/RADAR/+/FLOW/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
             # Millimeter wave radar
             consts.topic_replace(
-                "V2X/RADAR/+/+/EVENT/UP", self.config.DELIMITER
+                "V2X/RADAR/+/EVENT/UP", self.config.DELIMITER
             ): self._mqtt_on_radar,
         }
         self.rsm_topic_driver_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/(?P<intersectionid>[^/]+)/RSM/UP/(?P<driver>[^/]+)",
+                r"V2X/RSU/(?P<rsuid>[^/]+)/RSM/UP/(?P<driver>[^/]+)",
                 self.config.DELIMITER,
             )
         )
         self.rsm_topic_std_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/(?P<intersectionid>[^/]+)/RSM/UP", self.config.DELIMITER
+                r"V2X/RSU/(?P<rsuid>[^/]+)/RSM/UP", self.config.DELIMITER
             )
         )
         self.rsi_topic_driver_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/(?P<intersectionid>[^/]+)/RSI/UP/(?P<driver>[^/]+)",
+                r"V2X/RSU/(?P<rsuid>[^/]+)/RSI/UP/(?P<driver>[^/]+)",
                 self.config.DELIMITER,
             )
         )
@@ -113,7 +113,7 @@ class App:
         )
         self.vir_topic_re = re.compile(
             consts.topic_replace(
-                r"V2X/RSU/(?P<rsuid>[^/]+)/(?P<intersectionid>[^/]+)/VIR/UP", self.config.DELIMITER
+                r"V2X/RSU/(?P<rsuid>[^/]+)/VIR/UP", self.config.DELIMITER
             )
         )
         self.rsi_topic_re = re.compile(
@@ -128,8 +128,8 @@ class App:
         )
         self.radar_topic_re = re.compile(
             consts.topic_replace(
-                r"V2X/RADAR/(?P<rsuid>[^/]+)\/(?P<intersectionid>[^/]+)/(?:TRACK|\
-        CROSS|STATUS|FLOW|EVENT)/UP",
+                r"V2X/RADAR/(?P<rsuid>[^/]+)/(?:TRACK\
+                    |CROSS|STATUS|FLOW|EVENT)/UP",
                 self.config.DELIMITER,
             )
         )
@@ -137,6 +137,8 @@ class App:
 
         # RSU 与 nodeid 的对应关系
         self.rsu_nodeid: Dict = {}
+        # RSU 与 intersectionid 的对应关系
+        self.rsu_intersectionid: Dict = {}
 
     def run(self):
         """External call function."""
@@ -180,7 +182,7 @@ class App:
 
     def _mqtt_cfg_db(self):
         try:
-            mcfg_conn, self.rsu_nodeid = db.get_mqtt_config()
+            mcfg_conn, self.rsu_nodeid, self.rsu_intersectionid = db.get_mqtt_config()
             node_id = self.rsu_nodeid["R328328"]
             self.mqtt_conn = mqtt.Client(client_id=uuid.uuid4().hex)
             self.mqtt_conn.username_pw_set(
@@ -270,8 +272,9 @@ class App:
     def _mqtt_on_vir(self, client, userdata, msg):
         try:
             m = self.vir_topic_re.search(msg.topic)
-            intersection_id = m.groupdict()["intersectionid"]
             rsu_id = m.groupdict()["rsuid"]
+            # 获取 intersectionid
+            intersection_id = self.get_intersection_id(rsu_id)
             # 获取 nodeid
             nodeid = self.get_nodeid(rsu_id)
         except Exception:
@@ -284,13 +287,13 @@ class App:
 
     def _mqtt_on_rsi(self, client, userdata, msg):
         try:
-            driver_name, rsu_id, node_id = self._driver_name(msg.topic, "rsi")
+            driver_name, intersectionid, node_id = self._driver_name(msg.topic, "rsi")
             driver = getattr(drivers, driver_name)
             rsi, congestion_info = driver(msg.payload)
         except Exception as e:
             return logger.error(f"rsi data format error: {e}")
-        if self._is_valid_intersection_id(rsu_id):
-            self.loop.create_task(self.rsi.run(rsu_id, rsi, congestion_info))
+        if self._is_valid_intersection_id(intersectionid):
+            self.loop.create_task(self.rsi.run(intersectionid, rsi, congestion_info))
         else:
             logger.error("RSU is not registered")
 
@@ -308,9 +311,10 @@ class App:
     def _mqtt_on_radar(self, client, userdata, msg):
         try:
             m = self.radar_topic_re.search(msg.topic)
-            intersection_id = m.groupdict()["intersectionid"]
             # 得到 RSUID
             rsu_id = m.groupdict()["rsuid"]
+            # 获取 intersectionid
+            intersection_id = self.get_intersection_id(rsu_id)
         except Exception:
             return logger.error("radar data format error")
         if self._is_valid_intersection_id(intersection_id):
@@ -332,8 +336,6 @@ class App:
     def _driver_name(self, topic, msg_type):
         if topic[-2:] == "UP":
             m = getattr(self, "{}_topic_std_re".format(msg_type)).search(topic)
-            # 得到路口 code
-            intersectionid = m.groupdict()["intersectionid"]
             # 得到 RSUID
             rsu_id = m.groupdict()["rsuid"]
             driver_name = msg_type + "_std"
@@ -341,16 +343,18 @@ class App:
             m = getattr(self, "{}_topic_driver_re".format(msg_type)).search(
                 topic
             )
-            intersectionid = m.groupdict()["intersectionid"]
+            # 得到 RSUID
             rsu_id = m.groupdict()["rsuid"]
             driver_name = msg_type + "_" + m.groupdict()["driver"].lower()
+        # 得到路口 code
+        intersectionid = self.get_intersection_id(rsu_id)
+        # 得到边缘站点 nodeId
         node_id = self.get_nodeid(rsu_id)
         return driver_name, intersectionid, node_id
 
     def _is_valid_intersection_id(self, intersection_id):
-        if intersection_id in post_process.intersection_info:
-            return True
-        return False
+        return intersection_id in post_process.intersection_info
+
 
     def _is_valid_rsu_id(self, rsu_id):
         if rsu_id in post_process.rsu_info:
@@ -366,3 +370,13 @@ class App:
             node_id = self.rsu_nodeid.get(rsu_id)
 
         return node_id
+
+    def get_intersection_id(self, rsu_id):
+        """Get IntersectionId."""
+        if rsu_id in self.rsu_intersectionid:
+            intersectionid = self.rsu_intersectionid.get(rsu_id)
+        else:
+            self.rsu_intersectionid = db.put_rsu_intersectionid()
+            intersectionid = self.rsu_intersectionid.get(rsu_id)
+
+        return intersectionid

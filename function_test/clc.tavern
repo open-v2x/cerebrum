@@ -14,7 +14,7 @@ paho-mqtt:
 stages:
   - name: testclc
     mqtt_publish:
-      topic: V2X/RSU/R328328/32011501/VIR/UP
+      topic: V2X/RSU/R328328/VIR/UP
       json:
         {
           "msgCnt": "2",
