@@ -14,7 +14,7 @@ paho-mqtt:
 stages:
   - name: testrsi
     mqtt_publish:
-      topic: V2X/RSU/R329329/32011501/RSI/UP/DAWNLINE
+      topic: V2X/RSU/R329329/RSI/UP/DAWNLINE
       json:
         {
           "dev_id": "CmRa1635",

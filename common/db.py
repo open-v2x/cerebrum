@@ -176,7 +176,7 @@ class MQTT(Base):  # type: ignore
 
 class EdgeNodeRSU(Base, DandelionBase):  # type: ignore
     """EdgeNodeRSU."""
-    
+
     __tablename__ = "edge_node_rsu"
 
     edge_node_id = Column(Integer, ForeignKey("edge_node.id"))
@@ -430,24 +430,38 @@ def get_intersection_info():
 def get_mqtt_config():
     """Get the configuration of mqtt."""
     try:
-        results = session.query(MQTT.mqtt_config, MQTT.node_id).first()
-        mq_cfg = results[0]
-
+        # mqtt 的配置
         results = session.query(
+            MQTT.mqtt_config,
+            MQTT.node_id
+        ).first()
+        mq_cfg = results[0]
+        # RSU 与 NodeId 的对应关系
+        result = session.query(
             EdgeNodeRSU.esn,
             EdgeNodeRSU.edge_node_id
         ).all()
         rsu_nodeid: Dict = {}
-        for item in results:
+        for item in result:
             rsu_nodeid[item[0]] = item[1]
+        # RSU 与 路口Id 的对应关系
+        res = session.query(
+            RSU.rsu_esn,
+            RSU.intersection_code
+        ).all()
+        rsu_intersectionid: Dict = {}
+        for item in res:
+            rsu_intersectionid[item[0]] = item[1]
+
         session.close()
-        return mq_cfg, rsu_nodeid  # type: ignore
+        return mq_cfg, rsu_nodeid, rsu_intersectionid  # type: ignore
     except Exception:
         session.close()
         logger.error(
             "unable to \
             fetch mqtt configuration from database"
         )
+
 
 def put_rsu_nodeid():
     """Put the configuration of nodeid."""
@@ -466,6 +480,26 @@ def put_rsu_nodeid():
         logger.error(
             "unable to \
             fetch nodeid configuration from database"
+        )
+    pass
+
+def put_rsu_intersectionid():
+    """Put the configuration of intersectionid."""
+    try:
+        results = session.query(
+            RSU.rsu_esn,
+            RSU.intersection_code
+        ).all()
+        rsu_intersectionid: Dict = {}
+        for item in results:
+            rsu_intersectionid[item[0]] = item[1]
+        session.close()
+        return rsu_intersectionid  # type: ignore
+    except Exception:
+        session.close()
+        logger.error(
+            "unable to \
+            fetch intersectionid configuration from database"
         )
     pass
 

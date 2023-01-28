@@ -14,7 +14,7 @@ paho-mqtt:
 stages:
   - name: testrsm
     mqtt_publish:
-      topic: V2X/RSU/R328328/32011501/RSM/UP/DAWNLINE
+      topic: V2X/RSU/R328328/RSM/UP/DAWNLINE
       json:
         [
           {
