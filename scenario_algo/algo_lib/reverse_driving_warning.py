@@ -153,7 +153,7 @@ class ReverseDriving(Base):
 
         info_for_show = {
             "ego": ego_id,
-            "ego_current_point": [ego_info["x"][-1], ego_info["y"][-1]],
+            "ego_current_point": [ego_info["x"], ego_info["y"]],
         }
         info_for_rdw = {
             "secMark": ego_info["secMark"],
