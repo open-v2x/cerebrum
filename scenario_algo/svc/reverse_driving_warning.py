@@ -48,6 +48,7 @@ class ReverseDriving:
         rdw, show_info, last_ts = self._exe.run(
             context_frames, latest_frame, last_ts, rsu_id
         )
+        post_process.convert_for_reverse_visual(show_info, rsu_id)
         reverse_driving_warning_message = post_process.generate_rdw(
             rdw, rsu_id
         )

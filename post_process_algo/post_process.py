@@ -183,6 +183,21 @@ def convert_for_collision_visual(info: list, rsu_id: str) -> None:
                 new_y / rsu_info[rsu_id]["scale"]
             )
 
+def convert_for_reverse_visual(info: list, rsu_id: str) -> None:
+    """Reverse."""
+    k = -1 if rsu_info[rsu_id]["reverse"] else 1
+    rotation = math.radians(rsu_info[rsu_id]["rotation"])
+    print(info)
+    for i in range(len(info)):
+        x = info[i]["ego_current_point"][0]
+        y = info[i]["ego_current_point"][1]
+        x += rsu_info[rsu_id]["bias_x"]
+        y = k * (y - rsu_info[rsu_id]["bias_y"])
+        new_x = x * math.cos(rotation) - y * math.sin(rotation)
+        new_y = x * math.sin(rotation) + y * math.cos(rotation)
+        info[i]["ego_current_point"][0] = int(new_x / rsu_info[rsu_id]["scale"])
+        info[i]["ego_current_point"][1] = int(new_y / rsu_info[rsu_id]["scale"])
+
 
 def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
     """Generate collision warning message."""
