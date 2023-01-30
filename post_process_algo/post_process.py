@@ -210,6 +210,18 @@ def generate_rdw(rdw_list: list, rsu_id: str) -> dict:
     return rdw
 
 
+def generate_cgw(cgw_list: list, intersection_id: str) -> dict:
+    """Generate congestion warning message."""
+    position_info = rsu_info[intersection_id]["pos"].copy()
+    position_info["lon"] = int(position_info["lon"] * consts.CoordinateUnit)
+    position_info["lat"] = int(position_info["lat"] * consts.CoordinateUnit)
+    cgw = {
+        "targetRSU": intersection_id,
+        "sensorPos": position_info,
+        "content": cgw_list,
+    }
+    return cgw
+
 async def http_get(url: str, params: dict) -> aiohttp.ClientResponse:
     """Get request data."""
     async with aiohttp.ClientSession() as session:
