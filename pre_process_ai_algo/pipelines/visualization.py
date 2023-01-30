@@ -34,7 +34,8 @@ class Visualize(Base):
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
 
-    async def run(self, rsu: str, latest_frame: dict, node_id: int, _: dict = {}) -> dict:
+    async def run(self, rsu: str, intersection_id: str,\
+         latest_frame: dict, node_id: int, _: dict = {}) -> dict:
         """External call function."""
         # 可视化，修改 x，y 后，返回给 mqtt
         vis = []
@@ -47,7 +48,7 @@ class Visualize(Base):
         }
         for fr in latest_frame.values():
             frame = fr.copy()
-            post_process.convert_for_visual(frame, rsu)
+            post_process.convert_for_visual(frame, intersection_id)
             info_dict[frame["ptcType"]] += 1
             if frame["ptcType"] == "motor" and frame["speed"] > 70:
                 info_dict["moving_motor"] += 1
@@ -61,7 +62,7 @@ class Visualize(Base):
         # get rsi
         rsi_formatter = modules.algorithms.rsi_formatter.module
         congestion = await self._kv.get(
-            rsi_formatter.RSI.CONGESTION_KEY.format(rsu)
+            rsi_formatter.RSI.CONGESTION_KEY.format(intersection_id)
         )
         if congestion:
             congestion_info = "congestion"
@@ -79,7 +80,7 @@ class Visualize(Base):
             await post_process.http_post(url, final_info)
         if self._mqtt_conn:
             self._mqtt_conn.publish(
-                consts.RSM_VISUAL_TOPIC.format(rsu, node_id),
+                consts.RSM_VISUAL_TOPIC.format(intersection_id, node_id),
                 json.dumps(vis),
                 0,
             )

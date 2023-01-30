@@ -255,7 +255,7 @@ class App:
 
     def _mqtt_on_rsm_msg(self, client, userdata, msg):
         try:
-            driver_name, intersection_id, node_id = self._driver_name(
+            driver_name, rsu_id, intersection_id, node_id = self._driver_name(
                 msg.topic, "rsm")
             driver = getattr(drivers, driver_name)
             miss_flag, rsm, miss_info = driver(msg.payload)
@@ -263,7 +263,7 @@ class App:
             return logger.error("rsm data format error")
         if self._is_valid_intersection_id(intersection_id):
             self.loop.create_task(
-                self.process.run(intersection_id, rsm,
+                self.process.run(rsu_id, intersection_id, rsm,
                                  miss_flag, miss_info, node_id)
             )
         else:
@@ -287,13 +287,15 @@ class App:
 
     def _mqtt_on_rsi(self, client, userdata, msg):
         try:
-            driver_name, intersectionid, node_id = self._driver_name(msg.topic, "rsi")
+            driver_name, rsu_id, intersectionid, node_id = self._driver_name(
+                msg.topic, "rsi")
             driver = getattr(drivers, driver_name)
             rsi, congestion_info = driver(msg.payload)
         except Exception as e:
             return logger.error(f"rsi data format error: {e}")
         if self._is_valid_intersection_id(intersectionid):
-            self.loop.create_task(self.rsi.run(intersectionid, rsi, congestion_info))
+            self.loop.create_task(self.rsi.run(
+                intersectionid, rsi, congestion_info))
         else:
             logger.error("RSU is not registered")
 
@@ -350,11 +352,10 @@ class App:
         intersectionid = self.get_intersection_id(rsu_id)
         # 得到边缘站点 nodeId
         node_id = self.get_nodeid(rsu_id)
-        return driver_name, intersectionid, node_id
+        return driver_name, rsu_id, intersectionid, node_id
 
     def _is_valid_intersection_id(self, intersection_id):
         return intersection_id in post_process.intersection_info
-
 
     def _is_valid_rsu_id(self, rsu_id):
         if rsu_id in post_process.rsu_info:
