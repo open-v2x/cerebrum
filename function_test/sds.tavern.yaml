@@ -1,0 +1,78 @@
+test_name: testsds
+paho-mqtt:
+  client:
+    transport: websockets
+    client_id: R5
+  connect:
+    host: 127.0.0.1
+    port: 15675
+    timeout: 3
+  auth:
+    username: root
+    password: password
+
+stages:
+  - name: testsds
+    mqtt_publish:
+      topic: V2X/RSU/R328328/VIR/UP
+      json:
+        {
+          "msgCnt": "2",
+          "id": "39",
+          "refPos": {
+            "lon": 1188219331,
+            "lat": 319353469,
+            "ele": 100
+          },
+          "secMark": 33400,
+          "timeStamp": 1653016893400,
+          "intAndReq": {
+            "reqs": {
+              "reqID": 2,
+              "status": 2,
+              "targetRSU": "R328328",
+              "reqPriority": "B11100000",
+              "info": {
+                "sensorSharing": {
+                  "detectArea": {
+                    "activePath": [
+                      {
+                        "lon": 1188219331,
+                        "lat": 319353469,
+                        "ele": 100
+                      },
+                      {
+                        "lon": 1188219331,
+                        "lat": 319353469,
+                        "ele": 100
+                      },
+                      {
+                        "lon": 1188219331,
+                        "lat": 319353469,
+                        "ele": 100
+                      },
+                      {
+                        "lon": 1188219331,
+                        "lat": 319353469,
+                        "ele": 100
+                      },
+                      {
+                        "lon": 1188219331,
+                        "lat": 319353469,
+                        "ele": 100
+                      }
+                    ]
+                  }
+                }
+              },
+              "lifeTime": 50
+            }
+          }
+        }
+
+
+
+    mqtt_response:
+      topic: V2X/RSU/32011501/SDS/DOWN
+      payload: !anything
+      timeout: 1
