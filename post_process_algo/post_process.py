@@ -187,7 +187,6 @@ def convert_for_reverse_visual(info: list, rsu_id: str) -> None:
     """Reverse."""
     k = -1 if rsu_info[rsu_id]["reverse"] else 1
     rotation = math.radians(rsu_info[rsu_id]["rotation"])
-    print(info)
     for i in range(len(info)):
         x = info[i]["ego_current_point"][0]
         y = info[i]["ego_current_point"][1]

@@ -92,25 +92,28 @@ class DataProcessing:
         }
 
     async def run(
-        self, rsu_id: str, raw_rsm: dict, miss_flag: str, miss_info: str, node_id: int
+        self, rsu_id: str, intersection_id: str,\
+             raw_rsm: dict, miss_flag: str, miss_info: str, node_id: int
     ) -> None:
         """External call function."""
-        async with self._kv.lock(self.LOCK_KEY.format(rsu_id)):
+        async with self._kv.lock(self.LOCK_KEY.format(intersection_id)):
             if miss_flag == "miss_required_key":
                 self._mqtt.publish(
-                    consts.RSM_DAWNLINE_ACK_TOPIC.format(rsu_id), miss_info, 0
+                    consts.RSM_DAWNLINE_ACK_TOPIC.format(
+                        intersection_id), miss_info, 0
                 )
                 return None
             if miss_flag == "miss_optional_key":
                 self._mqtt.publish(
-                    consts.RSM_DAWNLINE_ACK_TOPIC.format(rsu_id), miss_info, 0
+                    consts.RSM_DAWNLINE_ACK_TOPIC.format(
+                        intersection_id), miss_info, 0
                 )
             # 把 rsm 数据结构转换成算法的数据结构
-            latest = post_process.rsm2frame(raw_rsm, rsu_id)
+            latest = post_process.rsm2frame(raw_rsm, intersection_id)
             if not latest:
                 return None
             current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
-            sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(rsu_id))
+            sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(intersection_id))
             last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
             pipe_cfg = (
                 # TODO(wu.wenxiang) document how to read config from mqtt
@@ -148,7 +151,7 @@ class DataProcessing:
             if 0 <= last_sec_mark - current_sec_mark <= 50000:
                 return None
             await self._kv.set(
-                self.SM_CFG_KEY.format(rsu_id),
+                self.SM_CFG_KEY.format(intersection_id),
                 {"sm": current_sec_mark, "cfg": pipe_cfg},
             )
             pipelines = [
@@ -158,7 +161,7 @@ class DataProcessing:
             ]
             for p1 in pipelines:
                 if p1:
-                    latest = await p1.run(rsu_id, latest)
+                    latest = await p1.run(intersection_id, latest)
             nodeid_pipelines = [
                 # TODO(wu.wenxiang) check p not exist
                 getattr(self, "_{}_dispatch".format(p))[pipe_cfg[p]]
@@ -167,11 +170,12 @@ class DataProcessing:
 
             for p in nodeid_pipelines:
                 if p:
-                    latest = await p.run(rsu_id, latest, node_id)
+                    latest = await p.run(rsu_id, intersection_id, latest, node_id)
 
-            rsm = post_process.frame2rsm(latest, raw_rsm, rsu_id)
+            rsm = post_process.frame2rsm(latest, raw_rsm, intersection_id)
             self._mqtt.publish(
-                consts.RSM_DOWN_TOPIC.format(rsu_id), json.dumps(rsm), 0
+                consts.RSM_DOWN_TOPIC.format(
+                    intersection_id), json.dumps(rsm), 0
             )
 
 
@@ -184,7 +188,7 @@ class Cfg:
         """Class initialization."""
         self._kv = kv
 
-    async def run(self, rsu_id: str, cfg_info: bytes) -> None:
+    async def run(self, intersection_id: str, cfg_info: bytes) -> None:
         """External call function."""
         cfg_info_dict = json.loads(cfg_info)
         yaml_info = cfg_info_dict.get("yaml_info")
@@ -193,9 +197,9 @@ class Cfg:
         )
         modules.load_algorithm_modules(default)
         redis_info = cfg_info_dict.get("redis_info")
-        sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(rsu_id))
+        sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(intersection_id))
         last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
         await self._kv.set(
-            self.SM_CFG_KEY.format(rsu_id),
+            self.SM_CFG_KEY.format(intersection_id),
             {"sm": last_sec_mark, "cfg": redis_info},
         )
