@@ -127,17 +127,22 @@ class ReverseDriving(Base):
 
     def _get_origin_coor(self, rsu_id):
         return {
-            "x": 0,
-            "y": 0,
+            "x": 80,
+            "y": 55,
         }
 
     def _get_direction(self, lane):
         return post_process.lane_info[self._rsu_id][lane]
 
     def _strictly_increasing(self, L):
+        # 起步不做逆向计算
+        if len(L) < 2:
+            return False
         return all(x < y for x, y in zip(L, L[1:]))
 
     def _strictly_decreasing(self, L):
+        if len(L) < 2:
+            return False
         return all(x > y for x, y in zip(L, L[1:]))
 
     def _cal_distance_from_o(self, ptc, o):
