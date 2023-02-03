@@ -1,0 +1,44 @@
+test_name: testrsi
+paho-mqtt:
+  client:
+    transport: websockets
+    client_id: R3
+  connect:
+    host: 127.0.0.1
+    port: 15675
+    timeout: 3
+  auth:
+    username: root
+    password: password
+
+stages:
+  - name: testrsi
+    mqtt_publish:
+      topic: V2X/RSU/R329329/RSI/UP/DAWNLINE
+      json:
+        {
+          "dev_id": "CmRa1635",
+          "dev_type": "integrated",
+          "dev_pos": {
+            "latitude": 319348466,
+            "longitude": 1188213963
+          },
+          "event_content": [
+            {
+              "event_type": 707,
+              "event_id": "1",
+              "event_source": "detection",
+              "timeStamp": 1653016703500,
+              "secMark": 23500,
+              "latitude": 319353853,
+              "longitude": 1188218217
+            }
+          ]
+        }
+
+
+
+    mqtt_response:
+      topic: V2X/RSU/32011501/RSI/DOWN
+      payload: !anything
+      timeout: 1
