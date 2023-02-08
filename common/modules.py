@@ -31,6 +31,7 @@ algorithm_topo = {
         "do_not_pass_warning",
         "sensor_data_sharing",
         "reverse_driving_warning",
+        "overspeed_warning",
     ],
     "post_process_algo": ["post_process"],
 }
@@ -49,6 +50,7 @@ algorithms = namedtuple(  # type: ignore
         "do_not_pass_warning",
         "sensor_data_sharing",
         "reverse_driving_warning",
+        "overspeed_warning",
         "post_process",
     ],
 )

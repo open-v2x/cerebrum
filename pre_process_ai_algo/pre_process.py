@@ -29,6 +29,7 @@ from pre_process_ai_algo.pipelines.smooth import ExponentialSmooth
 from pre_process_ai_algo.pipelines.smooth import PolynomialSmooth
 from pre_process_ai_algo.pipelines.visualization import Visualize
 from scenario_algo.svc.collision_warning import CollisionWarning
+from scenario_algo.svc.overspeed_warning import OverspeedWarning
 from scenario_algo.svc.reverse_driving_warning import ReverseDriving
 
 
@@ -51,6 +52,9 @@ class DataProcessing:
         self._reverse_driving_warning = ReverseDriving(
             kv, mqtt, mqtt_conn, node_id
         )
+        self._overspeed_warning = OverspeedWarning(
+            kv, mqtt, mqtt_conn, node_id
+        )
         self._visual = Visualize(kv, mqtt, mqtt_conn, node_id)
         self._kv = kv
         self._mqtt = mqtt
@@ -63,6 +67,7 @@ class DataProcessing:
             "visual",
             "collision_warning",
             "reverse_driving_warning",
+            "overspeed_warning"
         ]
         self._fusion_dispatch = {
             "disable": False,
@@ -90,10 +95,14 @@ class DataProcessing:
             "disable": False,
             "reverse_driving_warning": self._reverse_driving_warning,
         }
+        self._overspeed_warning_dispatch = {
+            "disable": False,
+            "overspeed_warning": self._overspeed_warning
+        }
 
     async def run(
         self, rsu_id: str, intersection_id: str,\
-             raw_rsm: dict, miss_flag: str, miss_info: str, node_id: int
+            raw_rsm: dict, miss_flag: str, miss_info: str, node_id: int
     ) -> None:
         """External call function."""
         async with self._kv.lock(self.LOCK_KEY.format(intersection_id)):
@@ -143,6 +152,11 @@ class DataProcessing:
                     "reverse_driving_warning": (
                         modules.algorithms.reverse_driving_warning.algo
                         if modules.algorithms.reverse_driving_warning.enable
+                        else "disable"
+                    ),
+                    "overspeed_warning": (
+                        modules.algorithms.overspeed_warning.algo
+                        if modules.algorithms.overspeed_warning.enable
                         else "disable"
                     ),
                     "visual": "visual",

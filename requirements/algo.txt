@@ -1,5 +1,6 @@
 matplotlib>=3.5.2 # PSF
 numpy>=1.22.4 # BSD
+pandas>=1.5.2 # BSD
 opencv-python>=4.1 # MIT
 scipy>=1.6.0 # BSD
 shapely>=1.7.1 # BSD

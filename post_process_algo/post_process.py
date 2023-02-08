@@ -183,6 +183,7 @@ def convert_for_collision_visual(info: list, rsu_id: str) -> None:
                 new_y / rsu_info[rsu_id]["scale"]
             )
 
+
 def convert_for_reverse_visual(info: list, rsu_id: str) -> None:
     """Reverse."""
     k = -1 if rsu_info[rsu_id]["reverse"] else 1
@@ -194,8 +195,10 @@ def convert_for_reverse_visual(info: list, rsu_id: str) -> None:
         y = k * (y - rsu_info[rsu_id]["bias_y"])
         new_x = x * math.cos(rotation) - y * math.sin(rotation)
         new_y = x * math.sin(rotation) + y * math.cos(rotation)
-        info[i]["ego_current_point"][0] = int(new_x / rsu_info[rsu_id]["scale"])
-        info[i]["ego_current_point"][1] = int(new_y / rsu_info[rsu_id]["scale"])
+        info[i]["ego_current_point"][0] = int(
+            new_x / rsu_info[rsu_id]["scale"])
+        info[i]["ego_current_point"][1] = int(
+            new_y / rsu_info[rsu_id]["scale"])
 
 
 def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
@@ -214,6 +217,19 @@ def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
 def generate_rdw(rdw_list: list, rsu_id: str) -> dict:
     """Generate reverse driving warning message."""
     position_info = rsu_info[rsu_id]["pos"].copy()
+    position_info["lon"] = int(position_info["lon"] * consts.CoordinateUnit)
+    position_info["lat"] = int(position_info["lat"] * consts.CoordinateUnit)
+    rdw = {
+        "targetRSU": rsu_id,
+        "sensorPos": position_info,
+        "content": rdw_list,
+    }
+    return rdw
+
+
+def generate_osw(rdw_list: list, rsu_id: str, intersection_id: str) -> dict:
+    """Generate overspeed warning message."""
+    position_info = rsu_info[intersection_id]["pos"].copy()
     position_info["lon"] = int(position_info["lon"] * consts.CoordinateUnit)
     position_info["lat"] = int(position_info["lat"] * consts.CoordinateUnit)
     rdw = {
@@ -258,21 +274,23 @@ def generate_transformation_info():
 
 YOrigin: Dict[str, int] = {}
 XOrigin: Dict[str, int] = {}
+map_lane_info: Dict[str, dict] = {}
+
 TfMap = {}  # type: ignore
 rsu_info = db.rsu_info
 lane_info = db.lane_info
 map_info = db.map_info
-map_lane_info: Dict[str, dict] = {}
+max_speed_limit = db.max_speed_limit
 intersection_info = db.intersection_info
 db.get_rsu_info(False)
 db.get_map_info()
 db.get_intersection_info()
 
-
 for k, v in intersection_info.items():
     intersection_info[k] = rsu_info["R328328"]
-    lane_info[k]=lane_info["R328328"]
+    lane_info[k] = lane_info["R328328"]
 rsu_info = intersection_info
+
 
 def update_rsu_info():
     """Update rsu info."""
@@ -289,95 +307,3 @@ if map_lane_info != {}:
 
 
 generate_transformation_info()
-
-
-# # 获取所有rsu的经纬度信息
-# rsu_info: Dict[str, dict] = {
-#     "R328328": {
-#         "pos": {"lon": 118.8213963998263, "lat": 31.934846637757847},
-#         "bias_x": 0.0,
-#         "bias_y": 0.0,
-#         "rotation": 0.0,
-#         "reverse": False,
-#         "scale": 0.09,
-#     },
-#     "R329329": {
-#         "pos": {"lon": 118.862336, "lat": 31.929900},
-#         "bias_x": 74.67,
-#         "bias_y": 78.91,
-#         "rotation": 2.0,
-#         "reverse": True,
-#         "scale": 0.09,
-#     },
-# }
-#
-# YOrigin, XOrigin, TfMap = {}, {}, {}
-# for rsu in rsu_info.keys():
-#     TfMap[rsu] = Transformer.from_crs(
-#         "epsg:4326", choose_epsg(rsu_info[rsu]["pos"]["lon"])
-#     )
-#     if rsu == "R328328":
-#         TfMap[rsu] = Transformer.from_crs("epsg:4326", "epsg:2416")
-#     YOrigin[rsu], XOrigin[rsu] = coordinate_tf(
-#         rsu_info[rsu]["pos"]["lat"] * coord_unit,
-#         rsu_info[rsu]["pos"]["lon"] * coord_unit,
-#         TfMap[rsu],
-#     )
-#     XOrigin[rsu] = int(XOrigin[rsu])
-#     YOrigin[rsu] = int(YOrigin[rsu])
-#
-# # 获取所有RSU的map地图数据
-# map_info: Dict[str, dict] = {
-#     "R328328": {
-#         1: -1,
-#         2: 1,
-#         3: 1,
-#         4: -1,
-#         5: -1,
-#         6: -1,
-#         7: -1,
-#         8: 1,
-#         9: 1,
-#         10: 1,
-#         11: 1,
-#         12: 1,
-#         13: 1,
-#         14: -1,
-#         15: -1,
-#         16: 1,
-#         17: 1,
-#         18: 1,
-#         19: 1,
-#         20: -1,
-#         21: -1,
-#         22: -1,
-#         23: -1,
-#         24: -1,
-#     },
-#     "R329329": {
-#         1: -1,
-#         2: 1,
-#         3: 1,
-#         4: -1,
-#         5: -1,
-#         6: -1,
-#         7: -1,
-#         8: 1,
-#         9: 1,
-#         10: 1,
-#         11: 1,
-#         12: 1,
-#         13: 1,
-#         14: -1,
-#         15: -1,
-#         16: 1,
-#         17: 1,
-#         18: 1,
-#         19: 1,
-#         20: -1,
-#         21: -1,
-#         22: -1,
-#         23: -1,
-#         24: -1,
-#     },
-# }

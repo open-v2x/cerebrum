@@ -39,10 +39,11 @@ from typing import List
 import zlib
 
 logger = Loggings()
-intersection_info: Dict[str, dict] = {}
 rsu_info: Dict[str, dict] = {}
 lane_info: Dict[str, dict] = {}
 map_info: Dict[str, dict] = {}
+intersection_info: Dict[str, dict] = {}
+max_speed_limit: Dict[int, int] = {}
 Base = declarative_base()
 engine = create_engine(**cfg.sqlalchemy_w)
 DBSession = sessionmaker(bind=engine)
@@ -348,17 +349,51 @@ def get_rsu_info(msg_info):
 
 def get_map_info():
     """Get information of all Map."""
-    results = session.query(Map.name, Map.intersection_code, Map.data).all()
+    results = session.query(
+        Map.name,
+        Map.intersection_code,
+        Map.data
+    ).all()
     for row in results:
         try:
-            # 计算 map.json 中每条车道的 +1 -1
+            """
+            link_dict 样例
+            {
+            '19-17': ['14', '15'],
+            '19-18': ['20', '21', '22'],
+            '18-19': ['16', '17', '18', '19'],
+            '21-19': ['23', '24', '1'],
+            '20-19': ['4', '5', '6', '7'],
+            '17-19': ['11', '12', '13'],
+            '19-20': ['8', '9', '10'],
+            '19-21': ['2', '3']
+            }
+            """
             link_dict = {}
+            # map.json 中每条车道的 +1 -1
             map_lane_info0 = {}
+            # 车道线的限速标准
+            max_speed_info = {}
             for item in row[2]["nodes"]["Node"]:
                 for link in item["inLinks"]["Link"]:
                     lane_list = []
+
+                    if "speedLimits" in link:
+                        max_speed = link["speedLimits"]["RegulatorySpeedLimit"]["speed"]
+                        for lane in link["lanes"]["Lane"]:
+                            max_speed_info[int(lane["laneID"])] = int(
+                                max_speed)
+                    else:
+                        for lane in link["lanes"]["Lane"]:
+                            max_speed_info[int(lane["laneID"])] = None
+
+                    max_speed_info = deepcopy(max_speed_info)
+                    max_speed_limit[row[1]] = max_speed_info
+
+
                     for lane in link["lanes"]["Lane"]:
                         lane_list.append(lane["laneID"])
+
                     lanes = deepcopy(lane_list)
                     link_dict[link["name"]] = lanes
 
@@ -381,6 +416,7 @@ def get_map_info():
                     )
                     refPos = node["refPos"]
 
+            # 计算车道线的+1 -1
             for num, link in enumerate(link_dict):
                 if link.split("-")[-1] == center_node[0]:
                     dict0 = dict(
@@ -400,7 +436,7 @@ def get_map_info():
             map_info[row[0]] = {
                 "intersection_code": row[1],  # type: ignore [no-redef]
                 "pos": refPos,  # type: ignore
-                "lane_info": map_lane_info0,  # type: ignore
+                "lane_info": map_lane_info0  # type: ignore
             }
 
         except Exception as e:
@@ -482,6 +518,7 @@ def put_rsu_nodeid():
             fetch nodeid configuration from database"
         )
     pass
+
 
 def put_rsu_intersectionid():
     """Put the configuration of intersectionid."""
