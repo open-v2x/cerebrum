@@ -87,6 +87,12 @@ scenario_algo:
       algo: "overspeed_warning"
       version:
       - overspeed_warning
+    slowspeed_warning:
+      enable: true
+      module: "scenario_algo.algo_lib.slowspeed_warning"
+      algo: "slowspeed_warning"
+      version:
+      - slowspeed_warning
 post_process_algo:
   algos:
     post_process:

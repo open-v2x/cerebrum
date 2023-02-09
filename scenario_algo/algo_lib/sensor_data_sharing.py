@@ -206,10 +206,7 @@ class SensorDataSharing(Base):
                 > self._min_dis
             ):
                 show_list.append(
-                    {
-                        "x": obj_info["x"][-1],
-                        "y": obj_info["y"][-1],
-                    }
+                    {"x": obj_info["x"][-1], "y": obj_info["y"][-1]}
                 )
                 motor_list.append(self._build_motor_info(obj_info))
         return motor_list, show_list
@@ -231,10 +228,7 @@ class SensorDataSharing(Base):
                 > self._min_dis
             ):
                 show_list.append(
-                    {
-                        "x": obj_info["x"][-1],
-                        "y": obj_info["y"][-1],
-                    }
+                    {"x": obj_info["x"][-1], "y": obj_info["y"][-1]}
                 )
                 vptc_list.append(self._build_vptc_info(obj_info))
         return vptc_list, show_list

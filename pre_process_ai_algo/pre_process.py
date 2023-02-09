@@ -31,6 +31,7 @@ from pre_process_ai_algo.pipelines.visualization import Visualize
 from scenario_algo.svc.collision_warning import CollisionWarning
 from scenario_algo.svc.overspeed_warning import OverspeedWarning
 from scenario_algo.svc.reverse_driving_warning import ReverseDriving
+from scenario_algo.svc.slowspeed_warning import SlowspeedWarning
 
 
 class DataProcessing:
@@ -55,24 +56,21 @@ class DataProcessing:
         self._overspeed_warning = OverspeedWarning(
             kv, mqtt, mqtt_conn, node_id
         )
+        self._slowspeed_warning = SlowspeedWarning(
+            kv, mqtt, mqtt_conn, node_id
+        )
         self._visual = Visualize(kv, mqtt, mqtt_conn, node_id)
         self._kv = kv
         self._mqtt = mqtt
-        self._pipelines = [
-            "fusion",
-            "complement",
-            "smooth",
-        ]
+        self._pipelines = ["fusion", "complement", "smooth"]
         self._nodeid_pipelines = [
             "visual",
             "collision_warning",
             "reverse_driving_warning",
-            "overspeed_warning"
+            "overspeed_warning",
+            "slowspeed_warning",
         ]
-        self._fusion_dispatch = {
-            "disable": False,
-            "fusion": self._fusion,
-        }
+        self._fusion_dispatch = {"disable": False, "fusion": self._fusion}
         self._smooth_dispatch = {
             "disable": False,
             "exponential": self._exponential_smooth,
@@ -83,10 +81,7 @@ class DataProcessing:
             "interpolation": self._interpolation,
             "lstm_predict": self._lstm_predict,
         }
-        self._visual_dispatch = {
-            "disable": False,
-            "visual": self._visual,
-        }
+        self._visual_dispatch = {"disable": False, "visual": self._visual}
         self._collision_warning_dispatch = {
             "disable": False,
             "collision_warning": self._collision_warning,
@@ -97,32 +92,45 @@ class DataProcessing:
         }
         self._overspeed_warning_dispatch = {
             "disable": False,
-            "overspeed_warning": self._overspeed_warning
+            "overspeed_warning": self._overspeed_warning,
+        }
+        self._slowspeed_warning_dispatch = {
+            "disable": False,
+            "slowspeed_warning": self._slowspeed_warning,
         }
 
     async def run(
-        self, rsu_id: str, intersection_id: str,\
-            raw_rsm: dict, miss_flag: str, miss_info: str, node_id: int
+        self,
+        rsu_id: str,
+        intersection_id: str,
+        raw_rsm: dict,
+        miss_flag: str,
+        miss_info: str,
+        node_id: int,
     ) -> None:
         """External call function."""
         async with self._kv.lock(self.LOCK_KEY.format(intersection_id)):
             if miss_flag == "miss_required_key":
                 self._mqtt.publish(
-                    consts.RSM_DAWNLINE_ACK_TOPIC.format(
-                        intersection_id), miss_info, 0
+                    consts.RSM_DAWNLINE_ACK_TOPIC.format(intersection_id),
+                    miss_info,
+                    0,
                 )
                 return None
             if miss_flag == "miss_optional_key":
                 self._mqtt.publish(
-                    consts.RSM_DAWNLINE_ACK_TOPIC.format(
-                        intersection_id), miss_info, 0
+                    consts.RSM_DAWNLINE_ACK_TOPIC.format(intersection_id),
+                    miss_info,
+                    0,
                 )
             # 把 rsm 数据结构转换成算法的数据结构
             latest = post_process.rsm2frame(raw_rsm, intersection_id)
             if not latest:
                 return None
             current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
-            sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(intersection_id))
+            sm_and_cfg = await self._kv.get(
+                self.SM_CFG_KEY.format(intersection_id)
+            )
             last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
             pipe_cfg = (
                 # TODO(wu.wenxiang) document how to read config from mqtt
@@ -159,13 +167,18 @@ class DataProcessing:
                         if modules.algorithms.overspeed_warning.enable
                         else "disable"
                     ),
+                    "slowspeed_warning": (
+                        modules.algorithms.slowspeed_warning.algo
+                        if modules.algorithms.slowspeed_warning.enable
+                        else "disable"
+                    ),
                     "visual": "visual",
                 }
             )
             if 0 <= last_sec_mark - current_sec_mark <= 50000:
                 return None
-            await self._kv.set(
-                self.SM_CFG_KEY.format(intersection_id),
+            await self._kv.set(  # type: ignore
+                self.SM_CFG_KEY.format(intersection_id),  # type: ignore
                 {"sm": current_sec_mark, "cfg": pipe_cfg},
             )
             pipelines = [
@@ -184,12 +197,15 @@ class DataProcessing:
 
             for p in nodeid_pipelines:
                 if p:
-                    latest = await p.run(rsu_id, intersection_id, latest, node_id)
+                    latest = await p.run(
+                        rsu_id, intersection_id, latest, node_id
+                    )
 
             rsm = post_process.frame2rsm(latest, raw_rsm, intersection_id)
             self._mqtt.publish(
-                consts.RSM_DOWN_TOPIC.format(
-                    intersection_id), json.dumps(rsm), 0
+                consts.RSM_DOWN_TOPIC.format(intersection_id),
+                json.dumps(rsm),
+                0,
             )
 
 
@@ -211,7 +227,9 @@ class Cfg:
         )
         modules.load_algorithm_modules(default)
         redis_info = cfg_info_dict.get("redis_info")
-        sm_and_cfg = await self._kv.get(self.SM_CFG_KEY.format(intersection_id))
+        sm_and_cfg = await self._kv.get(
+            self.SM_CFG_KEY.format(intersection_id)
+        )
         last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
         await self._kv.set(
             self.SM_CFG_KEY.format(intersection_id),

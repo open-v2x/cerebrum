@@ -34,7 +34,9 @@ class CooperativeLaneChange:
         self.node_id = node_id
         self._exe = cooperative_lane_change.CooperativeLaneChange()
 
-    async def run(self, params: dict, rsu_id: str, convert_info: list, node_id: int) -> None:
+    async def run(
+        self, params: dict, rsu_id: str, convert_info: list, node_id: int
+    ) -> None:
         """External call function."""
         his_info = await self._kv.get(
             CollisionWarning.HIS_INFO_KEY.format(rsu_id)
@@ -52,9 +54,7 @@ class CooperativeLaneChange:
             convert_info, context_frames, current_frame, params
         )
         self._mqtt.publish(
-            consts.CLC_TOPIC.format(rsu_id),
-            json.dumps(msg_rsc),
-            0,
+            consts.CLC_TOPIC.format(rsu_id), json.dumps(msg_rsc), 0
         )
         if msg_rsc["coordinates"]["driveSuggestion"]["suggestion"] > 0:
             for i in info_for_show["traj_list_for_show"]:

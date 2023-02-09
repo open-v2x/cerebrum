@@ -34,8 +34,14 @@ class Visualize(Base):
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
 
-    async def run(self, rsu: str, intersection_id: str,\
-         latest_frame: dict, node_id: int, _: dict = {}) -> dict:
+    async def run(
+        self,
+        rsu: str,
+        intersection_id: str,
+        latest_frame: dict,
+        node_id: int,
+        _: dict = {},
+    ) -> dict:
         """External call function."""
         # 可视化，修改 x，y 后，返回给 mqtt
         vis = []

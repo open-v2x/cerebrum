@@ -274,8 +274,7 @@ class CollisionWarning(Base):
             motors_info.keys(), 2
         ):
             cwm, event = self._predict_motor_pair(
-                motors_info[ego_key],
-                motors_info[other_key],
+                motors_info[ego_key], motors_info[other_key]
             )
             if event:
                 self._event_list.append(event)
@@ -288,8 +287,7 @@ class CollisionWarning(Base):
             return None
         for motor_key, vptc_key in itertools.product(motors_info, vptc_info):
             cwm, event = self._predict_vptc_pair(
-                motors_info[motor_key],
-                vptc_info[vptc_key],
+                motors_info[motor_key], vptc_info[vptc_key]
             )
             if event:
                 self._event_list.append(event)

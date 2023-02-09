@@ -12,7 +12,7 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-"""Scenario of OverSpeed Warning."""
+"""Scenario of SlowSpeed Warning."""
 
 from common import db
 import numpy as np
@@ -40,7 +40,7 @@ class Base:
         raise NotImplementedError
 
 
-class OverspeedWarning(Base):
+class SlowspeedWarning(Base):
     """Scenario of OverSpeed Warning."""
 
     def run(
@@ -65,8 +65,8 @@ class OverspeedWarning(Base):
         called
 
         Output:
-        overspeed_warning_message:
-        Overspeed warning message for broadcast, osw format
+        slowspeed_warning_message:
+        slowspeed warning message for broadcast, osw format
 
         last_timestamp:
         Timestamp of current frame data for the next call
@@ -74,7 +74,7 @@ class OverspeedWarning(Base):
         """
         self.intersection_id = intersection_id
         self._show_info: List[dict] = []
-        self._overspeed_warning_message: List[dict] = []
+        self._slowspeed_warning_message: List[dict] = []
         self._current_frame = current_frame
 
         id_set, last_timestamp = process_tools.frames_combination(
@@ -96,31 +96,30 @@ class OverspeedWarning(Base):
         current_df = pd.DataFrame(ptc_info["motors_kinematics"]).T
         if current_df.empty:
             return (
-                self._overspeed_warning_message,
+                self._slowspeed_warning_message,
                 self._show_info,
                 last_timestamp,
             )
         current_df["speed"] = current_df["speed"].apply(
             lambda x: int(x / 0.02)
         )
-        # 获取最高限速
-        current_df["vehicleMaxSpeed"] = current_df["lane"].apply(
-            self._get_max_speed_limit
+        current_df["vehicleMinSpeed"] = current_df["lane"].apply(
+            self._get_min_speed_limit
         )
         current_df = current_df.dropna(
-            axis=0, subset=["vehicleMaxSpeed"]
+            axis=0, subset=["vehicleMinSpeed"]
         )  # 删除指定列中有缺失值的那一行数据
         df = current_df[
             np.where(
                 current_df["speed"]
-                > current_df["vehicleMaxSpeed"],  # type: ignore
+                < current_df["vehicleMinSpeed"],  # type: ignore
                 True,
                 False,
             )
         ]  # type: ignore
-        df.apply(self._build_osw_event, axis=1)
+        df.apply(self._build_ssw_event, axis=1)
         return (
-            self._overspeed_warning_message,
+            self._slowspeed_warning_message,
             self._show_info,  # type: ignore
             last_timestamp,
         )
@@ -189,21 +188,22 @@ class OverspeedWarning(Base):
             [kinematics["speed_x"], kinematics["speed_y"]]
         ).tolist()
 
-    def _get_max_speed_limit(self, lane):
+    def _get_min_speed_limit(self, lane):
         if self.intersection_id in post_process.speed_limits:
             return (
                 post_process.speed_limits.get(self.intersection_id, {})
                 .get(lane, {})
-                .get("vehicleMaxSpeed", None)
+                .get("vehicleMinSpeed", None)
             )
+
         db.get_map_info()
         return (
             post_process.speed_limits.get(self.intersection_id, {})
             .get(lane, {})
-            .get("vehicleMaxSpeed", None)
+            .get("vehicleMinSpeed", None)
         )
 
-    def _build_osw_event(self, df_res):
+    def _build_ssw_event(self, df_res):
         info_for_show = {
             "ego": df_res["ptcId"],
             "ego_current_point": [df_res["x"], df_res["y"]],
@@ -221,4 +221,4 @@ class OverspeedWarning(Base):
         }
 
         self._show_info.append(info_for_show)
-        self._overspeed_warning_message.append(info_for_osw)
+        self._slowspeed_warning_message.append(info_for_osw)

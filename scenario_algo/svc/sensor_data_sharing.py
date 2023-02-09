@@ -34,7 +34,9 @@ class SensorDataSharing:
         self.node_id = node_id
         self._exe = sensor_data_sharing.SensorDataSharing()
 
-    async def run(self, params: dict, rsu_id: str, convert_info: list, node_id: int) -> None:
+    async def run(
+        self, params: dict, rsu_id: str, convert_info: list, node_id: int
+    ) -> None:
         """External call function."""
         # 获取traj
         ptc_traj = await self._kv.get(
@@ -60,11 +62,9 @@ class SensorDataSharing:
             post_process.convert_for_visual(info_for_show["ego_point"], rsu_id)
 
         self._mqtt.publish(
-            consts.SDS_TOPIC.format(rsu_id),
-            json.dumps(msg_ssm),
-            0,
+            consts.SDS_TOPIC.format(rsu_id), json.dumps(msg_ssm), 0
         )
-        
+
         if self._mqtt_conn:
             self._mqtt_conn.publish(
                 consts.SDS_VISUAL_TOPIC.format(rsu_id, node_id),
