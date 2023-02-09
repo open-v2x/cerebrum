@@ -81,6 +81,12 @@ scenario_algo:
       algo: "reverse_driving_warning"
       version:
       - reverse_driving_warning
+    overspeed_warning:
+      enable: true
+      module: "scenario_algo.algo_lib.overspeed_warning"
+      algo: "overspeed_warning"
+      version:
+      - overspeed_warning
 post_process_algo:
   algos:
     post_process:
