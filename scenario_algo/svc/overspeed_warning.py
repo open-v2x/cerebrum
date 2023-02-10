@@ -34,8 +34,14 @@ class OverspeedWarning:
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
 
-    async def run(self, rsu_id: str, intersection_id: str,\
-         latest_frame: dict, node_id: int, _: dict = {}) -> dict:
+    async def run(
+        self,
+        rsu_id: str,
+        intersection_id: str,
+        latest_frame: dict,
+        node_id: int,
+        _: dict = {},
+    ) -> dict:
         """External call function."""
         his_info = await self._kv.get(
             CollisionWarning.HIS_INFO_KEY.format(intersection_id)
@@ -51,7 +57,7 @@ class OverspeedWarning:
         )
         post_process.convert_for_reverse_visual(show_info, intersection_id)
         overspeed_warning_message = post_process.generate_osw(
-            osw, rsu_id,intersection_id
+            osw, rsu_id, intersection_id
         )
 
         if osw and show_info:

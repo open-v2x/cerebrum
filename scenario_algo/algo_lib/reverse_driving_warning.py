@@ -126,10 +126,7 @@ class ReverseDriving(Base):
         )
 
     def _get_origin_coor(self, rsu_id):
-        return {
-            "x": 80,
-            "y": 55,
-        }
+        return {"x": 80, "y": 55}
 
     def _get_direction(self, lane):
         return post_process.lane_info[self._rsu_id][lane]

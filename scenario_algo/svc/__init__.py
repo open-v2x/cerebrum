@@ -24,10 +24,18 @@ class Base:
         """Class initialization."""
         self._kv = kv
 
-    async def run(self, rsu: str, intersection_id: str,\
-         latest_frame: dict, node_id: int, _: dict = {}) -> dict:
+    async def run(
+        self,
+        rsu: str,
+        intersection_id: str,
+        latest_frame: dict,
+        node_id: int,
+        _: dict = {},
+    ) -> dict:
         """External call function."""
-        his_info = await self._kv.get(self.HIS_INFO_KEY.format(intersection_id))
+        his_info = await self._kv.get(
+            self.HIS_INFO_KEY.format(intersection_id)
+        )
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")

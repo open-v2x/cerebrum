@@ -43,6 +43,7 @@ CLC_TOPIC = topic_replace("V2X/RSU/{}/CLC/DOWN", cfg.DELIMITER)
 DNP_TOPIC = topic_replace("V2X/RSU/{}/DNP/DOWN", cfg.DELIMITER)
 RDW_TOPIC = topic_replace("V2X/RSU/{}/RDW/DOWN", cfg.DELIMITER)
 OSW_TOPIC = topic_replace("V2X/INTERSECTION/{}/OSW/DOWN", cfg.DELIMITER)
+SSW_TOPIC = topic_replace("V2X/INTERSECTION/{}/SSW/DOWN", cfg.DELIMITER)
 
 
 RSM_VISUAL_TOPIC = topic_replace(
@@ -66,6 +67,9 @@ RDW_VISUAL_TOPIC = topic_replace(
 )
 OSW_VISUAL_TOPIC = topic_replace(
     "V2X/DEVICE/{}/APPLICATION/OSW/NODE{}", cfg.DELIMITER
+)
+SSW_VISUAL_TOPIC = topic_replace(
+    "V2X/DEVICE/{}/APPLICATION/SSW/NODE{}", cfg.DELIMITER
 )
 
 # Millimeter wave radar

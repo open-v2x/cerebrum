@@ -91,10 +91,7 @@ class DoNotPass(Base):
             "refPos": {},
             "coordinates": {
                 "vehId": "",
-                "driveSuggestion": {
-                    "suggestion": -1,
-                    "lifeTime": 0,
-                },
+                "driveSuggestion": {"suggestion": -1, "lifeTime": 0},
                 "pathGuidance": [],
                 "info": 0,
             },

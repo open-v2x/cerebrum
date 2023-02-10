@@ -182,7 +182,11 @@ class App:
 
     def _mqtt_cfg_db(self):
         try:
-            mcfg_conn, self.rsu_nodeid, self.rsu_intersectionid = db.get_mqtt_config()
+            (
+                mcfg_conn,
+                self.rsu_nodeid,
+                self.rsu_intersectionid,
+            ) = db.get_mqtt_config()
             node_id = self.rsu_nodeid["R328328"]
             self.mqtt_conn = mqtt.Client(client_id=uuid.uuid4().hex)
             self.mqtt_conn.username_pw_set(
@@ -256,15 +260,17 @@ class App:
     def _mqtt_on_rsm_msg(self, client, userdata, msg):
         try:
             driver_name, rsu_id, intersection_id, node_id = self._driver_name(
-                msg.topic, "rsm")
+                msg.topic, "rsm"
+            )
             driver = getattr(drivers, driver_name)
             miss_flag, rsm, miss_info = driver(msg.payload)
         except Exception:
             return logger.error("rsm data format error")
         if self._is_valid_intersection_id(intersection_id):
             self.loop.create_task(
-                self.process.run(rsu_id, intersection_id, rsm,
-                                 miss_flag, miss_info, node_id)
+                self.process.run(
+                    rsu_id, intersection_id, rsm, miss_flag, miss_info, node_id
+                )
             )
         else:
             logger.error("RSU is not registered")
@@ -280,22 +286,25 @@ class App:
         except Exception:
             return logger.error("vir data format error")
         if self._is_valid_intersection_id(intersection_id):
-            self.loop.create_task(self.svc.run(
-                intersection_id, msg.payload, nodeid))
+            self.loop.create_task(
+                self.svc.run(intersection_id, msg.payload, nodeid)
+            )
         else:
             logger.error("Target RSU is not registered")
 
     def _mqtt_on_rsi(self, client, userdata, msg):
         try:
             driver_name, rsu_id, intersectionid, node_id = self._driver_name(
-                msg.topic, "rsi")
+                msg.topic, "rsi"
+            )
             driver = getattr(drivers, driver_name)
             rsi, congestion_info = driver(msg.payload)
         except Exception as e:
             return logger.error(f"rsi data format error: {e}")
         if self._is_valid_intersection_id(intersectionid):
-            self.loop.create_task(self.rsi.run(
-                intersectionid, rsi, congestion_info))
+            self.loop.create_task(
+                self.rsi.run(intersectionid, rsi, congestion_info)
+            )
         else:
             logger.error("RSU is not registered")
 
@@ -321,8 +330,9 @@ class App:
             return logger.error("radar data format error")
         if self._is_valid_intersection_id(intersection_id):
             self.loop.create_task(
-                self.radar.run(intersection_id,
-                               json.loads(msg.payload), rsu_id)
+                self.radar.run(
+                    intersection_id, json.loads(msg.payload), rsu_id
+                )
             )
         else:
             logger.error("Target RSU is not registered")

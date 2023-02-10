@@ -258,12 +258,7 @@ class CooperativeLaneChange(Base):
         last_y = self.latest_frame[self.vehId]["y"]
         path = []
         g_path = []
-        g_path.append(
-            {
-                "x": float(last_x),
-                "y": float(last_y),
-            }
-        )
+        g_path.append({"x": float(last_x), "y": float(last_y)})
         plan_num = 30
         for i in range(plan_num):
             v = v1 + (v2 - v1) * i / (plan_num - 1)
@@ -274,12 +269,7 @@ class CooperativeLaneChange(Base):
             px = last_x + v * 0.1 * np.sin(h * 0.0125 / 180 * np.pi)
             py = last_y - v * 0.1 * np.cos(h * 0.0125 / 180 * np.pi)
             last_x, last_y = px, py
-            g_path.append(
-                {
-                    "x": float(px),
-                    "y": float(py),
-                }
-            )
+            g_path.append({"x": float(px), "y": float(py)})
             lat, lon = post_process.coordinate_tf_inverse(
                 py + self._transform_info[2],
                 px + self._transform_info[1],

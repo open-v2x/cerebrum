@@ -45,9 +45,13 @@ class CollisionWarning(Base):
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
 
-    async def _filter_event(self, intersection_id, events: list, cwm: list) -> tuple:
+    async def _filter_event(
+        self, intersection_id, events: list, cwm: list
+    ) -> tuple:
         # 过滤碰撞事件
-        events_count = await self._kv.get(self.EVENT_PAIR_KEY.format(intersection_id))
+        events_count = await self._kv.get(
+            self.EVENT_PAIR_KEY.format(intersection_id)
+        )
         events_count = events_count if events_count else {}
         event_list = list(events_count.keys())
         for i in event_list:
@@ -73,13 +77,23 @@ class CollisionWarning(Base):
         for i in event_list:
             if events_count[i]["disappear_times"] >= self.DeleteThreshold:
                 del events_count[i]
-        await self._kv.set(self.EVENT_PAIR_KEY.format(intersection_id), events_count)
+        await self._kv.set(
+            self.EVENT_PAIR_KEY.format(intersection_id), events_count
+        )
         return alarms, filtered_cwm
 
-    async def run(self, rsu: str, intersection_id: str, \
-        latest_frame: dict, node_id: int, _: dict = {}) -> dict:
+    async def run(
+        self,
+        rsu: str,
+        intersection_id: str,
+        latest_frame: dict,
+        node_id: int,
+        _: dict = {},
+    ) -> dict:
         """External call function."""
-        his_info = await self._kv.get(self.HIS_INFO_KEY.format(intersection_id))
+        his_info = await self._kv.get(
+            self.HIS_INFO_KEY.format(intersection_id)
+        )
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")
@@ -102,7 +116,9 @@ class CollisionWarning(Base):
             {"motors": motors_trajs, "vptc": vptc_trajs},
         )
         if events:
-            alarms, filtered_cwm = await self._filter_event(intersection_id, events, cwm)
+            alarms, filtered_cwm = await self._filter_event(
+                intersection_id, events, cwm
+            )
             post_process.convert_for_collision_visual(alarms, intersection_id)
             collision_warning_message = post_process.generate_cwm(
                 filtered_cwm, intersection_id
@@ -110,7 +126,9 @@ class CollisionWarning(Base):
             if alarms:
                 if self._mqtt_conn:
                     self._mqtt_conn.publish(
-                        consts.CW_VISUAL_TOPIC.format(intersection_id, node_id),
+                        consts.CW_VISUAL_TOPIC.format(
+                            intersection_id, node_id
+                        ),
                         json.dumps(alarms),
                         0,
                     )

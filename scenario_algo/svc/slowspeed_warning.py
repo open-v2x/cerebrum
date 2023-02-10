@@ -12,7 +12,7 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-"""Call the do not pass algorithm function."""
+"""Call the slowspeed warning algorithm function."""
 
 from common import consts
 from common import modules
@@ -20,47 +20,55 @@ import orjson as json
 from post_process_algo import post_process
 from scenario_algo.svc.collision_warning import CollisionWarning
 
-do_not_pass_warning = modules.algorithms.do_not_pass_warning.module
+slowspeed_warning = modules.algorithms.slowspeed_warning.module  # type: ignore
 
 
-class DoNotPass:
-    """Call the do not pass algorithm function."""
+class SlowspeedWarning:
+    """Call the slowspeed warning algorithm function."""
 
-    def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None) -> None:
+    def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None):
         """Class initialization."""
         self._kv = kv
+        self._exe = slowspeed_warning.SlowspeedWarning()
         self._mqtt = mqtt
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
-        self._exe = do_not_pass_warning.DoNotPass()
 
     async def run(
-        self, params: dict, rsu_id: str, _: list, node_id: int
-    ) -> None:
+        self,
+        rsu_id: str,
+        intersection_id: str,
+        latest_frame: dict,
+        node_id: int,
+        _: dict = {},
+    ) -> dict:
         """External call function."""
         his_info = await self._kv.get(
-            CollisionWarning.HIS_INFO_KEY.format(rsu_id)
+            CollisionWarning.HIS_INFO_KEY.format(intersection_id)
         )
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")
             else {}
         )
-        current_frame = (
-            his_info["latest_frame"] if his_info.get("latest_frame") else {}
+        last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
+        ssw, show_info, last_ts = self._exe.run(
+            context_frames, latest_frame, last_ts, intersection_id
         )
-        msg_rsc, info_for_show = self._exe.run(
-            rsu_id, context_frames, current_frame, params
+        post_process.convert_for_reverse_visual(show_info, intersection_id)
+        slowspeed_warning_message = post_process.generate_osw(
+            ssw, rsu_id, intersection_id
         )
-        if info_for_show:
-            post_process.convert_for_visual(info_for_show["ego_point"], rsu_id)
+        if ssw and show_info:
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.DNP_VISUAL_TOPIC.format(rsu_id, node_id),
-                    json.dumps([info_for_show]),
+                    consts.SSW_VISUAL_TOPIC.format(intersection_id, node_id),
+                    json.dumps(show_info),
                     0,
                 )
-        if msg_rsc:
-            self._mqtt.publish(
-                consts.DNP_TOPIC.format(rsu_id), json.dumps(msg_rsc), 0
-            )
+                self._mqtt.publish(
+                    consts.SSW_TOPIC.format(intersection_id),
+                    json.dumps(slowspeed_warning_message),
+                    0,
+                )
+        return latest_frame

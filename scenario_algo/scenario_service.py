@@ -62,7 +62,9 @@ class Service:
                 post_process.YOrigin[rsu_id],
             ]
             if self._dispatch.get(svc):
-                await self._dispatch[svc](msg_vir, rsu_id, convert_info, node_id)
+                await self._dispatch[svc](
+                    msg_vir, rsu_id, convert_info, node_id
+                )
 
     async def _handle_sds(
         self, msg_vir: dict, rsu_id: str, convert_info: list, node_id: int

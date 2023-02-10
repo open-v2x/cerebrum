@@ -43,7 +43,7 @@ rsu_info: Dict[str, dict] = {}
 lane_info: Dict[str, dict] = {}
 map_info: Dict[str, dict] = {}
 intersection_info: Dict[str, dict] = {}
-max_speed_limit: Dict[int, int] = {}
+speed_limits: Dict[str, dict] = {}
 Base = declarative_base()
 engine = create_engine(**cfg.sqlalchemy_w)
 DBSession = sessionmaker(bind=engine)
@@ -349,11 +349,7 @@ def get_rsu_info(msg_info):
 
 def get_map_info():
     """Get information of all Map."""
-    results = session.query(
-        Map.name,
-        Map.intersection_code,
-        Map.data
-    ).all()
+    results = session.query(Map.name, Map.intersection_code, Map.data).all()
     for row in results:
         try:
             """
@@ -373,23 +369,35 @@ def get_map_info():
             # map.json 中每条车道的 +1 -1
             map_lane_info0 = {}
             # 车道线的限速标准
-            max_speed_info = {}
+            lane_speed_info = {}
             for item in row[2]["nodes"]["Node"]:
                 for link in item["inLinks"]["Link"]:
                     lane_list = []
 
                     if "speedLimits" in link:
-                        max_speed = link["speedLimits"]["RegulatorySpeedLimit"]["speed"]
+                        regulatory_speed_limits = link["speedLimits"][
+                            "RegulatorySpeedLimit"
+                        ]
+                        if not isinstance(regulatory_speed_limits, list):
+                            regulatory_speed_limits = [regulatory_speed_limits]
+
+                        speed_limits_info = {
+                            list(i["type"].keys())[0]: int(i["speed"])
+                            for i in regulatory_speed_limits
+                        }
                         for lane in link["lanes"]["Lane"]:
-                            max_speed_info[int(lane["laneID"])] = int(
-                                max_speed)
+                            lane_speed_info[
+                                int(lane["laneID"])
+                            ] = speed_limits_info
                     else:
                         for lane in link["lanes"]["Lane"]:
-                            max_speed_info[int(lane["laneID"])] = None
+                            lane_speed_info[int(lane["laneID"])] = {
+                                "vehicleMaxSpeed": None,
+                                "vehicleMinSpeed": None,
+                            }
 
-                    max_speed_info = deepcopy(max_speed_info)
-                    max_speed_limit[row[1]] = max_speed_info
-
+                    lane_speed = deepcopy(lane_speed_info)
+                    speed_limits[row[1]] = lane_speed
 
                     for lane in link["lanes"]["Lane"]:
                         lane_list.append(lane["laneID"])
@@ -436,7 +444,7 @@ def get_map_info():
             map_info[row[0]] = {
                 "intersection_code": row[1],  # type: ignore [no-redef]
                 "pos": refPos,  # type: ignore
-                "lane_info": map_lane_info0  # type: ignore
+                "lane_info": map_lane_info0,  # type: ignore
             }
 
         except Exception as e:
@@ -449,9 +457,7 @@ def get_map_info():
 
 def get_intersection_info():
     """Get information of all Intersection."""
-    results = session.query(
-        Intersection.code,
-    ).all()
+    results = session.query(Intersection.code).all()
     for row in results:
         try:
             intersection_info[row[0]] = {}
@@ -467,24 +473,15 @@ def get_mqtt_config():
     """Get the configuration of mqtt."""
     try:
         # mqtt 的配置
-        results = session.query(
-            MQTT.mqtt_config,
-            MQTT.node_id
-        ).first()
+        results = session.query(MQTT.mqtt_config, MQTT.node_id).first()
         mq_cfg = results[0]
         # RSU 与 NodeId 的对应关系
-        result = session.query(
-            EdgeNodeRSU.esn,
-            EdgeNodeRSU.edge_node_id
-        ).all()
+        result = session.query(EdgeNodeRSU.esn, EdgeNodeRSU.edge_node_id).all()
         rsu_nodeid: Dict = {}
         for item in result:
             rsu_nodeid[item[0]] = item[1]
         # RSU 与 路口Id 的对应关系
-        res = session.query(
-            RSU.rsu_esn,
-            RSU.intersection_code
-        ).all()
+        res = session.query(RSU.rsu_esn, RSU.intersection_code).all()
         rsu_intersectionid: Dict = {}
         for item in res:
             rsu_intersectionid[item[0]] = item[1]
@@ -503,8 +500,7 @@ def put_rsu_nodeid():
     """Put the configuration of nodeid."""
     try:
         results = session.query(
-            EdgeNodeRSU.esn,
-            EdgeNodeRSU.edge_node_id
+            EdgeNodeRSU.esn, EdgeNodeRSU.edge_node_id
         ).all()
         rsu_nodeid: Dict = {}
         for item in results:
@@ -517,16 +513,12 @@ def put_rsu_nodeid():
             "unable to \
             fetch nodeid configuration from database"
         )
-    pass
 
 
 def put_rsu_intersectionid():
     """Put the configuration of intersectionid."""
     try:
-        results = session.query(
-            RSU.rsu_esn,
-            RSU.intersection_code
-        ).all()
+        results = session.query(RSU.rsu_esn, RSU.intersection_code).all()
         rsu_intersectionid: Dict = {}
         for item in results:
             rsu_intersectionid[item[0]] = item[1]
