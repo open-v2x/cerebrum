@@ -81,6 +81,12 @@ scenario_algo:
       algo: "reverse_driving_warning"
       version:
       - reverse_driving_warning
+    congestion_warning:
+      enable: true
+      module: "scenario_algo.algo_lib.congestion_warning"
+      algo: "congestion_warning"
+      version:
+      - congestion_warning
     overspeed_warning:
       enable: true
       module: "scenario_algo.algo_lib.overspeed_warning"
