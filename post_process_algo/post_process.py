@@ -196,6 +196,22 @@ def convert_for_reverse_visual(info: list, rsu_id: str) -> None:
             new_y / rsu_info[rsu_id]["scale"]
         )
 
+def convert_for_congestion_visual(info: list, intersection_id: str) -> None:
+    k = -1 if rsu_info[intersection_id]["reverse"] else 1
+    rotation = math.radians(rsu_info[intersection_id]["rotation"])
+    for i in range(len(info)):
+        x = info[i]["startPoint"]["x"]
+        y = info[i]["startPoint"]["y"]
+        x += rsu_info[intersection_id]["bias_x"]
+        y = k * (y - rsu_info[intersection_id]["bias_y"])
+        new_x = x * math.cos(rotation) - y * math.sin(rotation)
+        new_y = x * math.sin(rotation) + y * math.cos(rotation)
+        info[i]["startPoint"]["x"] = int(
+            new_x / rsu_info[intersection_id]["scale"]
+        )
+        info[i]["startPoint"]["y"] = int(
+            new_y / rsu_info[intersection_id]["scale"]
+        )
 
 def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
     """Generate collision warning message."""
