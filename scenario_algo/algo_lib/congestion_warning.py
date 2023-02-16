@@ -152,6 +152,8 @@ class CongestionWarning(Base):
         elif 0 <= avg_speed < 15:
             level = 3
         lane_info["level"] = level
+        lane_info["avg_speed"] = avg_speed
+        lane_info["secMark"] = df_lane["secMark"].values[0]
 
         info_for_show, info_for_cgw = self._build_cgw_event(
             lane_info, lane_id)
@@ -243,9 +245,11 @@ class CongestionWarning(Base):
             }
         }
         info_for_cgw = {
+            "secMark": lane_info["secMark"],
             "congestionLanesInfo": {
                 "laneId": lane_id,
                 "level": lane_info["level"],
+                "avgSpeed": int(lane_info["avg_speed"]),
                 "startPoint": {
                     "lat": int(lane_info["start_point"]["lat"]),
                     "lon": int(lane_info["start_point"]["lon"]),
