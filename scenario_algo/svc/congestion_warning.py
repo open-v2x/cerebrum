@@ -55,9 +55,6 @@ class CongestionWarning:
             congestion_warning_message = post_process.generate_osw(
                 cgw, rsu, intersection_id
             )
-            print("验证")
-            print(json.dumps(show_info))
-            print(json.dumps(congestion_warning_message))
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
                     consts.CGW_VISUAL_TOPIC.format(
