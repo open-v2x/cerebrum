@@ -165,7 +165,11 @@ class ReverseDriving(Base):
                     "lat": int(ego_info["lat"]),
                     "lon": int(ego_info["lon"]),
                 },
+                "speed": ego_info["speed"],
                 "heading": ego_info["heading"],
+                "width": ego_info["width"],
+                "length": ego_info["length"],
+                "height": ego_info["height"]
             },
         }
         return info_for_show, info_for_rdw
