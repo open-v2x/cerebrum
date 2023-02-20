@@ -59,7 +59,6 @@ class OverspeedWarning:
         overspeed_warning_message = post_process.generate_osw(
             osw, rsu_id, intersection_id
         )
-
         if osw and show_info:
             if self._mqtt_conn:
                 self._mqtt_conn.publish(

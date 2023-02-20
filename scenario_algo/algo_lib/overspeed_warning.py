@@ -160,6 +160,11 @@ class OverspeedWarning(Base):
                 "ptcId": k,
                 "lane": mot[-1]["lane"],
                 "secMark": mot[-1]["secMark"],
+                "speed": mot[-1]["speed"],
+                "heading": mot[-1]["heading"],
+                "width": mot[-1]["width"],
+                "length": mot[-1]["length"],
+                "height": mot[-1]["height"],
                 "x": mot[-1]["x"],
                 "y": mot[-1]["y"],
                 "lat": mot[-1]["lat"],
@@ -217,6 +222,12 @@ class OverspeedWarning(Base):
                     "lat": int(df_res["lat"]),
                     "lon": int(df_res["lon"]),
                 },
+                "speed": df_res["speed"],
+                "heading": df_res["heading"],
+                "width": df_res["width"],
+                "length": df_res["length"],
+                "height": df_res["height"]
+
             },
         }
 
