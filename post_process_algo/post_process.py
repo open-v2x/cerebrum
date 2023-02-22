@@ -201,6 +201,7 @@ def convert_for_congestion_visual(info: list, intersection_id: str) -> None:
     k = -1 if rsu_info[intersection_id]["reverse"] else 1
     rotation = math.radians(rsu_info[intersection_id]["rotation"])
     for i in range(len(info)):
+        # 起点经纬度
         x = info[i]["startPoint"]["x"]
         y = info[i]["startPoint"]["y"]
         x += rsu_info[intersection_id]["bias_x"]
@@ -212,6 +213,19 @@ def convert_for_congestion_visual(info: list, intersection_id: str) -> None:
         )
         info[i]["startPoint"]["y"] = int(
             new_y / rsu_info[intersection_id]["scale"]
+        )
+        # 终点经纬度
+        x_end = info[i]["endPoint"]["x"]
+        y_end = info[i]["endPoint"]["y"]
+        x_end += rsu_info[intersection_id]["bias_x"]
+        y_end = k * (y_end - rsu_info[intersection_id]["bias_y"])
+        new_x_end = x_end * math.cos(rotation) - y_end * math.sin(rotation)
+        new_y_end = x_end * math.sin(rotation) + y_end * math.cos(rotation)
+        info[i]["endPoint"]["x"] = int(
+            new_x_end / rsu_info[intersection_id]["scale"]
+        )
+        info[i]["endPoint"]["y"] = int(
+            new_y_end / rsu_info[intersection_id]["scale"]
         )
 
 def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
