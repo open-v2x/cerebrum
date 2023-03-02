@@ -46,9 +46,15 @@ class CongestionWarning:
             else {}
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
-        cgw, show_info, last_ts = self._exe.run(
+        cgw, show_info, last_ts,CG_KEY  = self._exe.run(
             context_frames, latest_frame, last_ts, intersection_id
         )
+
+        cg_list = [item for item in show_info if item.get("level") > 0]
+        if cg_list:
+            await self._kv.set(
+                CG_KEY, "congestion"
+            )
 
         if cgw and show_info:
             post_process.convert_for_congestion_visual(show_info, intersection_id)

@@ -47,6 +47,8 @@ class Base:
 class CongestionWarning(Base):
     """Scenario of Congestion Warning."""
 
+    CG_KEY = "cg.{}"
+
     def run(
         self,
         context_frames: dict,
@@ -103,6 +105,7 @@ class CongestionWarning(Base):
                 self._congestion_warning_message,
                 self._show_info,
                 last_timestamp,
+                CongestionWarning.CG_KEY.format(intersection_id)
             )
         # 获取车道方向
         df["direction"] = df["lane"].apply(self._get_direction)
@@ -114,6 +117,7 @@ class CongestionWarning(Base):
             self._congestion_warning_message,
             self._show_info,
             last_timestamp,
+            CongestionWarning.CG_KEY.format(intersection_id)
         )
 
     def cal(self, df_lane):

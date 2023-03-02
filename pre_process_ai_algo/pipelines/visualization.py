@@ -66,9 +66,9 @@ class Visualize(Base):
             else 0
         )
         # get rsi
-        rsi_formatter = modules.algorithms.rsi_formatter.module
+        congestion_warning = modules.algorithms.congestion_warning.module
         congestion = await self._kv.get(
-            rsi_formatter.RSI.CONGESTION_KEY.format(intersection_id)
+            congestion_warning.CongestionWarning.CG_KEY.format(intersection_id)
         )
         if congestion:
             congestion_info = "congestion"
