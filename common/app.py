@@ -68,6 +68,9 @@ class App:
             consts.topic_replace(
                 "V2X/CONFIG/UPDATE/NOTICE", self.config.DELIMITER
             ): self._mqtt_on_config_db,
+            consts.topic_replace(
+                "V2X/INTERSECTION/UPDATE", self.config.DELIMITER
+            ): db.put_rsu_intersectionid,
             # Millimeter wave radar
             consts.topic_replace(
                 "V2X/RADAR/+/TRACK/UP", self.config.DELIMITER

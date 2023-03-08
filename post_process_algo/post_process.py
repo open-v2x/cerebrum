@@ -196,6 +196,7 @@ def convert_for_reverse_visual(info: list, rsu_id: str) -> None:
             new_y / rsu_info[rsu_id]["scale"]
         )
 
+
 def convert_for_congestion_visual(info: list, intersection_id: str) -> None:
     """Congestion."""
     k = -1 if rsu_info[intersection_id]["reverse"] else 1
@@ -227,6 +228,7 @@ def convert_for_congestion_visual(info: list, intersection_id: str) -> None:
         info[i]["endPoint"]["y"] = int(
             new_y_end / rsu_info[intersection_id]["scale"]
         )
+
 
 def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
     """Generate collision warning message."""
@@ -310,8 +312,9 @@ map_info = db.map_info
 speed_limits = db.speed_limits
 intersection_info = db.intersection_info
 db.get_rsu_info(False)
-db.get_map_info()
+
 db.get_intersection_info()
+
 
 for k, v in intersection_info.items():
     intersection_info[k] = rsu_info["R328328"]

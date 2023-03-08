@@ -281,6 +281,9 @@ class Intersection(Base, DandelionBase):  # type: ignore
     __tablename__ = "intersection"
 
     code = Column(String(64), unique=True, index=True, nullable=False)
+    map_data = deferred(Column(JSON, nullable=False))
+
+
 
     def __repr__(self) -> str:
         """repr."""
@@ -457,10 +460,97 @@ def get_map_info():
 
 def get_intersection_info():
     """Get information of all Intersection."""
-    results = session.query(Intersection.code).all()
+    results = session.query(Intersection.code,Intersection.map_data).all()
     for row in results:
         try:
+            # 获取路口信息
             intersection_info[row[0]] = {}
+            # 获取 map 的信息
+            link_dict = {}
+            # map.json 中每条车道的 +1 -1
+            map_lane_info0 = {}
+            # 车道线的限速标准
+            lane_speed_info = {}
+            for item in row[1]["nodes"]["Node"]:
+                for link in item["inLinks"]["Link"]:
+
+                    lane_list = []
+
+                    if "speedLimits" in link:
+                        regulatory_speed_limits = link["speedLimits"][
+                            "RegulatorySpeedLimit"
+                        ]
+                        if not isinstance(regulatory_speed_limits, list):
+                            regulatory_speed_limits = [regulatory_speed_limits]
+
+                        speed_limits_info = {
+                            list(i["type"].keys())[0]: int(i["speed"])
+                            for i in regulatory_speed_limits
+                        }
+                        for lane in link["lanes"]["Lane"]:
+                            lane_speed_info[
+                                int(lane["laneID"])
+                            ] = speed_limits_info
+                    else:
+                        for lane in link["lanes"]["Lane"]:
+                            lane_speed_info[int(lane["laneID"])] = {
+                                "vehicleMaxSpeed": None,
+                                "vehicleMinSpeed": None,
+                            }
+
+                    lane_speed = deepcopy(lane_speed_info)
+                    speed_limits[row[0]] = lane_speed
+
+                    for lane in link["lanes"]["Lane"]:
+                        lane_list.append(lane["laneID"])
+
+                    lanes = deepcopy(lane_list)
+                    link_dict[link["name"]] = lanes
+
+            key_list = [key.split("-")[-1] for key in link_dict.keys()]
+            center_node = [
+                item
+                for item, count in collections.Counter(key_list).items()
+                if count > 1
+            ]
+
+
+            # 取中心节点的参考经纬度
+            for node in row[1]["nodes"]["Node"]:
+                if node["name"] == center_node[0]:
+                    del node["refPos"]["elevation"]
+                    node["refPos"]["lon"] = (
+                        int(node["refPos"].pop("long")) / consts.CoordinateUnit
+                    )
+                    node["refPos"]["lat"] = (
+                        int(node["refPos"]["lat"]) / consts.CoordinateUnit
+                    )
+                    refPos = node["refPos"]
+
+            # 计算车道线的+1 -1
+            for num, link in enumerate(link_dict):
+                if link.split("-")[-1] == center_node[0]:
+                    dict0 = dict(
+                        [(int(v), +1) for i, v in enumerate(link_dict[link])]
+                    )
+                    new_dict0 = deepcopy(dict0)
+                    map_lane_info0.update(new_dict0)
+                    pass
+                else:
+                    dict1 = dict(
+                        [(int(v), -1) for i, v in enumerate(link_dict[link])]
+                    )
+                    new_dict1 = deepcopy(dict1)
+                    map_lane_info0.update(new_dict1)
+                    pass
+            map_info[row[0]] = {
+                "intersection_code": row[0],  # type: ignore [no-redef]
+                "pos": refPos,  # type: ignore
+                "lane_info": map_lane_info0,  # type: ignore
+            }
+
+
+
         except Exception as e:
             logger.error(
                 f"Missing required field data in Intersection with serial number "
