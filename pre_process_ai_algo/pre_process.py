@@ -39,7 +39,7 @@ class DataProcessing:
     """Convert rsm data format to algorithm format data."""
 
     LOCK_KEY = "v2x.process.lock.{}"
-    SM_CFG_KEY = "lastsm_and_cfg.{}"
+    SM_CFG_KEY = "lastsm_and_cfg"
 
     def __init__(self, mqtt, kv, mqtt_conn=None, node_id=None) -> None:
         """Class initialization."""
@@ -137,9 +137,7 @@ class DataProcessing:
             if not latest:
                 return None
             current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
-            sm_and_cfg = await self._kv.get(
-                self.SM_CFG_KEY.format(intersection_id)
-            )
+            sm_and_cfg = await self._kv.get(self.SM_CFG_KEY)
             last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
             pipe_cfg = (
                 # TODO(wu.wenxiang) document how to read config from mqtt
@@ -192,7 +190,7 @@ class DataProcessing:
             if 0 <= last_sec_mark - current_sec_mark <= 50000:
                 return None
             await self._kv.set(  # type: ignore
-                self.SM_CFG_KEY.format(intersection_id),  # type: ignore
+                self.SM_CFG_KEY,  # type: ignore
                 {"sm": current_sec_mark, "cfg": pipe_cfg},
             )
             pipelines = [
@@ -226,13 +224,13 @@ class DataProcessing:
 class Cfg:
     """Receive algorithm config information and set it in redis."""
 
-    SM_CFG_KEY = "lastsm_and_cfg.{}"
+    SM_CFG_KEY = "lastsm_and_cfg"
 
     def __init__(self, kv) -> None:
         """Class initialization."""
         self._kv = kv
 
-    async def run(self, intersection_id: str, cfg_info: bytes) -> None:
+    async def run(self, cfg_info: bytes) -> None:
         """External call function."""
         cfg_info_dict = json.loads(cfg_info)
         yaml_info = cfg_info_dict.get("yaml_info")
@@ -241,11 +239,9 @@ class Cfg:
         )
         modules.load_algorithm_modules(default)
         redis_info = cfg_info_dict.get("redis_info")
-        sm_and_cfg = await self._kv.get(
-            self.SM_CFG_KEY.format(intersection_id)
-        )
+        sm_and_cfg = await self._kv.get(self.SM_CFG_KEY)
         last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
         await self._kv.set(
-            self.SM_CFG_KEY.format(intersection_id),
+            self.SM_CFG_KEY,
             {"sm": last_sec_mark, "cfg": redis_info},
         )
