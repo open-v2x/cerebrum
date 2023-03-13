@@ -60,7 +60,7 @@ class App:
                 "V2X/RSU/+/VIR/UP", self.config.DELIMITER
             ): self._mqtt_on_vir,
             consts.topic_replace(
-                "V2X/RSU/+/PIP/CFG", self.config.DELIMITER
+                "V2X/RSU/PIP/CFG", self.config.DELIMITER
             ): self._mqtt_on_cfg,
             consts.topic_replace(
                 "V2X/RSU/REG/TICE", self.config.DELIMITER
@@ -312,15 +312,7 @@ class App:
             logger.error("RSU is not registered")
 
     def _mqtt_on_cfg(self, client, userdata, msg):
-        try:
-            m = self.cfg_topic_re.search(msg.topic)
-            rsu_id = m.groupdict()["rsuid"]
-        except Exception:
-            return logger.error("cfg data format error")
-        if self._is_valid_intersection_id(rsu_id):
-            self.loop.create_task(self.cfg.run(rsu_id, msg.payload))
-        else:
-            logger.error("RSU is not registered")
+        self.loop.create_task(self.cfg.run(msg.payload))
 
     def _mqtt_on_radar(self, client, userdata, msg):
         try:
