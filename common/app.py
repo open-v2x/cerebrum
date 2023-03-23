@@ -68,9 +68,6 @@ class App:
             consts.topic_replace(
                 "V2X/CONFIG/UPDATE/NOTICE", self.config.DELIMITER
             ): self._mqtt_on_config_db,
-            consts.topic_replace(
-                "V2X/INTERSECTION/UPDATE", self.config.DELIMITER
-            ): db.put_rsu_intersectionid,
             # Millimeter wave radar
             consts.topic_replace(
                 "V2X/RADAR/+/TRACK/UP", self.config.DELIMITER
@@ -139,9 +136,7 @@ class App:
         self.stop = False
 
         # RSU 与 nodeid 的对应关系
-        self.rsu_nodeid: Dict = {}
-        # RSU 与 intersectionid 的对应关系
-        self.rsu_intersectionid: Dict = {}
+        self.rsu_nodeid: Dict = {"R328328": 1}
 
     def run(self):
         """External call function."""
@@ -188,8 +183,8 @@ class App:
             (
                 mcfg_conn,
                 self.rsu_nodeid,
-                self.rsu_intersectionid,
             ) = db.get_mqtt_config()
+            self.rsu_nodeid = {"R328328": 1}
             node_id = self.rsu_nodeid["R328328"]
             self.mqtt_conn = mqtt.Client(client_id=uuid.uuid4().hex)
             self.mqtt_conn.username_pw_set(
@@ -262,18 +257,14 @@ class App:
 
     def _mqtt_on_rsm_msg(self, client, userdata, msg):
         try:
-            driver_name, rsu_id, intersection_id, node_id = self._driver_name(
-                msg.topic, "rsm"
-            )
+            driver_name, rsu_id, node_id = self._driver_name(msg.topic, "rsm")
             driver = getattr(drivers, driver_name)
             miss_flag, rsm, miss_info = driver(msg.payload)
         except Exception:
             return logger.error("rsm data format error")
-        if self._is_valid_intersection_id(intersection_id):
+        if self._is_valid_rsu_id(rsu_id):
             self.loop.create_task(
-                self.process.run(
-                    rsu_id, intersection_id, rsm, miss_flag, miss_info, node_id
-                )
+                self.process.run(rsu_id, rsm, miss_flag, miss_info, node_id)
             )
         else:
             logger.error("RSU is not registered")
@@ -282,32 +273,24 @@ class App:
         try:
             m = self.vir_topic_re.search(msg.topic)
             rsu_id = m.groupdict()["rsuid"]
-            # 获取 intersectionid
-            intersection_id = self.get_intersection_id(rsu_id)
             # 获取 nodeid
             nodeid = self.get_nodeid(rsu_id)
         except Exception:
             return logger.error("vir data format error")
-        if self._is_valid_intersection_id(intersection_id):
-            self.loop.create_task(
-                self.svc.run(intersection_id, msg.payload, nodeid)
-            )
+        if self._is_valid_rsu_id(rsu_id):
+            self.loop.create_task(self.svc.run(rsu_id, msg.payload, nodeid))
         else:
             logger.error("Target RSU is not registered")
 
     def _mqtt_on_rsi(self, client, userdata, msg):
         try:
-            driver_name, rsu_id, intersectionid, node_id = self._driver_name(
-                msg.topic, "rsi"
-            )
+            driver_name, rsu_id, node_id = self._driver_name(msg.topic, "rsi")
             driver = getattr(drivers, driver_name)
             rsi, congestion_info = driver(msg.payload)
         except Exception as e:
             return logger.error(f"rsi data format error: {e}")
-        if self._is_valid_intersection_id(intersectionid):
-            self.loop.create_task(
-                self.rsi.run(intersectionid, rsi, congestion_info)
-            )
+        if self._is_valid_rsu_id(rsu_id):
+            self.loop.create_task(self.rsi.run(rsu_id, rsi, congestion_info))
         else:
             logger.error("RSU is not registered")
 
@@ -319,15 +302,11 @@ class App:
             m = self.radar_topic_re.search(msg.topic)
             # 得到 RSUID
             rsu_id = m.groupdict()["rsuid"]
-            # 获取 intersectionid
-            intersection_id = self.get_intersection_id(rsu_id)
         except Exception:
             return logger.error("radar data format error")
-        if self._is_valid_intersection_id(intersection_id):
+        if self._is_valid_rsu_id(rsu_id):
             self.loop.create_task(
-                self.radar.run(
-                    intersection_id, json.loads(msg.payload), rsu_id
-                )
+                self.radar.run(rsu_id, json.loads(msg.payload), rsu_id)
             )
         else:
             logger.error("Target RSU is not registered")
@@ -353,14 +332,9 @@ class App:
             # 得到 RSUID
             rsu_id = m.groupdict()["rsuid"]
             driver_name = msg_type + "_" + m.groupdict()["driver"].lower()
-        # 得到路口 code
-        intersectionid = self.get_intersection_id(rsu_id)
         # 得到边缘站点 nodeId
         node_id = self.get_nodeid(rsu_id)
-        return driver_name, rsu_id, intersectionid, node_id
-
-    def _is_valid_intersection_id(self, intersection_id):
-        return intersection_id in post_process.intersection_info
+        return driver_name, rsu_id, node_id
 
     def _is_valid_rsu_id(self, rsu_id):
         if rsu_id in post_process.rsu_info:
@@ -376,13 +350,3 @@ class App:
             node_id = self.rsu_nodeid.get(rsu_id)
 
         return node_id
-
-    def get_intersection_id(self, rsu_id):
-        """Get IntersectionId."""
-        if rsu_id in self.rsu_intersectionid:
-            intersectionid = self.rsu_intersectionid.get(rsu_id)
-        else:
-            self.rsu_intersectionid = db.put_rsu_intersectionid()
-            intersectionid = self.rsu_intersectionid.get(rsu_id)
-
-        return intersectionid

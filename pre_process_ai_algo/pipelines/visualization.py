@@ -37,7 +37,6 @@ class Visualize(Base):
     async def run(
         self,
         rsu: str,
-        intersection_id: str,
         latest_frame: dict,
         node_id: int,
         _: dict = {},
@@ -54,7 +53,7 @@ class Visualize(Base):
         }
         for fr in latest_frame.values():
             frame = fr.copy()
-            post_process.convert_for_visual(frame, intersection_id)
+            post_process.convert_for_visual(frame, rsu)
             info_dict[frame["ptcType"]] += 1
             if frame["ptcType"] == "motor" and frame["speed"] > 70:
                 info_dict["moving_motor"] += 1
@@ -68,7 +67,7 @@ class Visualize(Base):
         # get rsi
         congestion_warning = modules.algorithms.congestion_warning.module
         congestion = await self._kv.get(
-            congestion_warning.CongestionWarning.CG_KEY.format(intersection_id)
+            congestion_warning.CongestionWarning.CG_KEY.format(rsu)
         )
         if congestion:
             congestion_info = "congestion"
@@ -86,7 +85,7 @@ class Visualize(Base):
             await post_process.http_post(url, final_info)
         if self._mqtt_conn:
             self._mqtt_conn.publish(
-                consts.RSM_VISUAL_TOPIC.format(intersection_id, node_id),
+                consts.RSM_VISUAL_TOPIC.format(rsu, node_id),
                 json.dumps(vis),
                 0,
             )

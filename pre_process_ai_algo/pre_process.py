@@ -111,29 +111,28 @@ class DataProcessing:
     async def run(
         self,
         rsu_id: str,
-        intersection_id: str,
         raw_rsm: dict,
         miss_flag: str,
         miss_info: str,
         node_id: int,
     ) -> None:
         """External call function."""
-        async with self._kv.lock(self.LOCK_KEY.format(intersection_id)):
+        async with self._kv.lock(self.LOCK_KEY.format(rsu_id)):
             if miss_flag == "miss_required_key":
                 self._mqtt.publish(
-                    consts.RSM_DAWNLINE_ACK_TOPIC.format(intersection_id),
+                    consts.RSM_DAWNLINE_ACK_TOPIC.format(rsu_id),
                     miss_info,
                     0,
                 )
                 return None
             if miss_flag == "miss_optional_key":
                 self._mqtt.publish(
-                    consts.RSM_DAWNLINE_ACK_TOPIC.format(intersection_id),
+                    consts.RSM_DAWNLINE_ACK_TOPIC.format(rsu_id),
                     miss_info,
                     0,
                 )
             # 把 rsm 数据结构转换成算法的数据结构
-            latest = post_process.rsm2frame(raw_rsm, intersection_id)
+            latest = post_process.rsm2frame(raw_rsm, rsu_id)
             if not latest:
                 return None
             current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
@@ -200,7 +199,7 @@ class DataProcessing:
             ]
             for p1 in pipelines:
                 if p1:
-                    latest = await p1.run(intersection_id, latest)
+                    latest = await p1.run(rsu_id, latest)
             nodeid_pipelines = [
                 # TODO(wu.wenxiang) check p not exist
                 getattr(self, "_{}_dispatch".format(p))[pipe_cfg[p]]
@@ -209,13 +208,11 @@ class DataProcessing:
 
             for p in nodeid_pipelines:
                 if p:
-                    latest = await p.run(
-                        rsu_id, intersection_id, latest, node_id
-                    )
+                    latest = await p.run(rsu_id, latest, node_id)
 
-            rsm = post_process.frame2rsm(latest, raw_rsm, intersection_id)
+            rsm = post_process.frame2rsm(latest, raw_rsm, rsu_id)
             self._mqtt.publish(
-                consts.RSM_DOWN_TOPIC.format(intersection_id),
+                consts.RSM_DOWN_TOPIC.format(rsu_id),
                 json.dumps(rsm),
                 0,
             )

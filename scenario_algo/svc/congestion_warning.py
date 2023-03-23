@@ -34,11 +34,10 @@ class CongestionWarning:
         self._mqtt_conn = mqtt_conn
         self.node_id = node_id
 
-    async def run(self, rsu: str, intersection_id: str,
-                  latest_frame: dict, _: dict = {}) -> dict:
+    async def run(self, rsu: str, latest_frame: dict, _: dict = {}) -> dict:
         """External call function."""
         his_info = await self._kv.get(
-            CollisionWarning.HIS_INFO_KEY.format(intersection_id)
+            CollisionWarning.HIS_INFO_KEY.format(rsu)
         )
         context_frames = (
             his_info["context_frames"]
@@ -46,30 +45,25 @@ class CongestionWarning:
             else {}
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
-        cgw, show_info, last_ts,CG_KEY  = self._exe.run(
-            context_frames, latest_frame, last_ts, intersection_id
+        cgw, show_info, last_ts, CG_KEY = self._exe.run(
+            context_frames, latest_frame, last_ts, rsu
         )
 
         cg_list = [item for item in show_info if item.get("level") > 0]
         if cg_list:
-            await self._kv.set(
-                CG_KEY, "congestion"
-            )
+            await self._kv.set(CG_KEY, "congestion")
 
         if cgw and show_info:
-            post_process.convert_for_congestion_visual(show_info, intersection_id)
-            congestion_warning_message = post_process.generate_osw(
-                cgw, rsu, intersection_id
-            )
+            post_process.convert_for_congestion_visual(show_info, rsu)
+            congestion_warning_message = post_process.generate_osw(cgw, rsu)
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.CGW_VISUAL_TOPIC.format(
-                        intersection_id, self.node_id),
+                    consts.CGW_VISUAL_TOPIC.format(rsu, self.node_id),
                     json.dumps(show_info),
                     0,
                 )
                 self._mqtt.publish(
-                    consts.CGW_TOPIC.format(intersection_id),
+                    consts.CGW_TOPIC.format(rsu),
                     json.dumps(congestion_warning_message),
                     0,
                 )
