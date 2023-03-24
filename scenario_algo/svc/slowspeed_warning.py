@@ -37,14 +37,13 @@ class SlowspeedWarning:
     async def run(
         self,
         rsu_id: str,
-        intersection_id: str,
         latest_frame: dict,
         node_id: int,
         _: dict = {},
     ) -> dict:
         """External call function."""
         his_info = await self._kv.get(
-            CollisionWarning.HIS_INFO_KEY.format(intersection_id)
+            CollisionWarning.HIS_INFO_KEY.format(rsu_id)
         )
         context_frames = (
             his_info["context_frames"]
@@ -53,21 +52,19 @@ class SlowspeedWarning:
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
         ssw, show_info, last_ts = self._exe.run(
-            context_frames, latest_frame, last_ts, intersection_id
+            context_frames, latest_frame, last_ts
         )
-        post_process.convert_for_reverse_visual(show_info, intersection_id)
-        slowspeed_warning_message = post_process.generate_osw(
-            ssw, rsu_id, intersection_id
-        )
+        post_process.convert_for_reverse_visual(show_info, rsu_id)
+        slowspeed_warning_message = post_process.generate_osw(ssw, rsu_id)
         if ssw and show_info:
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.SSW_VISUAL_TOPIC.format(intersection_id, node_id),
+                    consts.SSW_VISUAL_TOPIC.format(rsu_id, node_id),
                     json.dumps(show_info),
                     0,
                 )
                 self._mqtt.publish(
-                    consts.SSW_TOPIC.format(intersection_id),
+                    consts.SSW_TOPIC.format(rsu_id),
                     json.dumps(slowspeed_warning_message),
                     0,
                 )

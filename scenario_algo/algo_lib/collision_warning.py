@@ -739,7 +739,6 @@ class CollisionWarning(Base):
         ego_size: dict,
         other_size: dict,
     ) -> tuple:
-
         info_for_show = {
             "collision_type": collsion_type.value,
             "ego": ego_info["guid"],

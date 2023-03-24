@@ -38,7 +38,7 @@ class Base:
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
-        intersection_id: str,
+        rsu: str,
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
@@ -54,7 +54,7 @@ class CongestionWarning(Base):
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
-        intersection_id: str,
+        rsu: str,
     ) -> tuple:
         """External call function.
 
@@ -78,7 +78,7 @@ class CongestionWarning(Base):
         Timestamp of current frame data for the next call
 
         """
-        self._intersection_id = intersection_id
+        self.rsu = rsu
         self._show_info: List[dict] = []
         self._congestion_warning_message: List[dict] = []
         self._current_frame = current_frame
@@ -105,19 +105,19 @@ class CongestionWarning(Base):
                 self._congestion_warning_message,
                 self._show_info,
                 last_timestamp,
-                CongestionWarning.CG_KEY.format(intersection_id)
+                CongestionWarning.CG_KEY.format(rsu),
             )
         # 获取车道方向
         df["direction"] = df["lane"].apply(self._get_direction)
         # 车道方向是 驶向信号灯方向的 不做拥堵计算，因为信号灯数据还未输入
         df = df[df["direction"].isin([-1])]
-        df.groupby('lane').apply(self.cal)  # type: ignore
+        df.groupby("lane").apply(self.cal)  # type: ignore
 
         return (
             self._congestion_warning_message,
             self._show_info,
             last_timestamp,
-            CongestionWarning.CG_KEY.format(intersection_id)
+            CongestionWarning.CG_KEY.format(rsu),
         )
 
     def cal(self, df_lane):
@@ -131,24 +131,27 @@ class CongestionWarning(Base):
         df_lane.reset_index(inplace=True)
         df_lane["dis_x"] = df_lane["x"].diff()
         df_lane["dis_y"] = df_lane["y"].diff()
-        df_lane["dis"] = df_lane.apply(lambda x: np.sqrt(
-            x["dis_x"]**2 + x["dis_y"]**2), axis=1)
+        df_lane["dis"] = df_lane.apply(
+            lambda x: np.sqrt(x["dis_x"] ** 2 + x["dis_y"] ** 2), axis=1
+        )
         # 相邻两车距离大于100米。如何分段
         df1 = df_lane[df_lane["dis"] >= 200].index
         if df1.empty:
             pass
         else:
             pass
-        start_point = df_lane.head(
-            1)[["lat", "lon", "x", "y"]].to_dict('records')[0]
-        end_point = df_lane.tail(
-            1)[["lat", "lon", "x", "y"]].to_dict('records')[0]
+        start_point = df_lane.head(1)[["lat", "lon", "x", "y"]].to_dict(
+            "records"
+        )[0]
+        end_point = df_lane.tail(1)[["lat", "lon", "x", "y"]].to_dict(
+            "records"
+        )[0]
         lane_info["start_point"] = start_point
         lane_info["end_point"] = end_point
 
         # df_lane[df_lane["speed"]*3.6 <= 30]
         # m/s * 3.6 == km/h
-        avg_speed = df_lane["speed"].mean()*3.6
+        avg_speed = df_lane["speed"].mean() * 3.6
         if 25 <= avg_speed < 30:
             level = 1
         elif 15 <= avg_speed < 25:
@@ -159,8 +162,7 @@ class CongestionWarning(Base):
         lane_info["avg_speed"] = avg_speed
         lane_info["secMark"] = df_lane["secMark"].values[0]
 
-        info_for_show, info_for_cgw = self._build_cgw_event(
-            lane_info, lane_id)
+        info_for_show, info_for_cgw = self._build_cgw_event(lane_info, lane_id)
         self._show_info.append(info_for_show)
         self._congestion_warning_message.append(info_for_cgw)
 
@@ -229,7 +231,7 @@ class CongestionWarning(Base):
         ).tolist()
 
     def _get_direction(self, lane):
-        return post_process.lane_info[self._intersection_id][lane]
+        return post_process.lane_info[lane]
 
     def _build_cgw_event(self, lane_info: dict, id: str) -> tuple:
         info_for_show, info_for_cgw = self._message_generate(lane_info, id)
@@ -240,13 +242,13 @@ class CongestionWarning(Base):
             "type": "CGW",
             "level": lane_info["level"],
             "startPoint": {
-                "x": lane_info['start_point']["x"],
-                "y": lane_info['start_point']["y"],
+                "x": lane_info["start_point"]["x"],
+                "y": lane_info["start_point"]["y"],
             },
             "endPoint": {
-                "x": lane_info['end_point']["x"],
-                "y": lane_info['end_point']["y"],
-            }
+                "x": lane_info["end_point"]["x"],
+                "y": lane_info["end_point"]["y"],
+            },
         }
         info_for_cgw = {
             "secMark": lane_info["secMark"],
@@ -261,7 +263,7 @@ class CongestionWarning(Base):
                 "endPoint": {
                     "lat": int(lane_info["end_point"]["lat"]),
                     "lon": int(lane_info["end_point"]["lon"]),
-                }
-            }
+                },
+            },
         }
         return info_for_show, info_for_cgw

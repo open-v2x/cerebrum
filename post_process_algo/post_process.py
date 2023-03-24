@@ -197,37 +197,29 @@ def convert_for_reverse_visual(info: list, rsu_id: str) -> None:
         )
 
 
-def convert_for_congestion_visual(info: list, intersection_id: str) -> None:
+def convert_for_congestion_visual(info: list, rsu: str) -> None:
     """Congestion."""
-    k = -1 if rsu_info[intersection_id]["reverse"] else 1
-    rotation = math.radians(rsu_info[intersection_id]["rotation"])
+    k = -1 if rsu_info[rsu]["reverse"] else 1
+    rotation = math.radians(rsu_info[rsu]["rotation"])
     for i in range(len(info)):
         # 起点经纬度
         x = info[i]["startPoint"]["x"]
         y = info[i]["startPoint"]["y"]
-        x += rsu_info[intersection_id]["bias_x"]
-        y = k * (y - rsu_info[intersection_id]["bias_y"])
+        x += rsu_info[rsu]["bias_x"]
+        y = k * (y - rsu_info[rsu]["bias_y"])
         new_x = x * math.cos(rotation) - y * math.sin(rotation)
         new_y = x * math.sin(rotation) + y * math.cos(rotation)
-        info[i]["startPoint"]["x"] = int(
-            new_x / rsu_info[intersection_id]["scale"]
-        )
-        info[i]["startPoint"]["y"] = int(
-            new_y / rsu_info[intersection_id]["scale"]
-        )
+        info[i]["startPoint"]["x"] = int(new_x / rsu_info[rsu]["scale"])
+        info[i]["startPoint"]["y"] = int(new_y / rsu_info[rsu]["scale"])
         # 终点经纬度
         x_end = info[i]["endPoint"]["x"]
         y_end = info[i]["endPoint"]["y"]
-        x_end += rsu_info[intersection_id]["bias_x"]
-        y_end = k * (y_end - rsu_info[intersection_id]["bias_y"])
+        x_end += rsu_info[rsu]["bias_x"]
+        y_end = k * (y_end - rsu_info[rsu]["bias_y"])
         new_x_end = x_end * math.cos(rotation) - y_end * math.sin(rotation)
         new_y_end = x_end * math.sin(rotation) + y_end * math.cos(rotation)
-        info[i]["endPoint"]["x"] = int(
-            new_x_end / rsu_info[intersection_id]["scale"]
-        )
-        info[i]["endPoint"]["y"] = int(
-            new_y_end / rsu_info[intersection_id]["scale"]
-        )
+        info[i]["endPoint"]["x"] = int(new_x_end / rsu_info[rsu]["scale"])
+        info[i]["endPoint"]["y"] = int(new_y_end / rsu_info[rsu]["scale"])
 
 
 def generate_cwm(cwm_list: list, rsu_id: str) -> dict:
@@ -256,9 +248,9 @@ def generate_rdw(rdw_list: list, rsu_id: str) -> dict:
     return rdw
 
 
-def generate_osw(rdw_list: list, rsu_id: str, intersection_id: str) -> dict:
+def generate_osw(rdw_list: list, rsu_id: str) -> dict:
     """Generate overspeed warning message."""
-    position_info = rsu_info[intersection_id]["pos"].copy()
+    position_info = rsu_info[rsu_id]["pos"].copy()
     position_info["lon"] = int(position_info["lon"] * consts.CoordinateUnit)
     position_info["lat"] = int(position_info["lat"] * consts.CoordinateUnit)
     rdw = {
@@ -287,53 +279,46 @@ async def http_post(url: str, body: dict) -> aiohttp.ClientResponse:
             return await response.json()
 
 
-def generate_transformation_info():
+def generate_transformation_info(refPos: dict):
     """Generate transformation info."""
-    for intersection in intersection_info.keys():
-        TfMap[intersection] = Transformer.from_crs("epsg:4326", "epsg:2416")
+    for rsu in rsu_info.keys():
+        TfMap[rsu] = Transformer.from_crs("epsg:4326", "epsg:2416")
 
-        YOrigin[intersection], XOrigin[intersection] = coordinate_tf(
-            intersection_info[intersection]["pos"]["lat"] * coord_unit,
-            intersection_info[intersection]["pos"]["lon"] * coord_unit,
-            TfMap[intersection],
+        YOrigin[rsu], XOrigin[rsu] = coordinate_tf(
+            refPos["lat"] * coord_unit,
+            refPos["lon"] * coord_unit,
+            TfMap[rsu],
         )
-        XOrigin[intersection] = int(XOrigin[intersection])
-        YOrigin[intersection] = int(YOrigin[intersection])
+        XOrigin[rsu] = int(XOrigin[rsu])
+        YOrigin[rsu] = int(YOrigin[rsu])
 
 
 YOrigin: Dict[str, int] = {}
 XOrigin: Dict[str, int] = {}
-map_lane_info: Dict[str, dict] = {}
-
 TfMap = {}  # type: ignore
+
 rsu_info = db.rsu_info
+refPos = db.refPos
 lane_info = db.lane_info
-map_info = db.map_info
 speed_limits = db.speed_limits
-intersection_info = db.intersection_info
+
 db.get_rsu_info(False)
+# Get map: refPos + lane_info + speed_limits
+db.get_map_info()
 
-db.get_intersection_info()
+rsu_info = {
+    "R328328": {
+        "pos": {"lon": 118.8213963998, "lat": 31.9348466377},
+        "bias_x": 0.1,
+        "bias_y": 0.2,
+        "rotation": 0.1,
+        "reverse": 0,
+        "scale": 0.2,
+    }
+}
 
+for item in rsu_info:
+    rsu_info[item]["pos"]["lon"]=refPos["lon"] 
+    rsu_info[item]["pos"]["lat"]=refPos["lat"]
 
-for k, v in intersection_info.items():
-    intersection_info[k] = rsu_info["R328328"]
-    lane_info[k] = lane_info["R328328"]
-rsu_info = intersection_info
-
-
-def update_rsu_info():
-    """Update rsu info."""
-    for k, v in rsu_info.items():
-        for k_map, v_map in map_info.items():
-            if v["intersection_code"] == v_map["intersection_code"]:
-                rsu_info[k]["pos"] = map_info[k_map]["pos"]
-                map_lane_info[k] = map_info[k_map]["lane_info"]
-
-
-update_rsu_info()
-if map_lane_info != {}:
-    lane_info = map_lane_info
-
-
-generate_transformation_info()
+generate_transformation_info(refPos)

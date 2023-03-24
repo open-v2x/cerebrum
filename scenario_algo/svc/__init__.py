@@ -27,15 +27,12 @@ class Base:
     async def run(
         self,
         rsu: str,
-        intersection_id: str,
         latest_frame: dict,
         node_id: int,
         _: dict = {},
     ) -> dict:
         """External call function."""
-        his_info = await self._kv.get(
-            self.HIS_INFO_KEY.format(intersection_id)
-        )
+        his_info = await self._kv.get(self.HIS_INFO_KEY.format(rsu))
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")
@@ -46,7 +43,7 @@ class Base:
             context_frames, latest_frame, last_ts
         )
         await self._kv.set(
-            self.HIS_INFO_KEY.format(intersection_id),
+            self.HIS_INFO_KEY.format(rsu),
             {"context_frames": context_frames, "last_ts": last_ts},
         )
         return ret

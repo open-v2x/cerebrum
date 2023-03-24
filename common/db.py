@@ -40,10 +40,11 @@ import zlib
 
 logger = Loggings()
 rsu_info: Dict[str, dict] = {}
+refPos: Dict = {}
 lane_info: Dict[str, dict] = {}
-map_info: Dict[str, dict] = {}
-intersection_info: Dict[str, dict] = {}
-speed_limits: Dict[str, dict] = {}
+speed_limits: Dict = {}
+
+
 Base = declarative_base()
 engine = create_engine(**cfg.sqlalchemy_w)
 DBSession = sessionmaker(bind=engine)
@@ -163,7 +164,6 @@ class RSU(Base):  # type: ignore
     reverse = Column(type_=Integer, nullable=False)
     scale = Column(type_=Float, nullable=False)
     lane_info = Column(type_=JSON, nullable=False)
-    intersection_code = Column(String(64), ForeignKey("intersection.code"))
 
 
 class MQTT(Base):  # type: ignore
@@ -181,7 +181,6 @@ class EdgeNodeRSU(Base, DandelionBase):  # type: ignore
     __tablename__ = "edge_node_rsu"
 
     edge_node_id = Column(Integer, ForeignKey("edge_node.id"))
-    intersection_code = Column(String(64), ForeignKey("intersection.code"))
     name = Column(String(64), nullable=False, index=True)
     esn = Column(String(64), nullable=False, index=True)
     location = Column(JSON, nullable=False)
@@ -239,17 +238,12 @@ class Map(Base, DandelionBase):  # type: ignore
     __tablename__ = "map"
 
     name = Column(String(64), nullable=False, index=True, unique=True)
-    intersection_code = Column(
-        String(64), ForeignKey("intersection.code")
-    )  # type: ignore
     desc = Column(String(255), nullable=False, default="")
-    lat = Column(Float, nullable=False)
-    lng = Column(Float, nullable=False)
     data = deferred(Column(JSON, nullable=True))
     bitmap_filename = Column(String(64), nullable=True)
 
     def __repr__(self) -> str:
-        """Repr."""
+        """repr."""
         return f"<Map(name='{self.name}')>"
 
     def to_dict(self):
@@ -257,48 +251,15 @@ class Map(Base, DandelionBase):  # type: ignore
         return {
             **dict(
                 id=self.id,
-                intersection_code=self.intersection_code,
                 name=self.name,
                 desc=self.desc,
-                amount=len(self.rsus),
-                lat=self.lat,
-                lng=self.lng,
                 createTime=self.create_time,
-            ),
-            **Optional.none(self.intersection)
-            .map(lambda v: v.to_all())
-            .orElse({}),
+            )
         }
 
 
 if cfg.db_server == "sqlite":
     sqlite()
-
-
-class Intersection(Base, DandelionBase):  # type: ignore
-    """Intersection."""
-
-    __tablename__ = "intersection"
-
-    code = Column(String(64), unique=True, index=True, nullable=False)
-    map_data = deferred(Column(JSON, nullable=False))
-
-
-
-    def __repr__(self) -> str:
-        """repr."""
-        return f"<Intersection(code='{self.code}', name='{self.name}')>"
-
-    def to_dict(self):
-        """to_dict."""
-        return dict(
-            id=self.id,
-            code=self.code,
-            name=self.name,
-            lng=self.lng,
-            lat=self.lat,
-            **self.to_area(),
-        )
 
 
 def get_rsu_info(msg_info):
@@ -314,7 +275,6 @@ def get_rsu_info(msg_info):
             RSU.reverse,
             RSU.scale,
             RSU.lane_info,
-            RSU.intersection_code,
         ).filter(RSU.rsu_esn == rsu_id)
     else:
         results = session.query(
@@ -326,13 +286,9 @@ def get_rsu_info(msg_info):
             RSU.reverse,
             RSU.scale,
             RSU.lane_info,
-            RSU.intersection_code,
         ).all()
     for row in results:
         try:
-            lane_info[row[0]] = {}
-            for k, v in row[7].items():
-                lane_info[row[0]][int(k)] = v
             rsu_info[row[0]] = {
                 "pos": row[1],
                 "bias_x": row[2],
@@ -340,7 +296,6 @@ def get_rsu_info(msg_info):
                 "rotation": row[4],
                 "reverse": row[5],
                 "scale": row[6],
-                "intersection_code": row[8],
             }
         except Exception as e:
             logger.error(
@@ -351,8 +306,8 @@ def get_rsu_info(msg_info):
 
 
 def get_map_info():
-    """Get information of all Map."""
-    results = session.query(Map.name, Map.intersection_code, Map.data).all()
+    """Get information of map."""
+    results = session.query(Map.name, Map.data).all()
     for row in results:
         try:
             """
@@ -369,113 +324,10 @@ def get_map_info():
             }
             """
             link_dict = {}
-            # map.json 中每条车道的 +1 -1
-            map_lane_info0 = {}
-            # 车道线的限速标准
-            lane_speed_info = {}
-            for item in row[2]["nodes"]["Node"]:
-                for link in item["inLinks"]["Link"]:
-                    lane_list = []
-
-                    if "speedLimits" in link:
-                        regulatory_speed_limits = link["speedLimits"][
-                            "RegulatorySpeedLimit"
-                        ]
-                        if not isinstance(regulatory_speed_limits, list):
-                            regulatory_speed_limits = [regulatory_speed_limits]
-
-                        speed_limits_info = {
-                            list(i["type"].keys())[0]: int(i["speed"])
-                            for i in regulatory_speed_limits
-                        }
-                        for lane in link["lanes"]["Lane"]:
-                            lane_speed_info[
-                                int(lane["laneID"])
-                            ] = speed_limits_info
-                    else:
-                        for lane in link["lanes"]["Lane"]:
-                            lane_speed_info[int(lane["laneID"])] = {
-                                "vehicleMaxSpeed": None,
-                                "vehicleMinSpeed": None,
-                            }
-
-                    lane_speed = deepcopy(lane_speed_info)
-                    speed_limits[row[1]] = lane_speed
-
-                    for lane in link["lanes"]["Lane"]:
-                        lane_list.append(lane["laneID"])
-
-                    lanes = deepcopy(lane_list)
-                    link_dict[link["name"]] = lanes
-
-            key_list = [key.split("-")[-1] for key in link_dict.keys()]
-            center_node = [
-                item
-                for item, count in collections.Counter(key_list).items()
-                if count > 1
-            ]
-
-            # 取中心节点的参考经纬度
-            for node in row[2]["nodes"]["Node"]:
-                if node["name"] == center_node[0]:
-                    del node["refPos"]["elevation"]
-                    node["refPos"]["lon"] = (
-                        int(node["refPos"].pop("long")) / consts.CoordinateUnit
-                    )
-                    node["refPos"]["lat"] = (
-                        int(node["refPos"]["lat"]) / consts.CoordinateUnit
-                    )
-                    refPos = node["refPos"]
-
-            # 计算车道线的+1 -1
-            for num, link in enumerate(link_dict):
-                if link.split("-")[-1] == center_node[0]:
-                    dict0 = dict(
-                        [(int(v), +1) for i, v in enumerate(link_dict[link])]
-                    )
-                    new_dict0 = deepcopy(dict0)
-                    map_lane_info0.update(new_dict0)
-                    pass
-                else:
-                    dict1 = dict(
-                        [(int(v), -1) for i, v in enumerate(link_dict[link])]
-                    )
-                    new_dict1 = deepcopy(dict1)
-                    map_lane_info0.update(new_dict1)
-                    pass
-
-            map_info[row[0]] = {
-                "intersection_code": row[1],  # type: ignore [no-redef]
-                "pos": refPos,  # type: ignore
-                "lane_info": map_lane_info0,  # type: ignore
-            }
-
-        except Exception as e:
-            logger.error(  # type: ignore
-                "Missing required field data in Map with serial number"  # type: ignore
-            )  # type: ignore
-
-    session.close()
-
-
-def get_intersection_info():
-    """Get information of all Intersection."""
-    results = session.query(Intersection.code,Intersection.map_data).all()
-    for row in results:
-        try:
-            # 获取路口信息
-            intersection_info[row[0]] = {}
-            # 获取 map 的信息
-            link_dict = {}
-            # map.json 中每条车道的 +1 -1
-            map_lane_info0 = {}
-            # 车道线的限速标准
-            lane_speed_info = {}
             for item in row[1]["nodes"]["Node"]:
                 for link in item["inLinks"]["Link"]:
-
                     lane_list = []
-
+                    # 车道限速标准的获取
                     if "speedLimits" in link:
                         regulatory_speed_limits = link["speedLimits"][
                             "RegulatorySpeedLimit"
@@ -488,19 +340,16 @@ def get_intersection_info():
                             for i in regulatory_speed_limits
                         }
                         for lane in link["lanes"]["Lane"]:
-                            lane_speed_info[
+                            speed_limits[
                                 int(lane["laneID"])
                             ] = speed_limits_info
                     else:
                         for lane in link["lanes"]["Lane"]:
-                            lane_speed_info[int(lane["laneID"])] = {
+                            speed_limits[int(lane["laneID"])] = {
                                 "vehicleMaxSpeed": None,
                                 "vehicleMinSpeed": None,
                             }
-
-                    lane_speed = deepcopy(lane_speed_info)
-                    speed_limits[row[0]] = lane_speed
-
+                    # 车道 对应的 所有车道线的获取
                     for lane in link["lanes"]["Lane"]:
                         lane_list.append(lane["laneID"])
 
@@ -513,7 +362,6 @@ def get_intersection_info():
                 for item, count in collections.Counter(key_list).items()
                 if count > 1
             ]
-
 
             # 取中心节点的参考经纬度
             for node in row[1]["nodes"]["Node"]:
@@ -525,7 +373,8 @@ def get_intersection_info():
                     node["refPos"]["lat"] = (
                         int(node["refPos"]["lat"]) / consts.CoordinateUnit
                     )
-                    refPos = node["refPos"]
+                    refPos["lat"] = node["refPos"]["lat"]
+                    refPos["lon"] = node["refPos"]["lon"]
 
             # 计算车道线的+1 -1
             for num, link in enumerate(link_dict):
@@ -534,28 +383,21 @@ def get_intersection_info():
                         [(int(v), +1) for i, v in enumerate(link_dict[link])]
                     )
                     new_dict0 = deepcopy(dict0)
-                    map_lane_info0.update(new_dict0)
+                    lane_info.update(new_dict0)
                     pass
                 else:
                     dict1 = dict(
                         [(int(v), -1) for i, v in enumerate(link_dict[link])]
                     )
                     new_dict1 = deepcopy(dict1)
-                    map_lane_info0.update(new_dict1)
+                    lane_info.update(new_dict1)
                     pass
-            map_info[row[0]] = {
-                "intersection_code": row[0],  # type: ignore [no-redef]
-                "pos": refPos,  # type: ignore
-                "lane_info": map_lane_info0,  # type: ignore
-            }
-
-
 
         except Exception as e:
-            logger.error(
-                f"Missing required field data in Intersection with serial number "
-                f":{row[0]}, ERROR: {e}"
-            )
+            logger.error(  # type: ignore
+                "Missing required field data in Map with serial number"  # type: ignore
+            )  # type: ignore
+
     session.close()
 
 
@@ -570,14 +412,8 @@ def get_mqtt_config():
         rsu_nodeid: Dict = {}
         for item in result:
             rsu_nodeid[item[0]] = item[1]
-        # RSU 与 路口Id 的对应关系
-        res = session.query(RSU.rsu_esn, RSU.intersection_code).all()
-        rsu_intersectionid: Dict = {}
-        for item in res:
-            rsu_intersectionid[item[0]] = item[1]
-
         session.close()
-        return mq_cfg, rsu_nodeid, rsu_intersectionid  # type: ignore
+        return mq_cfg, rsu_nodeid  # type: ignore
     except Exception:
         session.close()
         logger.error(
@@ -603,24 +439,6 @@ def put_rsu_nodeid():
             "unable to \
             fetch nodeid configuration from database"
         )
-
-
-def put_rsu_intersectionid():
-    """Put the configuration of intersectionid."""
-    try:
-        results = session.query(RSU.rsu_esn, RSU.intersection_code).all()
-        rsu_intersectionid: Dict = {}
-        for item in results:
-            rsu_intersectionid[item[0]] = item[1]
-        session.close()
-        return rsu_intersectionid  # type: ignore
-    except Exception:
-        session.close()
-        logger.error(
-            "unable to \
-            fetch intersectionid configuration from database"
-        )
-    pass
 
 
 class AlgoVersion(Base):  # type: ignore

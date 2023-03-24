@@ -129,7 +129,7 @@ class ReverseDriving(Base):
         return {"x": 80, "y": 55}
 
     def _get_direction(self, lane):
-        return post_process.lane_info[self._rsu_id][lane]
+        return post_process.lane_info[lane]
 
     def _strictly_increasing(self, L):
         # 起步不做逆向计算
@@ -152,7 +152,6 @@ class ReverseDriving(Base):
         return info_for_show, info_for_rdw
 
     def _message_generate(self, ego_info: dict, ego_id: str) -> tuple:
-
         info_for_show = {
             "ego": ego_id,
             "ego_current_point": [ego_info["x"], ego_info["y"]],
@@ -169,7 +168,7 @@ class ReverseDriving(Base):
                 "heading": ego_info["heading"],
                 "width": ego_info["width"],
                 "length": ego_info["length"],
-                "height": ego_info["height"]
+                "height": ego_info["height"],
             },
         }
         return info_for_show, info_for_rdw

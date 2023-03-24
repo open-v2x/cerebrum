@@ -14,7 +14,6 @@
 
 """Scenario of SlowSpeed Warning."""
 
-from common import db
 import numpy as np
 import pandas as pd
 from post_process_algo import post_process
@@ -34,7 +33,6 @@ class Base:
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
-        intersection_id: str,
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
@@ -48,7 +46,6 @@ class SlowspeedWarning(Base):
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
-        intersection_id: str,
     ) -> tuple:
         """External call function.
 
@@ -72,7 +69,6 @@ class SlowspeedWarning(Base):
         Timestamp of current frame data for the next call
 
         """
-        self.intersection_id = intersection_id
         self._show_info: List[dict] = []
         self._slowspeed_warning_message: List[dict] = []
         self._current_frame = current_frame
@@ -194,18 +190,8 @@ class SlowspeedWarning(Base):
         ).tolist()
 
     def _get_min_speed_limit(self, lane):
-        if self.intersection_id in post_process.speed_limits:
-            return (
-                post_process.speed_limits.get(self.intersection_id, {})
-                .get(lane, {})
-                .get("vehicleMinSpeed", None)
-            )
-
-        db.get_map_info()
-        return (
-            post_process.speed_limits.get(self.intersection_id, {})
-            .get(lane, {})
-            .get("vehicleMinSpeed", None)
+        return post_process.speed_limits.get(lane, {}).get(
+            "vehicleMinSpeed", None
         )
 
     def _build_ssw_event(self, df_res):
@@ -226,7 +212,7 @@ class SlowspeedWarning(Base):
                 "heading": df_res["heading"],
                 "width": df_res["width"],
                 "length": df_res["length"],
-                "height": df_res["height"]
+                "height": df_res["height"],
             },
         }
 
