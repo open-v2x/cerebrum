@@ -52,13 +52,12 @@ class CongestionWarning:
         cg_list = [item for item in show_info if item.get("level") > 0]
         if cg_list:
             await self._kv.set(CG_KEY, "congestion")
-
         if cgw and show_info:
             post_process.convert_for_congestion_visual(show_info, rsu)
             congestion_warning_message = post_process.generate_osw(cgw, rsu)
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.CGW_VISUAL_TOPIC.format(rsu, self.node_id),
+                    consts.CGW_VISUAL_TOPIC.format(self.node_id),
                     json.dumps(show_info),
                     0,
                 )

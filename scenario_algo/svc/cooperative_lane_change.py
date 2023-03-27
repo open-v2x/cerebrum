@@ -62,7 +62,7 @@ class CooperativeLaneChange:
             # rsu，前端
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.CLC_VISUAL_TOPIC.format(rsu_id, node_id),
+                    consts.CLC_VISUAL_TOPIC.format(node_id),
                     json.dumps([info_for_show]),
                     0,
                 )

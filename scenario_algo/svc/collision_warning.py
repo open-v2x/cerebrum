@@ -115,7 +115,7 @@ class CollisionWarning(Base):
             if alarms:
                 if self._mqtt_conn:
                     self._mqtt_conn.publish(
-                        consts.CW_VISUAL_TOPIC.format(rsu, node_id),
+                        consts.CW_VISUAL_TOPIC.format(node_id),
                         json.dumps(alarms),
                         0,
                     )

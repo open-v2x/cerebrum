@@ -85,7 +85,7 @@ class Visualize(Base):
             await post_process.http_post(url, final_info)
         if self._mqtt_conn:
             self._mqtt_conn.publish(
-                consts.RSM_VISUAL_TOPIC.format(rsu, node_id),
+                consts.RSM_VISUAL_TOPIC.format(node_id),
                 json.dumps(vis),
                 0,
             )
