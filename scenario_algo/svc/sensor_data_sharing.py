@@ -67,7 +67,7 @@ class SensorDataSharing:
 
         if self._mqtt_conn:
             self._mqtt_conn.publish(
-                consts.SDS_VISUAL_TOPIC.format(rsu_id, node_id),
+                consts.SDS_VISUAL_TOPIC.format(node_id),
                 json.dumps([info_for_show]),
                 0,
             )

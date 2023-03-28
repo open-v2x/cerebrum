@@ -122,6 +122,8 @@ class CongestionWarning(Base):
 
     def cal(self, df_lane):
         """Cal."""
+        # 车辆总数
+        vehicle_data = len(df_lane)
         # 车道详细信息
         lane_info: Dict = {}
         lane_id = df_lane["lane"].values[0]
@@ -152,12 +154,14 @@ class CongestionWarning(Base):
         # df_lane[df_lane["speed"]*3.6 <= 30]
         # m/s * 3.6 == km/h
         avg_speed = df_lane["speed"].mean() * 3.6
-        if 25 <= avg_speed < 30:
-            level = 1
-        elif 15 <= avg_speed < 25:
-            level = 2
-        elif 0 <= avg_speed < 15:
-            level = 3
+        if vehicle_data >= 10:
+            if 25 <= avg_speed < 30:
+                level = 1
+            elif 15 <= avg_speed < 25:
+                level = 2
+            elif 0 <= avg_speed < 15:
+                level = 3
+
         lane_info["level"] = level
         lane_info["avg_speed"] = avg_speed
         lane_info["secMark"] = df_lane["secMark"].values[0]

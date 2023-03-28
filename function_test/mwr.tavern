@@ -81,6 +81,6 @@ stages:
       }
 
     mqtt_response:
-      topic: V2X/DEVICE/R328328/RADAR/DOWN
+      topic: V2X/DEVICE/RADAR/DOWN
       payload: !anything
       timeout: 1

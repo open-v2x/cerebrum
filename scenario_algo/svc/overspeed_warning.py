@@ -59,7 +59,7 @@ class OverspeedWarning:
         if osw and show_info:
             if self._mqtt_conn:
                 self._mqtt_conn.publish(
-                    consts.OSW_VISUAL_TOPIC.format(rsu_id, node_id),
+                    consts.OSW_VISUAL_TOPIC.format(node_id),
                     json.dumps(show_info),
                     0,
                 )

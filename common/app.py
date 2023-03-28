@@ -184,7 +184,8 @@ class App:
                 mcfg_conn,
                 self.rsu_nodeid,
             ) = db.get_mqtt_config()
-            self.rsu_nodeid = {"R328328": 1}
+            if self.rsu_nodeid == {}:
+                self.rsu_nodeid = {"R328328": 1}
             node_id = self.rsu_nodeid["R328328"]
             self.mqtt_conn = mqtt.Client(client_id=uuid.uuid4().hex)
             self.mqtt_conn.username_pw_set(
