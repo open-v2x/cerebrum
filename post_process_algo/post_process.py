@@ -309,11 +309,11 @@ db.get_map_info()
 rsu_info = {
     "R328328": {
         "pos": {"lon": 118.8213963998, "lat": 31.9348466377},
-        "bias_x": 0.1,
-        "bias_y": 0.2,
-        "rotation": 0.1,
-        "reverse": 0,
-        "scale": 0.2,
+        "bias_x": 0.0,
+        "bias_y": 0.0,
+        "rotation": 0.0,
+        "reverse": False,
+        "scale": 0.09,
     }
 }
 
