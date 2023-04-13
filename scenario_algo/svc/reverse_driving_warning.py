@@ -59,15 +59,14 @@ class ReverseDriving:
             rdw, rsu_id
         )
         if rdw and show_info:
-            if self._mqtt_conn:
-                self._mqtt_conn.publish(
-                    consts.RDW_VISUAL_TOPIC.format(node_id),
-                    json.dumps(show_info),
-                    0,
-                )
-                self._mqtt.publish(
-                    consts.RDW_TOPIC.format(rsu_id),
-                    json.dumps(reverse_driving_warning_message),
-                    0,
-                )
+            self._mqtt.publish(
+                consts.RDW_VISUAL_TOPIC.format(node_id),
+                json.dumps(show_info),
+                0,
+            )
+            self._mqtt.publish(
+                consts.RDW_TOPIC.format(rsu_id),
+                json.dumps(reverse_driving_warning_message),
+                0,
+            )
         return latest_frame

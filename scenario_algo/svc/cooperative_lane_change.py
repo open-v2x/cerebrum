@@ -60,9 +60,9 @@ class CooperativeLaneChange:
             for i in info_for_show["traj_list_for_show"]:
                 post_process.convert_for_visual(i, rsu_id)
             # rsu，前端
-            if self._mqtt_conn:
-                self._mqtt_conn.publish(
-                    consts.CLC_VISUAL_TOPIC.format(node_id),
-                    json.dumps([info_for_show]),
-                    0,
-                )
+
+            self._mqtt.publish(
+                consts.CLC_VISUAL_TOPIC.format(node_id),
+                json.dumps([info_for_show]),
+                0,
+            )

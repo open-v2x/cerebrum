@@ -145,6 +145,15 @@ mqtt = {
     "password": os.getenv("emqx_password") or DEFAULT_MQTT_PASSWORD,
 }
 
+dandelion = {
+    "endpoint": os.getenv("DANDELION_ENDPOINT", "http://127.0.0.1:28300/"),
+    "edge_id_url": os.getenv("SYSTEM_CONFIG_URL", "api/v1/system_configs/1"),
+    "login_url": os.getenv("LOGIN_URL", "api/v1/login"),
+    "username": os.getenv("USERNAME", "admin"),
+    "password": os.getenv("PASSWORD", "dandelion"),
+    "rsu_get_url": os.getenv("RSU_GET_URL", "api/v1/rsus?pageSize=-1")
+}
+
 cloud_server = os.getenv("cloud_url") or DEFAULT_CLOUD_URL
 algorithm_yaml = os.getenv("algorithm_yaml") or DEFAULT_ALGORITHM_YAML_PATH
 

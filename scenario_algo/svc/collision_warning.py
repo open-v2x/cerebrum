@@ -113,12 +113,11 @@ class CollisionWarning(Base):
                 filtered_cwm, rsu
             )
             if alarms:
-                if self._mqtt_conn:
-                    self._mqtt_conn.publish(
-                        consts.CW_VISUAL_TOPIC.format(node_id),
-                        json.dumps(alarms),
-                        0,
-                    )
+                self._mqtt.publish(
+                    consts.CW_VISUAL_TOPIC.format(node_id),
+                    json.dumps(alarms),
+                    0,
+                )
                 self._mqtt.publish(
                     consts.CW_TOPIC.format(rsu),
                     json.dumps(collision_warning_message),

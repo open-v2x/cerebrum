@@ -13,8 +13,10 @@
 #   under the License.
 
 """database config and data access functions."""
-import yaml
+import os
 
+import yaml
+import requests
 import collections
 from common import consts
 from common.log import Loggings
@@ -44,7 +46,6 @@ refPos: Dict = {}
 lane_info: Dict[str, dict] = {}
 speed_limits: Dict = {}
 
-
 Base = declarative_base()
 engine = create_engine(**cfg.sqlalchemy_w)
 DBSession = sessionmaker(bind=engine)
@@ -70,7 +71,7 @@ class KVStore:
         )
 
     async def get(
-        self, key: str, convert: Callable = json.loads, empty: Any = dict
+            self, key: str, convert: Callable = json.loads, empty: Any = dict
     ) -> Any:
         """Get data from redis."""
         ret = await self._redis.get(self.KEY_PREFIX.format(key))
@@ -173,33 +174,6 @@ class MQTT(Base):  # type: ignore
     id = Column(Integer, primary_key=True)
     node_id = Column(Integer, nullable=True, default=0)
     mqtt_config = Column(JSON, nullable=True)
-
-
-class EdgeNodeRSU(Base, DandelionBase):  # type: ignore
-    """EdgeNodeRSU."""
-
-    __tablename__ = "edge_node_rsu"
-
-    edge_node_id = Column(Integer, ForeignKey("edge_node.id"))
-    name = Column(String(64), nullable=False, index=True)
-    esn = Column(String(64), nullable=False, index=True)
-    location = Column(JSON, nullable=False)
-    edge_rsu_id = Column(Integer, nullable=False)
-
-    def to_all_dict(self):
-        """To all dict."""
-        return dict(
-            id=self.id,
-            name=self.name,
-            esn=self.esn,
-            location=self.location,
-            createTime=self.create_time,
-            edge_rsu_id=self.edge_rsu_id,
-        )
-
-    def __repr__(self) -> str:
-        """repr."""
-        return f"<EdgeNodeRSU(name='{self.name}', esn='{self.esn}')>"
 
 
 class Optional(object):  # type: ignore
@@ -368,10 +342,10 @@ def get_map_info():
                 if node["name"] == center_node[0]:
                     del node["refPos"]["elevation"]
                     node["refPos"]["lon"] = (
-                        int(node["refPos"].pop("long")) / consts.CoordinateUnit
+                            int(node["refPos"].pop("long")) / consts.CoordinateUnit
                     )
                     node["refPos"]["lat"] = (
-                        int(node["refPos"]["lat"]) / consts.CoordinateUnit
+                            int(node["refPos"]["lat"]) / consts.CoordinateUnit
                     )
                     refPos["lat"] = node["refPos"]["lat"]
                     refPos["lon"] = node["refPos"]["lon"]
@@ -401,21 +375,32 @@ def get_map_info():
     session.close()
 
 
+def login():
+    """Login to edge dandelion."""
+    login_res = requests.post(url=os.path.join(cfg.dandelion["endpoint"], cfg.dandelion["login_url"]), json={
+        "username": cfg.dandelion["username"],
+        "password": cfg.dandelion["password"]
+    })
+    token_type = login_res.json().get("token_type", "bearer")
+    token = login_res.json().get("access_token")
+
+    return f"{token_type} {token}"
+
+
 def get_mqtt_config():
     """Get the configuration of mqtt."""
     try:
         # mqtt 的配置
-        results = session.query(MQTT.mqtt_config, MQTT.node_id).first()
-        mq_cfg = results[0]
-        # RSU 与 NodeId 的对应关系
-        result = session.query(EdgeNodeRSU.esn, EdgeNodeRSU.edge_node_id).all()
-        rsu_nodeid: Dict = {}
-        for item in result:
-            rsu_nodeid[item[0]] = item[1]
-        session.close()
-        return mq_cfg, rsu_nodeid  # type: ignore
+        token = login()
+        system_config_res = requests.get(url=os.path.join(cfg.dandelion["endpoint"], cfg.dandelion["edge_id_url"]), headers={"Authorization": token}).json()
+        mqtt_config = system_config_res.get("mqttConfig")
+        edge_site_id = system_config_res.get("edgeSiteID", 1)
+        # 查询所有RSU
+        rsu_res = requests.get(url=os.path.join(cfg.dandelion["endpoint"], cfg.dandelion["rsu_get_url"]),
+                                         headers={"Authorization": token}).json()
+        rsu_node_id_dict = {rsu.get("rsuEsn"): edge_site_id for rsu in rsu_res.get("data")}
+        return mqtt_config, rsu_node_id_dict  # type: ignore
     except Exception:
-        session.close()
         logger.error(
             "unable to \
             fetch mqtt configuration from database"
@@ -424,21 +409,7 @@ def get_mqtt_config():
 
 def put_rsu_nodeid():
     """Put the configuration of nodeid."""
-    try:
-        results = session.query(
-            EdgeNodeRSU.esn, EdgeNodeRSU.edge_node_id
-        ).all()
-        rsu_nodeid: Dict = {}
-        for item in results:
-            rsu_nodeid[item[0]] = item[1]
-        session.close()
-        return rsu_nodeid  # type: ignore
-    except Exception:
-        session.close()
-        logger.error(
-            "unable to \
-            fetch nodeid configuration from database"
-        )
+    return get_mqtt_config()[1]
 
 
 class AlgoVersion(Base):  # type: ignore
@@ -488,8 +459,8 @@ def get_algo_config():
             "version"
         ].extend(algo_version_dict.keys())
         if (
-            algo_name_in_db.in_use in algo_version_dict.keys()
-            and algo_version_dict.get(algo_name_in_db.in_use)
+                algo_name_in_db.in_use in algo_version_dict.keys()
+                and algo_version_dict.get(algo_name_in_db.in_use)
         ):
             algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
                 "module"

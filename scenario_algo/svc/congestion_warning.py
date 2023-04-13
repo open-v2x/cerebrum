@@ -55,15 +55,14 @@ class CongestionWarning:
         if cgw and show_info:
             post_process.convert_for_congestion_visual(show_info, rsu)
             congestion_warning_message = post_process.generate_osw(cgw, rsu)
-            if self._mqtt_conn:
-                self._mqtt_conn.publish(
-                    consts.CGW_VISUAL_TOPIC.format(self.node_id),
-                    json.dumps(show_info),
-                    0,
-                )
-                self._mqtt.publish(
-                    consts.CGW_TOPIC.format(rsu),
-                    json.dumps(congestion_warning_message),
-                    0,
-                )
+            self._mqtt.publish(
+                consts.CGW_VISUAL_TOPIC.format(self.node_id),
+                json.dumps(show_info),
+                0,
+            )
+            self._mqtt.publish(
+                consts.CGW_TOPIC.format(rsu),
+                json.dumps(congestion_warning_message),
+                0,
+            )
         return latest_frame

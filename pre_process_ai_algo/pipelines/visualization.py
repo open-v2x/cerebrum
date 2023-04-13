@@ -83,10 +83,10 @@ class Visualize(Base):
         if cfg.cloud_server:
             url = cfg.cloud_server + "/homes/route_info_push"
             await post_process.http_post(url, final_info)
-        if self._mqtt_conn:
-            self._mqtt_conn.publish(
-                consts.RSM_VISUAL_TOPIC.format(node_id),
-                json.dumps(vis),
-                0,
-            )
+
+        self._mqtt.publish(
+            consts.RSM_VISUAL_TOPIC.format(node_id),
+            json.dumps(vis),
+            0,
+        )
         return latest_frame

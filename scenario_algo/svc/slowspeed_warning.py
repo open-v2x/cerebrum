@@ -57,15 +57,14 @@ class SlowspeedWarning:
         post_process.convert_for_reverse_visual(show_info, rsu_id)
         slowspeed_warning_message = post_process.generate_osw(ssw, rsu_id)
         if ssw and show_info:
-            if self._mqtt_conn:
-                self._mqtt_conn.publish(
-                    consts.SSW_VISUAL_TOPIC.format(node_id),
-                    json.dumps(show_info),
-                    0,
-                )
-                self._mqtt.publish(
-                    consts.SSW_TOPIC.format(rsu_id),
-                    json.dumps(slowspeed_warning_message),
-                    0,
-                )
+            self._mqtt.publish(
+                consts.SSW_VISUAL_TOPIC.format(node_id),
+                json.dumps(show_info),
+                0,
+            )
+            self._mqtt.publish(
+                consts.SSW_TOPIC.format(rsu_id),
+                json.dumps(slowspeed_warning_message),
+                0,
+            )
         return latest_frame
