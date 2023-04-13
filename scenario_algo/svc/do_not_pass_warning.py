@@ -54,12 +54,11 @@ class DoNotPass:
         )
         if info_for_show:
             post_process.convert_for_visual(info_for_show["ego_point"], rsu_id)
-            if self._mqtt_conn:
-                self._mqtt_conn.publish(
-                    consts.DNP_VISUAL_TOPIC.format(node_id),
-                    json.dumps([info_for_show]),
-                    0,
-                )
+            self._mqtt.publish(
+                consts.DNP_VISUAL_TOPIC.format(node_id),
+                json.dumps([info_for_show]),
+                0,
+            )
         if msg_rsc:
             self._mqtt.publish(
                 consts.DNP_TOPIC.format(rsu_id), json.dumps(msg_rsc), 0

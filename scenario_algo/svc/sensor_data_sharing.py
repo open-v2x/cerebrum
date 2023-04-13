@@ -64,10 +64,8 @@ class SensorDataSharing:
         self._mqtt.publish(
             consts.SDS_TOPIC.format(rsu_id), json.dumps(msg_ssm), 0
         )
-
-        if self._mqtt_conn:
-            self._mqtt_conn.publish(
-                consts.SDS_VISUAL_TOPIC.format(node_id),
-                json.dumps([info_for_show]),
-                0,
-            )
+        self._mqtt.publish(
+            consts.SDS_VISUAL_TOPIC.format(node_id),
+            json.dumps([info_for_show]),
+            0,
+        )

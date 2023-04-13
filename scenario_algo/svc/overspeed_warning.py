@@ -57,15 +57,14 @@ class OverspeedWarning:
         post_process.convert_for_reverse_visual(show_info, rsu_id)
         overspeed_warning_message = post_process.generate_osw(osw, rsu_id)
         if osw and show_info:
-            if self._mqtt_conn:
-                self._mqtt_conn.publish(
-                    consts.OSW_VISUAL_TOPIC.format(node_id),
-                    json.dumps(show_info),
-                    0,
-                )
-                self._mqtt.publish(
-                    consts.OSW_TOPIC.format(rsu_id),
-                    json.dumps(overspeed_warning_message),
-                    0,
-                )
+            self._mqtt.publish(
+                consts.OSW_VISUAL_TOPIC.format(node_id),
+                json.dumps(show_info),
+                0,
+            )
+            self._mqtt.publish(
+                consts.OSW_TOPIC.format(rsu_id),
+                json.dumps(overspeed_warning_message),
+                0,
+            )
         return latest_frame
