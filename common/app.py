@@ -63,6 +63,9 @@ class App:
                 "V2X/RSU/PIP/CFG", self.config.DELIMITER
             ): self._mqtt_on_cfg,
             consts.topic_replace(
+                "V2X/EDGE/SITE/CHANGE", self.config.DELIMITER
+            ): self._mqtt_on_edge_site_update,
+            consts.topic_replace(
                 "V2X/RSU/REG/TICE", self.config.DELIMITER
             ): self._mqtt_on_db,
             consts.topic_replace(
@@ -177,6 +180,9 @@ class App:
                 getattr(signal, sig), self._handle_sigstop
             )
         return True
+
+    def _mqtt_on_edge_site_update(self, client, userdata, msg):
+        self.rsu_nodeid = db.put_rsu_nodeid()
 
     def _mqtt_cfg_db(self):
         try:
