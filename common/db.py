@@ -15,7 +15,6 @@
 """database config and data access functions."""
 import os
 
-import yaml
 import requests
 import collections
 from common import consts
@@ -71,7 +70,7 @@ class KVStore:
         )
 
     async def get(
-            self, key: str, convert: Callable = json.loads, empty: Any = dict
+        self, key: str, convert: Callable = json.loads, empty: Any = dict
     ) -> Any:
         """Get data from redis."""
         ret = await self._redis.get(self.KEY_PREFIX.format(key))
@@ -342,10 +341,10 @@ def get_map_info():
                 if node["name"] == center_node[0]:
                     del node["refPos"]["elevation"]
                     node["refPos"]["lon"] = (
-                            int(node["refPos"].pop("long")) / consts.CoordinateUnit
+                        int(node["refPos"].pop("long")) / consts.CoordinateUnit
                     )
                     node["refPos"]["lat"] = (
-                            int(node["refPos"]["lat"]) / consts.CoordinateUnit
+                        int(node["refPos"]["lat"]) / consts.CoordinateUnit
                     )
                     refPos["lat"] = node["refPos"]["lat"]
                     refPos["lon"] = node["refPos"]["lon"]
@@ -377,10 +376,15 @@ def get_map_info():
 
 def login():
     """Login to edge dandelion."""
-    login_res = requests.post(url=os.path.join(cfg.dandelion["endpoint"], cfg.dandelion["login_url"]), json={
-        "username": cfg.dandelion["username"],
-        "password": cfg.dandelion["password"]
-    })
+    login_res = requests.post(
+        url=os.path.join(
+            cfg.dandelion["endpoint"], cfg.dandelion["login_url"]
+        ),
+        json={
+            "username": cfg.dandelion["username"],
+            "password": cfg.dandelion["password"],
+        },
+    )
     token_type = login_res.json().get("token_type", "bearer")
     token = login_res.json().get("access_token")
 
@@ -392,13 +396,24 @@ def get_mqtt_config():
     try:
         # mqtt 的配置
         token = login()
-        system_config_res = requests.get(url=os.path.join(cfg.dandelion["endpoint"], cfg.dandelion["edge_id_url"]), headers={"Authorization": token}).json()
+        system_config_res = requests.get(
+            url=os.path.join(
+                cfg.dandelion["endpoint"], cfg.dandelion["edge_id_url"]
+            ),
+            headers={"Authorization": token},
+        ).json()
         mqtt_config = system_config_res.get("mqttConfig")
         edge_site_id = system_config_res.get("edgeSiteID", 1)
         # 查询所有RSU
-        rsu_res = requests.get(url=os.path.join(cfg.dandelion["endpoint"], cfg.dandelion["rsu_get_url"]),
-                                         headers={"Authorization": token}).json()
-        rsu_node_id_dict = {rsu.get("rsuEsn"): edge_site_id for rsu in rsu_res.get("data")}
+        rsu_res = requests.get(
+            url=os.path.join(
+                cfg.dandelion["endpoint"], cfg.dandelion["rsu_get_url"]
+            ),
+            headers={"Authorization": token},
+        ).json()
+        rsu_node_id_dict = {
+            rsu.get("rsuEsn"): edge_site_id for rsu in rsu_res.get("data")
+        }
         return mqtt_config, rsu_node_id_dict  # type: ignore
     except Exception:
         logger.error(
@@ -412,60 +427,13 @@ def put_rsu_nodeid():
     return get_mqtt_config()[1]
 
 
-class AlgoVersion(Base):  # type: ignore
-    """Define the Algo version object."""
-
-    __tablename__ = "algo_version"
-
-    id = Column(Integer, primary_key=True)
-    algo = Column(String(64), ForeignKey("algo_name.name"))
-    version = Column(String(64), nullable=False)
-    version_path = Column(String(64), nullable=True)
-
-
-class AlgoName(Base):  # type: ignore
-    """Define the Algo object."""
-
-    __tablename__ = "algo_name"
-
-    id = Column(Integer, primary_key=True)
-    module = Column(String(64), ForeignKey("algo_module.module"))
-    name = Column(String(64), nullable=False, index=True)
-    enable = Column(Boolean, nullable=False, default=False)
-    module_path = Column(String(64), nullable=False)
-    in_use = Column(String(64), nullable=True)
-    algo_versions: List[AlgoVersion] = relationship(
-        "AlgoVersion", backref="algo_name"
-    )
-
-
-def get_algo_config():
-    """Get algo config from database."""
-    algo_config_in_db = session.query(AlgoName).all()
-    algo_config = yaml.safe_load(cfg.DEFAULT_ALGORITHM_YAML)
-    for algo_name_in_db in algo_config_in_db:
-        algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
-            "enable"
-        ] = algo_name_in_db.enable
-        if algo_name_in_db.in_use:
-            algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
-                "algo"
-            ] = algo_name_in_db.in_use
-        algo_version_dict = {
-            version.version: version.version_path
-            for version in algo_name_in_db.algo_versions
-        }
-        algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
-            "version"
-        ].extend(algo_version_dict.keys())
-        if (
-                algo_name_in_db.in_use in algo_version_dict.keys()
-                and algo_version_dict.get(algo_name_in_db.in_use)
-        ):
-            algo_config[algo_name_in_db.module]["algos"][algo_name_in_db.name][
-                "module"
-            ] = algo_version_dict.get(algo_name_in_db.in_use)
-    return yaml.safe_dump(algo_config, sort_keys=False)
-
-
-cfg.DEFAULT_ALGORITHM_YAML = get_algo_config()
+def get_algo_from_api():
+    """Get algo data from dandelion api."""
+    token = login()
+    algo_res = requests.get(
+        url=os.path.join(
+            cfg.dandelion["endpoint"], cfg.dandelion["get_algo_all_url"]
+        ),
+        headers={"Authorization": token},
+    ).json()
+    return algo_res.get("data")

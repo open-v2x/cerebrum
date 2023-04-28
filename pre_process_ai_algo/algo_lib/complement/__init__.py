@@ -24,7 +24,7 @@ import math
 import numpy as np
 import os
 from pre_process_ai_algo.algo_lib import utils
-import torch
+import torch  # type: ignore
 from typing import Any
 from typing import Union
 

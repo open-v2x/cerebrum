@@ -15,28 +15,9 @@
 """Load dynamic modules."""
 
 from collections import namedtuple
-from config import devel as config
-
-# from functools import reduce
+from common.db import get_algo_from_api
 import importlib
-import os
-import yaml
 
-algorithm_topo = {
-    "rsi_formatter": ["rsi_formatter"],
-    "pre_process_ai_algo": ["complement", "fusion", "smooth"],
-    "scenario_algo": [
-        "collision_warning",
-        "cooperative_lane_change",
-        "do_not_pass_warning",
-        "sensor_data_sharing",
-        "reverse_driving_warning",
-        "congestion_warning",
-        "overspeed_warning",
-        "slowspeed_warning",
-    ],
-    "post_process_algo": ["post_process"],
-}
 
 algorithms = namedtuple(  # type: ignore
     "algorithms",
@@ -60,26 +41,20 @@ algorithms = namedtuple(  # type: ignore
 )
 
 
-def load_algorithm_modules(config) -> None:
+def load_algorithm_modules() -> None:
     """Load algorithm modules."""
-    algos = yaml.safe_load(config.DEFAULT_ALGORITHM_YAML)
-
-    algo_yaml = config.algorithm_yaml
-    if os.path.exists(config.algorithm_yaml):
-        with open(algo_yaml) as f:
-            algos = yaml.safe_load(f)
-
-    # algorithms.
-    # TODO(wu.wenxiang) Add try exception to show which prefix/module error
-    for prefix, modules in algorithm_topo.items():
-        for m in modules:
-            algo = namedtuple(m, ["module", "algo", "enable"])  # type: ignore
-            algo.module = importlib.import_module(  # type: ignore
-                algos[prefix]["algos"][m]["module"]
-            )
-            algo.algo = algos[prefix]["algos"][m]["algo"]  # type: ignore
-            algo.enable = algos[prefix]["algos"][m]["enable"]  # type: ignore
-            setattr(algorithms, m, algo)
+    algo_data = get_algo_from_api()
+    for algo in algo_data:
+        algo_t = namedtuple(  # type: ignore
+            str(algo.get("algo")),
+            ["module", "algo", "enable", "external_bool", "endpoint_config"],
+        )
+        algo_t.module = importlib.import_module(algo.get("modulePath"))  # type: ignore
+        algo_t.algo = algo.get("inUse")  # type: ignore
+        algo_t.enable = algo.get("enable")  # type: ignore
+        algo_t.external_bool = algo.get("externalBool")  # type: ignore
+        algo_t.endpoint_config = algo.get("endpointConfig")  # type: ignore
+        setattr(algorithms, algo.get("algo"), algo_t)
 
 
-load_algorithm_modules(config)
+load_algorithm_modules()

@@ -18,7 +18,7 @@ import argparse
 from common import modules
 import numpy as np
 import os
-import torch
+import torch  # type: ignore
 from tqdm import tqdm  # type: ignore
 
 complement = modules.algorithms.complement.module

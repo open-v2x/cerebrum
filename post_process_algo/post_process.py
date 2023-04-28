@@ -318,7 +318,7 @@ rsu_info = {
 }
 
 for item in rsu_info:
-    rsu_info[item]["pos"]["lon"]=refPos["lon"] 
-    rsu_info[item]["pos"]["lat"]=refPos["lat"]
+    rsu_info[item]["pos"]["lon"] = refPos["lon"]
+    rsu_info[item]["pos"]["lat"] = refPos["lat"]
 
 generate_transformation_info(refPos)

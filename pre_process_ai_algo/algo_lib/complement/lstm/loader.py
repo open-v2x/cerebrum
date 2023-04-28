@@ -17,7 +17,7 @@
 import copy
 import numpy as np
 import pandas as pd
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader  # type: ignore
 
 
 class LstmDataLoader:
