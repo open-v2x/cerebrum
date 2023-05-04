@@ -11,14 +11,10 @@
 #   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #   License for the specific language governing permissions and limitations
 #   under the License.
-
-"""Scenario of OverSpeed Warning."""
-
+"""algo_lib."""
 import numpy as np
+from overspeed_warning_service import utils
 import pandas as pd
-from post_process_algo import post_process
-from pre_process_ai_algo.algo_lib import utils as process_tools
-from scenario_algo.algo_lib import utils
 from typing import List
 
 
@@ -28,24 +24,31 @@ MinDataDuration = 1.5  # 至少有多少秒的数据才计算车辆的动力学�
 class Base:
     """Super class of overspeed warning class."""
 
-    async def run(
+    def run(
         self,
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
+        speed_limits: dict,
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
 
 
-class OverspeedWarning(Base):
+class OverSpeedWarning(Base):
     """Scenario of OverSpeed Warning."""
 
-    async def run(
+    _current_frame: dict
+    _show_info: List[dict]
+    _overspeed_warning_message: List[dict]
+    speed_limits: dict
+
+    def run(
         self,
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
+        speed_limits: dict,
     ) -> tuple:
         """External call function.
 
@@ -69,11 +72,11 @@ class OverspeedWarning(Base):
         Timestamp of current frame data for the next call
 
         """
+        self.speed_limits = speed_limits
         self._show_info: List[dict] = []
         self._overspeed_warning_message: List[dict] = []
         self._current_frame = current_frame
-
-        id_set, last_timestamp = process_tools.frames_combination(
+        id_set, last_timestamp = utils.frames_combination(
             context_frames, self._current_frame, last_timestamp
         )
 
@@ -94,11 +97,11 @@ class OverspeedWarning(Base):
             return (
                 self._overspeed_warning_message,
                 self._show_info,
-                last_timestamp,
             )
         current_df["speed"] = current_df["speed"].apply(
             lambda x: int(x / 0.02)
         )
+
         # 获取最高限速
         current_df["vehicleMaxSpeed"] = current_df["lane"].apply(
             self._get_max_speed_limit
@@ -106,6 +109,7 @@ class OverspeedWarning(Base):
         current_df = current_df.dropna(
             axis=0, subset=["vehicleMaxSpeed"]
         )  # 删除指定列中有缺失值的那一行数据
+
         df = current_df[
             np.where(
                 current_df["speed"]
@@ -118,7 +122,6 @@ class OverspeedWarning(Base):
         return (
             self._overspeed_warning_message,
             self._show_info,  # type: ignore
-            last_timestamp,
         )
 
     def _filter_ptcs(
@@ -191,7 +194,7 @@ class OverspeedWarning(Base):
         ).tolist()
 
     def _get_max_speed_limit(self, lane):
-        return post_process.speed_limits.get(lane, {}).get(
+        return self.speed_limits.get(str(lane), {}).get(
             "vehicleMaxSpeed", None
         )
 
@@ -200,7 +203,6 @@ class OverspeedWarning(Base):
             "ego": df_res["ptcId"],
             "ego_current_point": [df_res["x"], df_res["y"]],
         }
-
         info_for_osw = {
             "secMark": df_res["secMark"],
             "egoInfo": {

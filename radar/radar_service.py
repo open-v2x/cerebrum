@@ -44,7 +44,5 @@ class RadarServer:
         # ret= self._exe.run()
         ret = data  # type: ignore
         if self._mqtt:
-            self._mqtt.publish(
-                consts.RADAR_VISUAL_TOPIC, json.dumps(ret), 0
-            )
+            self._mqtt.publish(consts.RADAR_VISUAL_TOPIC, json.dumps(ret), 0)
         return ret

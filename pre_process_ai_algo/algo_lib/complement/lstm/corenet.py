@@ -14,7 +14,7 @@
 
 """The core-net of LSTM."""
 
-from torch import nn
+from torch import nn  # type: ignore
 
 
 class RegLSTM(nn.Module):

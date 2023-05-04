@@ -14,13 +14,11 @@
 
 """Algorithm pipeline processing flow."""
 
-import yaml
 
 from common import consts
 from common import modules
 import orjson as json
 
-from config import default
 from post_process_algo import post_process
 from pre_process_ai_algo.pipelines.complement import Interpolation
 from pre_process_ai_algo.pipelines.complement import LstmPredict
@@ -102,6 +100,7 @@ class DataProcessing:
         self._overspeed_warning_dispatch = {
             "disable": False,
             "overspeed_warning": self._overspeed_warning,
+            "external": self._overspeed_warning,
         }
         self._slowspeed_warning_dispatch = {
             "disable": False,
@@ -194,7 +193,10 @@ class DataProcessing:
             )
             pipelines = [
                 # TODO(wu.wenxiang) check p not exist
-                getattr(self, "_{}_dispatch".format(p))[pipe_cfg[p]]
+                getattr(self, "_{}_dispatch".format(p)).get(
+                    pipe_cfg[p],
+                    getattr(self, "_{}_dispatch".format(p)).get("external"),
+                )
                 for p in self._pipelines
             ]
             for p1 in pipelines:
@@ -202,7 +204,10 @@ class DataProcessing:
                     latest = await p1.run(rsu_id, latest)
             nodeid_pipelines = [
                 # TODO(wu.wenxiang) check p not exist
-                getattr(self, "_{}_dispatch".format(p))[pipe_cfg[p]]
+                getattr(self, "_{}_dispatch".format(p)).get(
+                    pipe_cfg[p],
+                    getattr(self, "_{}_dispatch".format(p)).get("external"),
+                )
                 for p in self._nodeid_pipelines
             ]
 
@@ -230,11 +235,7 @@ class Cfg:
     async def run(self, cfg_info: bytes) -> None:
         """External call function."""
         cfg_info_dict = json.loads(cfg_info)
-        yaml_info = cfg_info_dict.get("yaml_info")
-        default.DEFAULT_ALGORITHM_YAML = yaml.safe_dump(
-            yaml_info, sort_keys=False
-        )
-        modules.load_algorithm_modules(default)
+        modules.load_algorithm_modules()
         redis_info = cfg_info_dict.get("redis_info")
         sm_and_cfg = await self._kv.get(self.SM_CFG_KEY)
         last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0

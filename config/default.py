@@ -27,7 +27,7 @@ pre_process_ai_algo:
       enable: true
       module: "pre_process_ai_algo.algo_lib.complement"
       algo: "interpolation"
-      version: 
+      version:
       - interpolation
       - lstm_predict
     fusion:
@@ -151,7 +151,8 @@ dandelion = {
     "login_url": os.getenv("LOGIN_URL", "api/v1/login"),
     "username": os.getenv("USERNAME", "admin"),
     "password": os.getenv("PASSWORD", "dandelion"),
-    "rsu_get_url": os.getenv("RSU_GET_URL", "api/v1/rsus?pageSize=-1")
+    "rsu_get_url": os.getenv("RSU_GET_URL", "api/v1/rsus?pageSize=-1"),
+    "get_algo_all_url": os.getenv("ALGO_GET_URL", "api/v1/algos?pageSize=-1"),
 }
 
 cloud_server = os.getenv("cloud_url") or DEFAULT_CLOUD_URL

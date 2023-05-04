@@ -18,9 +18,12 @@ from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
+from scenario_algo import external
 from scenario_algo.svc.collision_warning import CollisionWarning
 
 overspeed_warning = modules.algorithms.overspeed_warning.module
+if modules.algorithms.overspeed_warning.external_bool:
+    overspeed_warning = getattr(external, "overspeed_warning")
 
 
 class OverspeedWarning:
@@ -51,7 +54,7 @@ class OverspeedWarning:
             else {}
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
-        osw, show_info, last_ts = self._exe.run(
+        osw, show_info, last_ts = await self._exe.run(
             context_frames, latest_frame, last_ts
         )
         post_process.convert_for_reverse_visual(show_info, rsu_id)
