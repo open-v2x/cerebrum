@@ -123,4 +123,4 @@ class OverspeedWarning(Base):
             over_speed_grpc_pb2.OverSpeedRequest(data=json.dumps(data))
         )
         res = json.loads(response.data)
-        return res.get("osw"), res.get("show_info")
+        return res.get("osw"), res.get("info")

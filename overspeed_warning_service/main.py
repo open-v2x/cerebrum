@@ -101,7 +101,7 @@ class OverSpeed(over_speed_grpc_pb2_grpc.OverSpeedGrpcServicer):
         data = json.loads(request.data)
         osw, show_info = over_speed.run(**data)
         return over_speed_grpc_pb2.OverSpeedResponse(
-            data=json.dumps({"osw": osw, "show_info": show_info})
+            data=json.dumps({"osw": osw, "info": show_info})
         )
 
 
