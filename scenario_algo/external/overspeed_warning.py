@@ -102,6 +102,7 @@ class OverspeedWarning(Base):
             )(data)
         except Exception:
             self.connect = None
+            return [], [], last_timestamp
         return osw, show_info, last_timestamp
 
     async def _run_from_external_websocket(self, data):
