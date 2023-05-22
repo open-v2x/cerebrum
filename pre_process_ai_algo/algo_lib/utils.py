@@ -20,6 +20,7 @@ MaxSecMark = consts.MaxSecMark
 # 以下参数根据算法所需数据量确定，算法最多需要2s的历史数据，大于2.5s的数据即可删除
 HistoricalInterval = 1600  # 同一id容纳的历史数据时间范围
 UpdateInterval = 1600  # 某一id可容忍的不更新数据的时间范围
+HIS_INFO_KEY = "v2v.his.{}"  # openv2x RSU 相对应的历史轨迹
 
 
 def frame_delete(context_frames: dict, last_timestamp: int) -> None:
@@ -78,6 +79,34 @@ def frames_combination(
         context_frames[guid] = [obj_info]
         latest_id_set.add(guid)
     return latest_id_set, last_timestamp
+
+
+async def his_save(kv, rsu, _current_frame):
+    """History save."""
+    his_info = await kv.get(HIS_INFO_KEY.format(rsu))
+    # 历史轨迹
+    context_frames = (
+        his_info["context_frames"] if his_info.get("context_frames") else {}
+    )
+    # 历史轨迹中的最新时间戳
+    last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
+
+    # 目标ID集合，最新时间戳
+    id_set, last_ts = frames_combination(
+        context_frames, _current_frame, last_ts
+    )
+
+    # context_frames: 历史轨迹+当前帧
+    # last_ts:(历史轨迹+当前帧) 中的最新时间戳
+    # latest_frame: 当前帧数据
+    await kv.set(
+        HIS_INFO_KEY.format(rsu),
+        {
+            "context_frames": context_frames,
+            "last_ts": last_ts,
+            "latest_frame": _current_frame,
+        },
+    )
 
 
 def get_current_frame(frames: dict, last_timestamp: int) -> dict:

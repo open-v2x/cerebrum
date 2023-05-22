@@ -18,7 +18,8 @@ from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
-from scenario_algo.svc.collision_warning import CollisionWarning
+from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
+
 
 do_not_pass_warning = modules.algorithms.do_not_pass_warning.module
 
@@ -38,9 +39,7 @@ class DoNotPass:
         self, params: dict, rsu_id: str, _: list, node_id: int
     ) -> None:
         """External call function."""
-        his_info = await self._kv.get(
-            CollisionWarning.HIS_INFO_KEY.format(rsu_id)
-        )
+        his_info = await self._kv.get(HIS_INFO_KEY.format(rsu_id))
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")

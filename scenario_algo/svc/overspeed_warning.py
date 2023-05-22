@@ -18,8 +18,8 @@ from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
+from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
 from scenario_algo import external
-from scenario_algo.svc.collision_warning import CollisionWarning
 
 overspeed_warning = modules.algorithms.overspeed_warning.module
 if modules.algorithms.overspeed_warning.external_bool:
@@ -45,9 +45,7 @@ class OverspeedWarning:
         _: dict = {},
     ) -> dict:
         """External call function."""
-        his_info = await self._kv.get(
-            CollisionWarning.HIS_INFO_KEY.format(rsu_id)
-        )
+        his_info = await self._kv.get(HIS_INFO_KEY.format(rsu_id))
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")
