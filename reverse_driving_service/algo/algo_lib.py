@@ -16,7 +16,7 @@
 
 import numpy as np
 from post_process_algo import post_process
-from pre_process_ai_algo.algo_lib import utils as process_tools
+from reverse_driving_service import utils as process_tools
 from typing import List
 
 
@@ -24,17 +24,23 @@ class Base:
     """Super class of reverse driving warning class."""
 
     def run(
-        self, context_frames: dict, current_frame: dict, last_timestamp: int
+        self,
+        context_frames: dict,
+        current_frame: dict,
+        last_timestamp: int,
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
 
 
-class ReverseDriving(Base):
+class ReverseDrivingWarning(Base):
     """Scenario of Reverse Driving Warning."""
 
-    async def run(  # type: ignore
-        self, context_frames: dict, current_frame: dict, last_timestamp: int
+    def run(
+        self,
+        context_frames: dict,
+        current_frame: dict,
+        last_timestamp: int,
     ) -> tuple:
         """External call function.
 
@@ -110,11 +116,7 @@ class ReverseDriving(Base):
                         dis_from_o_list.clear()
                     else:
                         dis_from_o_list.clear()
-        return (
-            self._reverse_driving_warning_message,
-            self._show_info,
-            last_timestamp,
-        )
+        return (self._reverse_driving_warning_message, self._show_info)
 
     def _get_origin_coor(self):
         return {"x": 80, "y": 55}

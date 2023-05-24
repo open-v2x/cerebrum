@@ -225,6 +225,12 @@ class App:
         ):
             await self.process._overspeed_warning._exe.connect.close()
 
+        if (
+            hasattr(self.process._reverse_driving_warning._exe, "connect")
+            and self.process._reverse_driving_warning._exe.connect
+        ):
+            await self.process._reverse_driving_warning._exe.connect.close()
+
     def _mqtt_on_socket_open(self, client, userdata, sock):
         logger.trace("Socket opened")
 

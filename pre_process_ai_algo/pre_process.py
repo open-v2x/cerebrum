@@ -30,7 +30,7 @@ from pre_process_ai_algo.pipelines.visualization import Visualize
 from scenario_algo.svc.collision_warning import CollisionWarning
 from scenario_algo.svc.congestion_warning import CongestionWarning
 from scenario_algo.svc.overspeed_warning import OverspeedWarning
-from scenario_algo.svc.reverse_driving_warning import ReverseDriving
+from scenario_algo.svc.reverse_driving_warning import ReverseDrivingWarning
 from scenario_algo.svc.slowspeed_warning import SlowspeedWarning
 
 
@@ -50,7 +50,7 @@ class DataProcessing:
         self._collision_warning = CollisionWarning(
             kv, mqtt, mqtt_conn, node_id
         )
-        self._reverse_driving_warning = ReverseDriving(
+        self._reverse_driving_warning = ReverseDrivingWarning(
             kv, mqtt, mqtt_conn, node_id
         )
         self._congestion_warning = CongestionWarning(
@@ -94,6 +94,7 @@ class DataProcessing:
         self._reverse_driving_warning_dispatch = {
             "disable": False,
             "reverse_driving_warning": self._reverse_driving_warning,
+            "external": self._reverse_driving_warning,
         }
         self._congestion_warning_dispatch = {
             "disable": False,
