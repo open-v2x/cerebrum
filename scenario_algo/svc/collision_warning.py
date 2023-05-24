@@ -18,6 +18,7 @@ from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
+from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
 from scenario_algo.svc import Base
 
 collision_warning = modules.algorithms.collision_warning.module
@@ -31,7 +32,6 @@ class CollisionWarning(Base):
 
     """
 
-    HIS_INFO_KEY = "collision.v2v.his.{}"
     EVENT_PAIR_KEY = "collision.event.pair.{}"
     TRAJS_KEY = "collision.trajs.{}"
     AlarmThreshold = 5  # 次数 同一对车至少发现多少次碰撞才预警
@@ -84,7 +84,7 @@ class CollisionWarning(Base):
         _: dict = {},
     ) -> dict:
         """External call function."""
-        his_info = await self._kv.get(self.HIS_INFO_KEY.format(rsu))
+        his_info = await self._kv.get(HIS_INFO_KEY.format(rsu))
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")
@@ -94,14 +94,7 @@ class CollisionWarning(Base):
         cwm, events, last_ts, motors_trajs, vptc_trajs = self._exe.run(
             context_frames, latest_frame, last_ts
         )
-        await self._kv.set(
-            self.HIS_INFO_KEY.format(rsu),
-            {
-                "context_frames": context_frames,
-                "last_ts": last_ts,
-                "latest_frame": latest_frame,
-            },
-        )
+
         await self._kv.set(
             self.TRAJS_KEY.format(rsu),
             {"motors": motors_trajs, "vptc": vptc_trajs},

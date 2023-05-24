@@ -18,7 +18,7 @@ from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
-from scenario_algo.svc.collision_warning import CollisionWarning
+from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
 
 congestion_warning = modules.algorithms.congestion_warning.module
 
@@ -36,9 +36,7 @@ class CongestionWarning:
 
     async def run(self, rsu: str, latest_frame: dict, _: dict = {}) -> dict:
         """External call function."""
-        his_info = await self._kv.get(
-            CollisionWarning.HIS_INFO_KEY.format(rsu)
-        )
+        his_info = await self._kv.get(HIS_INFO_KEY.format(rsu))
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")

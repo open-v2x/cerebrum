@@ -18,7 +18,7 @@ from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
-from scenario_algo.svc.collision_warning import CollisionWarning
+from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
 
 cooperative_lane_change = modules.algorithms.cooperative_lane_change.module
 
@@ -38,9 +38,7 @@ class CooperativeLaneChange:
         self, params: dict, rsu_id: str, convert_info: list, node_id: int
     ) -> None:
         """External call function."""
-        his_info = await self._kv.get(
-            CollisionWarning.HIS_INFO_KEY.format(rsu_id)
-        )
+        his_info = await self._kv.get(HIS_INFO_KEY.format(rsu_id))
         context_frames = (
             his_info["context_frames"]
             if his_info.get("context_frames")
@@ -59,8 +57,6 @@ class CooperativeLaneChange:
         if msg_rsc["coordinates"]["driveSuggestion"]["suggestion"] > 0:
             for i in info_for_show["traj_list_for_show"]:
                 post_process.convert_for_visual(i, rsu_id)
-            # rsu，前端
-
             self._mqtt.publish(
                 consts.CLC_VISUAL_TOPIC.format(node_id),
                 json.dumps([info_for_show]),

@@ -20,6 +20,7 @@ from common import modules
 import orjson as json
 
 from post_process_algo import post_process
+from pre_process_ai_algo.algo_lib import utils as process_tools
 from pre_process_ai_algo.pipelines.complement import Interpolation
 from pre_process_ai_algo.pipelines.complement import LstmPredict
 from pre_process_ai_algo.pipelines.fusion import Fusion
@@ -64,6 +65,7 @@ class DataProcessing:
         self._visual = Visualize(kv, mqtt, mqtt_conn, node_id)
         self._kv = kv
         self._mqtt = mqtt
+        # 预处理算法
         self._pipelines = ["fusion", "complement", "smooth"]
         self._nodeid_pipelines = [
             "visual",
@@ -134,6 +136,7 @@ class DataProcessing:
             latest = post_process.rsm2frame(raw_rsm, rsu_id)
             if not latest:
                 return None
+
             current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
             sm_and_cfg = await self._kv.get(self.SM_CFG_KEY)
             last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
@@ -202,6 +205,10 @@ class DataProcessing:
             for p1 in pipelines:
                 if p1:
                     latest = await p1.run(rsu_id, latest)
+
+            # redis 存储历史轨迹
+            await process_tools.his_save(self._kv, rsu_id, latest)
+
             nodeid_pipelines = [
                 # TODO(wu.wenxiang) check p not exist
                 getattr(self, "_{}_dispatch".format(p)).get(
