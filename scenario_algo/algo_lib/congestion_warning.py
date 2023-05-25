@@ -125,7 +125,7 @@ class CongestionWarning(Base):
         # 车辆总数
         vehicle_data = len(df_lane)
         # 车道详细信息
-        lane_info: Dict = {}
+        lane_info: Dict = {}  # type: ignore
         lane_id = df_lane["lane"].values[0]
         lane_info["lane_id"] = lane_id
         level = 0

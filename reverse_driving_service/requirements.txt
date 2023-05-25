@@ -1,0 +1,5 @@
+numpy>=1.22.4 # BSD
+pandas>=1.5.2 # BSD
+requests==2.28.2
+fastapi==0.95.1
+uvicorn==0.17.6

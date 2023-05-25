@@ -19,11 +19,18 @@ from common import modules
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
+from scenario_algo import reverse_driving_external
+
 
 reverse_driving_warning = modules.algorithms.reverse_driving_warning.module
 
+if modules.algorithms.reverse_driving_warning.external_bool:
+    reverse_driving_warning = getattr(
+        reverse_driving_external, "reverse_driving_warning"
+    )
 
-class ReverseDriving:
+
+class ReverseDrivingWarning:
     """Call the reverse driving warning algorithm function."""
 
     def __init__(self, kv, mqtt, mqtt_conn=None, node_id=None):
@@ -49,8 +56,8 @@ class ReverseDriving:
             else {}
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
-        rdw, show_info, last_ts = self._exe.run(
-            context_frames, latest_frame, last_ts, rsu_id
+        rdw, show_info, last_ts = await self._exe.run(
+            context_frames, latest_frame, last_ts
         )
         post_process.convert_for_reverse_visual(show_info, rsu_id)
         reverse_driving_warning_message = post_process.generate_rdw(
