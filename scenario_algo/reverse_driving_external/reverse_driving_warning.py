@@ -17,6 +17,7 @@ import aiohttp  # noqa
 from common import modules  # noqa
 import grpc.aio  # type: ignore
 import json  # noqa
+from post_process_algo import post_process
 from scenario_algo.reverse_driving_external import (  # noqa
     reverse_driving_grpc_pb2,  # noqa
 )  # noqa
@@ -50,7 +51,6 @@ class ReverseDriving(Base):
         self.service_type = self.endpoint_config.get("service_type").split(
             "/"
         )[-1]
-
 
     async def _connect_websocket(self):
         self.connect = await connect(self.endpoint_config.get("endpoint_url"))
@@ -88,7 +88,6 @@ class ReverseDriving(Base):
         RevreseDriving warning message for broadcast, osw format
 
         """
-
         if not self.connect:
             await getattr(self, f"_connect_{self.service_type}")()
 
@@ -96,13 +95,15 @@ class ReverseDriving(Base):
             context_frames=context_frames,
             current_frame=current_frame,
             last_timestamp=last_timestamp,
+            lane_info=post_process.lane_info
         )
 
         try:
             rdw, show_info = await getattr(
                 self, f"_run_from_external_{self.service_type}"
             )(data)
-        except Exception:
+        except Exception as error:
+            print(error)
             self.connect = None
             return [], [], last_timestamp
         return rdw, show_info, last_timestamp
