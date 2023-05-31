@@ -44,7 +44,7 @@ class ReverseDriving(Base):
 
     def __init__(self) -> None:  # noqa
         self.endpoint_config = (
-            modules.algorithms.overspeed_warning.endpoint_config
+            modules.algorithms.reverse_driving_warning.endpoint_config
         )
         self.connect = None
         self.service_type = self.endpoint_config.get("service_type").split(
