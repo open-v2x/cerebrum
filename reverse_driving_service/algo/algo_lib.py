@@ -15,7 +15,6 @@
 """Scenario of Reverse Driving Warning."""
 
 import numpy as np
-from post_process_algo import post_process
 from reverse_driving_service import utils as process_tools
 from typing import List
 
@@ -28,6 +27,7 @@ class Base:
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
+        lane_info: dict
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
@@ -41,6 +41,7 @@ class ReverseDrivingWarning(Base):
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
+        lane_info: dict
     ) -> tuple:
         """External call function.
 
@@ -67,6 +68,7 @@ class ReverseDrivingWarning(Base):
         Timestamp of current frame data for the next call
 
         """
+        self.lane_info = lane_info
         self._show_info: List[dict] = []
         self._reverse_driving_warning_message: List[dict] = []
         self._current_frame = current_frame
@@ -122,7 +124,7 @@ class ReverseDrivingWarning(Base):
         return {"x": 80, "y": 55}
 
     def _get_direction(self, lane):
-        return post_process.lane_info[lane]
+        return self.lane_info[str(lane)]
 
     def _strictly_increasing(self, L):
         # 起步不做逆向计算

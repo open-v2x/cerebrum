@@ -88,6 +88,7 @@ class ReverseDrivingModel(BaseModel):
     context_frames: dict
     current_frame: dict
     last_timestamp: int
+    lane_info: dict
 
 
 @app.post("/reverse_driving")
