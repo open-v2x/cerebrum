@@ -112,7 +112,7 @@ class ReverseDriving(Base):
         await self.connect.send(json.dumps(data))
         res = await self.connect.recv()
         res = json.loads(res)
-        return res.get("osw"), res.get("info")
+        return res.get("rdw"), res.get("info")
 
     async def _run_from_external_http(self, data):
         async with self.connect.post(
@@ -131,4 +131,4 @@ class ReverseDriving(Base):
             )
         )
         res = json.loads(response.data)
-        return res.get("osw"), res.get("info")
+        return res.get("rdw"), res.get("info")

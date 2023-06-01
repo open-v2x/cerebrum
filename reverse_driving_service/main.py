@@ -107,9 +107,9 @@ class ReverseDriving(reverse_driving_grpc_pb2_grpc.ReverseDrivingGrpcServicer):
     async def reverse_driving(self, request, context):
         """Grpc server."""
         data = json.loads(request.data)
-        osw, show_info = reverse_driving.run(**data)
+        rdw, show_info = reverse_driving.run(**data)
         return reverse_driving_grpc_pb2.ReverseDrivingResponse(
-            data=json.dumps({"osw": osw, "info": show_info})
+            data=json.dumps({"rdw": rdw, "info": show_info})
         )
 
 
