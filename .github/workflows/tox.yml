@@ -3,7 +3,7 @@ name: tox
 on:
   push:
     branches:
-      - master
+      - columbia
   pull_request:
     types: [opened, synchronize]
 
