@@ -3,7 +3,7 @@ name: ci
 on:
   push:
     branches:
-      - master
+      - columbia
 
 jobs:
   docker:
@@ -26,7 +26,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: openv2x/cerebrum:latest
+          tags: openv2x/cerebrum:columbia
           build-args: |
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/cerebrum
@@ -47,9 +47,9 @@ jobs:
             set -e
 
             (docker images | grep none | awk '{print $3}' | xargs -I{} docker rmi -f {}) || true
-            docker pull openv2x/cerebrum:latest
-            docker tag openv2x/cerebrum:latest registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:latest
-            docker push registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:latest
+            docker pull openv2x/cerebrum:columbia
+            docker tag openv2x/cerebrum:columbia registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:columbia
+            docker push registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum:columbia
 
   ssh:
     needs: acr
@@ -64,7 +64,7 @@ jobs:
           port: ${{ secrets.AIO_MASTER_PORT }}
           script: |
             set -e
-            rm -rf openv2x-aio-master.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/master/openv2x-aio-master.tar.gz
-            rm -rf src && tar zxvf openv2x-aio-master.tar.gz
+            rm -rf openv2x-aio-columbia.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/columbia/openv2x-aio-columbia.tar.gz
+            rm -rf src && tar zxvf openv2x-aio-columbia.tar.gz
             cd src
             sh install.sh

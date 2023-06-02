@@ -3,7 +3,7 @@ name: ci-base
 on:
   push:
     branches:
-      - master
+      - columbia
 
 jobs:
   docker:
@@ -27,7 +27,7 @@ jobs:
           file: Dockerfile-cerebrum-base
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: openv2x/cerebrum-base:latest
+          tags: openv2x/cerebrum-base:columbia
           build-args: |
             GIT_BRANCH=${{ github.ref_name }}
             REPO_URL=https://github.com/open-v2x/cerebrum
@@ -48,6 +48,6 @@ jobs:
             set -e
 
             (docker images | grep none | awk '{print $3}' | xargs -I{} docker rmi -f {}) || true
-            docker pull openv2x/cerebrum-base:latest
-            docker tag openv2x/cerebrum-base:latest registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum-base:latest
-            docker push registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum-base:latest
+            docker pull openv2x/cerebrum-base:columbia
+            docker tag openv2x/cerebrum-base:columbia registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum-base:columbia
+            docker push registry.cn-shanghai.aliyuncs.com/openv2x/cerebrum-base:columbia

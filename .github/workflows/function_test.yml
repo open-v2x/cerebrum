@@ -3,7 +3,7 @@ name: test
 on:
   pull_request:
     branches:
-      - 'master'
+      - 'columbia'
 env:
   OPENV2X_EXTERNAL_IP: 127.0.0.1
   OPENV2X_CENTER_IP: 127.0.0.1
@@ -39,9 +39,9 @@ jobs:
       - name: install pre
         run: sudo unalias cp 2>/dev/null || true
       - name: install pre
-        run: sudo rm -rf openv2x-aio-master.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/master/openv2x-aio-master.tar.gz
+        run: sudo rm -rf openv2x-aio-columbia.tar.gz && wget https://openv2x.oss-ap-southeast-1.aliyuncs.com/deploy/columbia/openv2x-aio-columbia.tar.gz
       - name: install pre
-        run: sudo rm -rf src && tar zxvf openv2x-aio-master.tar.gz
+        run: sudo rm -rf src && tar zxvf openv2x-aio-columbia.tar.gz
       - name: install pre
         run: sudo sed -i "s/8084/8085/" src/deploy/docker-compose-pre.yaml && sudo sed -i "s/8084/8085/" src/deploy/docker-compose-service.yaml
       - name: install openv2x
