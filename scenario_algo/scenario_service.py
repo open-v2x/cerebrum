@@ -41,7 +41,7 @@ class Service:
         self._pipelines = [
             "sensor_data_sharing",
             "cooperative_lane_change",
-            "do_not_pass_warning"
+            "do_not_pass_warning",
         ]
         self._sensor_data_sharing_dispatch = {
             "disable": False,
@@ -89,7 +89,7 @@ class Service:
                     modules.algorithms.do_not_pass_warning.algo
                     if modules.algorithms.do_not_pass_warning.enable
                     else "disable"
-                )
+                ),
             }
         )
         # if 0 <= last_sec_mark - current_sec_mark <= 50000:
@@ -101,9 +101,7 @@ class Service:
 
         # 根据意向请求确定具体场景算法
         p = self._map.get(svc)
-        p_adopt = getattr(self, "_{}_dispatch".format(p)).get(
-            pipe_cfg[p]
-        )
+        p_adopt = getattr(self, "_{}_dispatch".format(p)).get(pipe_cfg[p])
 
         return p_adopt
 

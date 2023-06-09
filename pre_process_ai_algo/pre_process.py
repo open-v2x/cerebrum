@@ -15,6 +15,7 @@
 """Algorithm pipeline processing flow."""
 
 
+import aioredis
 from common import consts
 from common import modules
 import orjson as json
@@ -119,115 +120,127 @@ class DataProcessing:
         node_id: int,
     ) -> None:
         """External call function."""
-        async with self._kv.lock(self.LOCK_KEY.format(rsu_id)):
-            if miss_flag == "miss_required_key":
+        try:
+            async with self._kv.lock(self.LOCK_KEY.format(rsu_id)):
+                if miss_flag == "miss_required_key":
+                    self._mqtt.publish(
+                        consts.RSM_DAWNLINE_ACK_TOPIC.format(rsu_id),
+                        miss_info,
+                        0,
+                    )
+                    return None
+                if miss_flag == "miss_optional_key":
+                    self._mqtt.publish(
+                        consts.RSM_DAWNLINE_ACK_TOPIC.format(rsu_id),
+                        miss_info,
+                        0,
+                    )
+                # 把 rsm 数据结构转换成算法的数据结构
+                latest = post_process.rsm2frame(raw_rsm, rsu_id)
+                if not latest:
+                    return None
+
+                current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
+                sm_and_cfg = await self._kv.get(self.SM_CFG_KEY)
+                last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
+                pipe_cfg = (
+                    # TODO(wu.wenxiang) document how to read config from mqtt
+                    sm_and_cfg["cfg"]
+                    if sm_and_cfg.get("cfg")
+                    else {
+                        "fusion": (
+                            modules.algorithms.fusion.algo
+                            if modules.algorithms.fusion.enable
+                            else "disable"
+                        ),
+                        "complement": (
+                            modules.algorithms.complement.algo
+                            if modules.algorithms.complement.enable
+                            else "disable"
+                        ),
+                        "smooth": (
+                            modules.algorithms.smooth.algo
+                            if modules.algorithms.smooth.enable
+                            else "disable"
+                        ),
+                        "collision_warning": (
+                            modules.algorithms.collision_warning.algo
+                            if modules.algorithms.collision_warning.enable
+                            else "disable"
+                        ),
+                        "reverse_driving_warning": (
+                            modules.algorithms.reverse_driving_warning.algo  # noqa
+                            if modules.algorithms.reverse_driving_warning.enable  # noqa
+                            else "disable"  # noqa
+                        ),
+                        "congestion_warning": (
+                            modules.algorithms.congestion_warning.algo
+                            if modules.algorithms.congestion_warning.enable
+                            else "disable"
+                        ),
+                        "overspeed_warning": (
+                            modules.algorithms.overspeed_warning.algo
+                            if modules.algorithms.overspeed_warning.enable
+                            else "disable"
+                        ),
+                        "slowspeed_warning": (
+                            modules.algorithms.slowspeed_warning.algo
+                            if modules.algorithms.slowspeed_warning.enable
+                            else "disable"
+                        ),
+                        "visual": "visual",
+                    }
+                )
+                if 0 <= last_sec_mark - current_sec_mark <= 50000:
+                    return None
+                await self._kv.set(  # type: ignore
+                    self.SM_CFG_KEY,  # type: ignore
+                    {"sm": current_sec_mark, "cfg": pipe_cfg},
+                )
+                pipelines = [
+                    # TODO(wu.wenxiang) check p not exist
+                    getattr(self, "_{}_dispatch".format(p)).get(
+                        pipe_cfg[p],
+                        getattr(self, "_{}_dispatch".format(p)).get(
+                            "external"
+                        ),
+                    )
+                    for p in self._pipelines
+                ]
+                for p1 in pipelines:
+                    if p1:
+                        latest = await p1.run(rsu_id, latest)
+
+                # redis 存储历史轨迹
+                await process_tools.his_save(self._kv, rsu_id, latest)
+
+                nodeid_pipelines = [
+                    # TODO(wu.wenxiang) check p not exist
+                    getattr(self, "_{}_dispatch".format(p)).get(
+                        pipe_cfg[p],
+                        getattr(self, "_{}_dispatch".format(p)).get(
+                            "external"
+                        ),
+                    )
+                    for p in self._nodeid_pipelines
+                ]
+
+                for p in nodeid_pipelines:
+                    if p:
+                        latest = await p.run(rsu_id, latest, node_id)
+
+                rsm = post_process.frame2rsm(latest, raw_rsm, rsu_id)
                 self._mqtt.publish(
-                    consts.RSM_DAWNLINE_ACK_TOPIC.format(rsu_id),
-                    miss_info,
+                    consts.RSM_DOWN_TOPIC.format(rsu_id),
+                    json.dumps(rsm),
                     0,
                 )
-                return None
-            if miss_flag == "miss_optional_key":
-                self._mqtt.publish(
-                    consts.RSM_DAWNLINE_ACK_TOPIC.format(rsu_id),
-                    miss_info,
-                    0,
+        except aioredis.exceptions.LockError:
+            # 处理获取锁失败的情况
+            print(
+                "Failed to acquire lock for: {}".format(
+                    self.LOCK_KEY.format(rsu_id)
                 )
-            # 把 rsm 数据结构转换成算法的数据结构
-            latest = post_process.rsm2frame(raw_rsm, rsu_id)
-            if not latest:
-                return None
-
-            current_sec_mark = latest[list(latest.keys())[0]]["secMark"]
-            sm_and_cfg = await self._kv.get(self.SM_CFG_KEY)
-            last_sec_mark = sm_and_cfg["sm"] if sm_and_cfg.get("sm") else 0
-            pipe_cfg = (
-                # TODO(wu.wenxiang) document how to read config from mqtt
-                sm_and_cfg["cfg"]
-                if sm_and_cfg.get("cfg")
-                else {
-                    "fusion": (
-                        modules.algorithms.fusion.algo
-                        if modules.algorithms.fusion.enable
-                        else "disable"
-                    ),
-                    "complement": (
-                        modules.algorithms.complement.algo
-                        if modules.algorithms.complement.enable
-                        else "disable"
-                    ),
-                    "smooth": (
-                        modules.algorithms.smooth.algo
-                        if modules.algorithms.smooth.enable
-                        else "disable"
-                    ),
-                    "collision_warning": (
-                        modules.algorithms.collision_warning.algo
-                        if modules.algorithms.collision_warning.enable
-                        else "disable"
-                    ),
-                    "reverse_driving_warning": (
-                        modules.algorithms.reverse_driving_warning.algo
-                        if modules.algorithms.reverse_driving_warning.enable
-                        else "disable"
-                    ),
-                    "congestion_warning": (
-                        modules.algorithms.congestion_warning.algo
-                        if modules.algorithms.congestion_warning.enable
-                        else "disable"
-                    ),
-                    "overspeed_warning": (
-                        modules.algorithms.overspeed_warning.algo
-                        if modules.algorithms.overspeed_warning.enable
-                        else "disable"
-                    ),
-                    "slowspeed_warning": (
-                        modules.algorithms.slowspeed_warning.algo
-                        if modules.algorithms.slowspeed_warning.enable
-                        else "disable"
-                    ),
-                    "visual": "visual",
-                }
-            )
-            if 0 <= last_sec_mark - current_sec_mark <= 50000:
-                return None
-            await self._kv.set(  # type: ignore
-                self.SM_CFG_KEY,  # type: ignore
-                {"sm": current_sec_mark, "cfg": pipe_cfg},
-            )
-            pipelines = [
-                # TODO(wu.wenxiang) check p not exist
-                getattr(self, "_{}_dispatch".format(p)).get(
-                    pipe_cfg[p],
-                    getattr(self, "_{}_dispatch".format(p)).get("external"),
-                )
-                for p in self._pipelines
-            ]
-            for p1 in pipelines:
-                if p1:
-                    latest = await p1.run(rsu_id, latest)
-
-            # redis 存储历史轨迹
-            await process_tools.his_save(self._kv, rsu_id, latest)
-
-            nodeid_pipelines = [
-                # TODO(wu.wenxiang) check p not exist
-                getattr(self, "_{}_dispatch".format(p)).get(
-                    pipe_cfg[p],
-                    getattr(self, "_{}_dispatch".format(p)).get("external"),
-                )
-                for p in self._nodeid_pipelines
-            ]
-
-            for p in nodeid_pipelines:
-                if p:
-                    latest = await p.run(rsu_id, latest, node_id)
-
-            rsm = post_process.frame2rsm(latest, raw_rsm, rsu_id)
-            self._mqtt.publish(
-                consts.RSM_DOWN_TOPIC.format(rsu_id),
-                json.dumps(rsm),
-                0,
             )
 
 

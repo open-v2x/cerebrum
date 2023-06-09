@@ -149,12 +149,12 @@ class Interpolation(Base):
         # 补全指定的帧号下指定 id的轨迹点
         objs_info.insert(index, objs_info[index].copy())
         for i in ("x", "y"):
-            objs_info[index][i] = objs_info[index - 1][i] + (
-                objs_info[index + 1][i] - objs_info[index - 1][i]
-            ) * (delay_sec_mark - objs_info[index - 1]["timeStamp"]) / (
-                objs_info[index + 1]["timeStamp"]
-                - objs_info[index - 1]["timeStamp"]
-            )
+            objs_info[index][i] = objs_info[index - 1][i] + (  # noqa
+                objs_info[index + 1][i] - objs_info[index - 1][i]  # noqa
+            ) * (delay_sec_mark - objs_info[index - 1]["timeStamp"]) / (  # noqa
+                objs_info[index + 1]["timeStamp"]  # noqa
+                - objs_info[index - 1]["timeStamp"]  # noqa
+            )  # noqa
         objs_info[index]["timeStamp"] = delay_sec_mark
         objs_info[index]["secMark"] = delay_sec_mark % utils.MaxSecMark
 
