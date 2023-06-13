@@ -29,14 +29,14 @@ def frame_delete(context_frames: dict, last_timestamp: int) -> None:
     guid_list = list(context_frames.keys())
     for guid in guid_list:
         if (
-            last_timestamp - context_frames[guid][0]["timeStamp"]
-            > HistoricalInterval
+            last_timestamp - context_frames[guid][0]["timeStamp"]  # noqa
+            > HistoricalInterval  # noqa
         ):
             del context_frames[guid][0]
         if (
             len(context_frames[guid]) == 0
-            or last_timestamp - context_frames[guid][-1]["timeStamp"]
-            > UpdateInterval
+            or last_timestamp - context_frames[guid][-1]["timeStamp"]  # noqa
+            > UpdateInterval  # noqa
         ):
             del context_frames[guid]
 
@@ -62,8 +62,8 @@ def frames_combination(
             context_frames.setdefault(guid, [])
             if (
                 len(context_frames[guid])
-                and context_frames[guid][-1]["timeStamp"]
-                == obj_info["timeStamp"]
+                and context_frames[guid][-1]["timeStamp"]  # noqa
+                == obj_info["timeStamp"]  # noqa
             ):
                 context_frames[guid][-1] = obj_info
             else:

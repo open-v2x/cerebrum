@@ -35,7 +35,7 @@ class ConnectionManager:
 
     def __init__(self):
         """init."""
-        self.active_connections: List[WebSocket] = []   # noqa
+        self.active_connections: List[WebSocket] = []  # noqa
 
     async def connect(self, websocket: WebSocket):
         """connect."""

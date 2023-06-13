@@ -95,7 +95,7 @@ class ReverseDriving(Base):
             context_frames=context_frames,
             current_frame=current_frame,
             last_timestamp=last_timestamp,
-            lane_info=post_process.lane_info
+            lane_info=post_process.lane_info,
         )
 
         try:

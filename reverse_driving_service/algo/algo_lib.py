@@ -27,7 +27,7 @@ class Base:
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
-        lane_info: dict
+        lane_info: dict,
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
@@ -41,7 +41,7 @@ class ReverseDrivingWarning(Base):
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
-        lane_info: dict
+        lane_info: dict,
     ) -> tuple:
         """External call function.
 
