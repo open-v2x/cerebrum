@@ -14,7 +14,7 @@
 
 """logging."""
 
-from loguru import logger
+from loguru import logger  # type: ignore
 import os
 import sys
 import time

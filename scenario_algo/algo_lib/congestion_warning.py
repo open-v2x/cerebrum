@@ -35,6 +35,9 @@ class Base:
         current_frame: dict,
         last_timestamp: int,
         rsu: str,
+        min_con_range: list,
+        mid_con_range: list,
+        max_con_range: list,
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
@@ -53,7 +56,7 @@ class CongestionWarning(Base):
         rsu: str,
         min_con_range: list,
         mid_con_range: list,
-        max_con_range: list
+        max_con_range: list,
     ) -> tuple:
         """External call function.
 

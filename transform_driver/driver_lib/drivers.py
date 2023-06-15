@@ -132,7 +132,9 @@ def time_transform(time_stamp: int):
     return (
         datetime.utcfromtimestamp(time_stamp / 1000).strftime(
             "%Y-%m-%dT%H:%M:%S.%f"
-        )[:-3]  # noqa
+        )[
+            :-3
+        ]  # noqa
         + "Z"  # noqa
     )
 

@@ -14,8 +14,7 @@
 
 """database config and data access functions."""
 import os
-
-import requests
+import requests  # type: ignore
 import collections
 from common import consts
 from common.log import Loggings
