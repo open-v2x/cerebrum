@@ -151,7 +151,9 @@ class Interpolation(Base):
         for i in ("x", "y"):
             objs_info[index][i] = objs_info[index - 1][i] + (  # noqa
                 objs_info[index + 1][i] - objs_info[index - 1][i]  # noqa
-            ) * (delay_sec_mark - objs_info[index - 1]["timeStamp"]) / (  # noqa
+            ) * (
+                delay_sec_mark - objs_info[index - 1]["timeStamp"]
+            ) / (  # noqa
                 objs_info[index + 1]["timeStamp"]  # noqa
                 - objs_info[index - 1]["timeStamp"]  # noqa
             )  # noqa

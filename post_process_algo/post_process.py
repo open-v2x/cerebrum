@@ -306,8 +306,9 @@ db.get_rsu_info(False)
 # Get map: refPos + lane_info + speed_limits
 db.get_map_info()
 
-for item in rsu_info:
-    rsu_info[item]["pos"]["lon"] = refPos["lon"]
-    rsu_info[item]["pos"]["lat"] = refPos["lat"]
+
+# for item in rsu_info:
+#     rsu_info[item]["pos"]["lon"] = refPos["lon"]
+#     rsu_info[item]["pos"]["lat"] = refPos["lat"]
 
 generate_transformation_info()

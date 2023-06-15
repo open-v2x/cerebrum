@@ -54,9 +54,14 @@ class DataProcessing:
         self._reverse_driving_warning = ReverseDrivingWarning(
             kv, mqtt, mqtt_conn, node_id
         )
-        self._congestion_warning = CongestionWarning(
-            kv, mqtt, mqtt_conn, node_id
-        )
+        # 验证环境变量（拥堵级别范围是否冲突）
+        try:  # type: ignore
+            self._congestion_warning = CongestionWarning(  # type: ignore
+                kv, mqtt, mqtt_conn, node_id  # type: ignore
+            )  # type: ignore
+        except ValueError as e:  # type: ignore
+            print(e)  # type: ignore
+            self._congestion_warning = False  # type: ignore
         self._overspeed_warning = OverspeedWarning(
             kv, mqtt, mqtt_conn, node_id
         )
