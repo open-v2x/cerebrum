@@ -23,10 +23,6 @@ from typing import Dict
 from typing import List
 
 
-MaxLevel = 3  # 拥堵级别最大值
-MidLevel = 2  # 拥堵级别中间值
-MinLevel = 1  # 拥堵级别最小值
-
 MinDataDuration = 1.5  # 至少有多少秒的数据才计算车辆的动力学信息
 
 
@@ -55,6 +51,9 @@ class CongestionWarning(Base):
         current_frame: dict,
         last_timestamp: int,
         rsu: str,
+        min_con_range: list,
+        mid_con_range: list,
+        max_con_range: list
     ) -> tuple:
         """External call function.
 
@@ -79,6 +78,9 @@ class CongestionWarning(Base):
 
         """
         self.rsu = rsu
+        self.min_con_range = min_con_range
+        self.mid_con_range = mid_con_range
+        self.max_con_range = max_con_range
         self._show_info: List[dict] = []
         self._congestion_warning_message: List[dict] = []
         self._current_frame = current_frame
@@ -131,6 +133,7 @@ class CongestionWarning(Base):
         level = 0
         df_lane.sort_values("x", inplace=True, ascending=True)
         df_lane.reset_index(inplace=True)
+        # 计算车辆与车辆之间的距离
         df_lane["dis_x"] = df_lane["x"].diff()
         df_lane["dis_y"] = df_lane["y"].diff()
         df_lane["dis"] = df_lane.apply(
@@ -154,12 +157,13 @@ class CongestionWarning(Base):
         # df_lane[df_lane["speed"]*3.6 <= 30]
         # m/s * 3.6 == km/h
         avg_speed = df_lane["speed"].mean() * 3.6
+
         if vehicle_data >= 10:
-            if 25 <= avg_speed < 30:
+            if self.min_con_range[0] <= avg_speed <= self.min_con_range[1]:
                 level = 1
-            elif 15 <= avg_speed < 25:
+            elif self.mid_con_range[0] <= avg_speed <= self.mid_con_range[1]:
                 level = 2
-            elif 0 <= avg_speed < 15:
+            elif self.max_con_range[0] <= avg_speed <= self.max_con_range[1]:
                 level = 3
 
         lane_info["level"] = level
