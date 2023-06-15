@@ -279,7 +279,7 @@ async def http_post(url: str, body: dict) -> aiohttp.ClientResponse:
             return await response.json()
 
 
-def generate_transformation_info(refPos: dict):
+def generate_transformation_info():
     """Generate transformation info."""
     for rsu in rsu_info.keys():
         TfMap[rsu] = Transformer.from_crs("epsg:4326", "epsg:2416")
@@ -306,19 +306,8 @@ db.get_rsu_info(False)
 # Get map: refPos + lane_info + speed_limits
 db.get_map_info()
 
-rsu_info = {
-    "R328328": {
-        "pos": {"lon": 118.8213963998, "lat": 31.9348466377},
-        "bias_x": 0.0,
-        "bias_y": 0.0,
-        "rotation": 0.0,
-        "reverse": False,
-        "scale": 0.09,
-    }
-}
-
 for item in rsu_info:
     rsu_info[item]["pos"]["lon"] = refPos["lon"]
     rsu_info[item]["pos"]["lat"] = refPos["lat"]
 
-generate_transformation_info(refPos)
+generate_transformation_info()
