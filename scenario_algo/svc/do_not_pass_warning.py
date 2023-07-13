@@ -19,9 +19,11 @@ from common import modules
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
-
+from scenario_algo import do_not_pass_external
 
 do_not_pass_warning = modules.algorithms.do_not_pass_warning.module
+if modules.algorithms.do_not_pass_warning.external_bool:
+    do_not_pass_warning = getattr(do_not_pass_external, "do_not_pass")
 
 
 class DoNotPass:
@@ -37,8 +39,9 @@ class DoNotPass:
 
     async def run(
         self, params: dict, rsu_id: str, _: list, node_id: int
-    ) -> None:
+    ) -> None:  # noqa
         """External call function."""
+
         his_info = await self._kv.get(HIS_INFO_KEY.format(rsu_id))
         context_frames = (
             his_info["context_frames"]
@@ -48,7 +51,8 @@ class DoNotPass:
         current_frame = (
             his_info["latest_frame"] if his_info.get("latest_frame") else {}
         )
-        msg_rsc, info_for_show = self._exe.run(
+
+        msg_rsc, info_for_show = await self._exe.run(
             rsu_id, context_frames, current_frame, params
         )
         if info_for_show:
