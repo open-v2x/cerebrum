@@ -54,6 +54,9 @@ class Service:
         self._do_not_pass_warning_dispatch = {
             "disable": False,
             "do_not_pass_warning": self._dnp,
+            # "do_not_pass_warning_http": self._dnp,
+            # "do_not_pass_warning_websocket": self._dnp,
+            # "do_not_pass_warning_grpc": self._dnp,
         }
 
     def _is_time_valid(self, msg_vir: dict) -> bool:
@@ -86,7 +89,7 @@ class Service:
                     else "disable"
                 ),
                 "do_not_pass_warning": (
-                    modules.algorithms.do_not_pass_warning.algo
+                    "do_not_pass_warning"
                     if modules.algorithms.do_not_pass_warning.enable
                     else "disable"
                 ),

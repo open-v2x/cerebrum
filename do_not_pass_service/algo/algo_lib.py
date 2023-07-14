@@ -15,26 +15,12 @@
 """Scenario of Do Not Pass Warning."""
 
 import numpy as np
-from post_process_algo import post_process
-from typing import Any
-from typing import Dict
+
+OvertakingTime = 9000
+MinTrackLength = 3
 
 
-class Base:
-    """Super class of DoNotPass class."""
-
-    async def run(
-        self,
-        rsu_id: str,
-        context_frame: dict = {},
-        latest_frame: dict = {},
-        msg_VIR: dict = {},
-    ) -> tuple:
-        """External call function."""
-        raise NotImplementedError
-
-
-class DoNotPass(Base):
+class DoNotPass:
     """Scenario of Do Not Pass Warning.
 
     Structural logic:
@@ -47,16 +33,21 @@ class DoNotPass(Base):
 
     """
 
-    OvertakingTime = 9000
-    MinTrackLength = 3
+    def __init__(self):
+        self.context_frame, self.latest_frame, self.msg_vir, self.lane_info = (
+            {},
+            {},
+            {},
+            {},
+        )
 
-    async def run(
+    def run(
         self,
-        rsu_id: str,
-        context_frame: dict = {},
-        latest_frame: dict = {},
-        msg_VIR: dict = {},
-    ) -> tuple:
+        context_frame,
+        latest_frame,
+        msg_vir,
+        lane_info,
+    ):
         """External call function.
 
         Input:
@@ -84,7 +75,7 @@ class DoNotPass(Base):
 
         """
         # 检测到逆行变道车的转向灯信息(Msg_VIR) 变道前发请求，或者绑定扳动转向灯
-        msg_rsc: Dict[str, Any] = {
+        msg_rsc = {
             "msgCnt": "",
             "id": "",
             "secMark": 0,
@@ -96,34 +87,30 @@ class DoNotPass(Base):
                 "info": 0,
             },
         }
-        self._rsu_id = rsu_id
         self.context_frame = context_frame
         self.latest_frame = latest_frame
-        self.msg_VIR = msg_VIR
-        rtg = self._if_retrograde()  # rtg is retrograde: bool
-        if not rtg:  # 并非逆行
+        self.msg_vir = msg_vir
+        self.lane_info = lane_info
+
+        if not self._if_retrograde():  # 并非逆行
             return msg_rsc, {}
 
         # 找到逆行车要去的车道的所有来向车，计算ttc
         risk_veh, risk_ttc = self._potential_risk()
         operation = 1
-        effect = self.OvertakingTime
+        effect = OvertakingTime
 
         # 判断ttc是否小于超车所需时间（9s），判断风险
-        if risk_ttc < self.OvertakingTime:
+        if risk_ttc < OvertakingTime:
             operation = 0
             effect = risk_ttc
         msg_rsc, show_info = self._suggests_generation(effect, operation)
 
         return msg_rsc, show_info
 
-    def _get_direction(self, lane):
-        # 用于获取地图车道的方向，这里预先设定，后续要和地图预设链接。
-        return post_process.lane_info[lane]
-
     def _get_id(self):
-        lon = self.msg_VIR["refPos"]["lon"]
-        lat = self.msg_VIR["refPos"]["lat"]
+        lon = self.msg_vir["refPos"]["lon"]
+        lat = self.msg_vir["refPos"]["lat"]
         veh_id = ""
         min_dis = 1000000000
         for veh in self.latest_frame:
@@ -148,10 +135,10 @@ class DoNotPass(Base):
         if "lane" not in self.latest_frame[self.veh_id]:
             return False
         c_lane = self.latest_frame[self.veh_id]["lane"]
-        a_lane = self.msg_VIR["intAndReq"]["reqs"]["info"]["retrograde"][
+        a_lane = self.msg_vir["intAndReq"]["reqs"]["info"]["retrograde"][
             "targetLane"
         ]
-        if self._get_direction(c_lane) * self._get_direction(a_lane) < 0:
+        if self.lane_info[str(c_lane)] * self.lane_info[str(a_lane)] < 0:
             self.aim_lane = a_lane
             return True
         return False
@@ -161,14 +148,14 @@ class DoNotPass(Base):
         dy = veh1["y"] - veh2["y"]
         return np.sqrt(dx**2 + dy**2)
 
-    def _get_v(self, ID):
-        if len(self.context_frame[ID]) < self.MinTrackLength:
+    def _get_v(self, id):
+        if len(self.context_frame[id]) < MinTrackLength:
             # v(新四跨)* 0.02 = v (m/s)
-            return self.latest_frame[ID]["speed"] * 0.02
-        dis = self._distance(self.latest_frame[ID], self.context_frame[ID][-3])
+            return self.latest_frame[id]["speed"] * 0.02
+        dis = self._distance(self.latest_frame[id], self.context_frame[id][-3])
         dt = (
-            self.latest_frame[ID]["timeStamp"]
-            - self.context_frame[ID][-3]["timeStamp"]
+            self.latest_frame[id]["timeStamp"]
+            - self.context_frame[id][-3]["timeStamp"]
         )
         return dis / dt * 1000  # 米每秒
 
@@ -189,7 +176,7 @@ class DoNotPass(Base):
         if delta_angle > 90 / 0.0125:  # 如果是锐角
             if_lead = -1
         dis = self._distance(self.latest_frame[id1], self.latest_frame[id2])
-        ttc = dis / (self._get_v(id2) + self._get_v(id1)) * (if_lead)
+        ttc = dis / (self._get_v(id2) + self._get_v(id1)) * if_lead
         return ttc * 1000
 
     def _potential_risk(self) -> tuple:
@@ -203,7 +190,7 @@ class DoNotPass(Base):
                 continue
             if self.latest_frame[veh_temp]["lane"] == self.aim_lane:
                 ttc = self._predict_ttc(self.veh_id, veh_temp)
-                if ttc < risk_ttc and ttc > 0:
+                if risk_ttc > ttc > 0:
                     risk_veh = veh_temp
                     risk_ttc = ttc
         return risk_veh, risk_ttc
@@ -219,22 +206,20 @@ class DoNotPass(Base):
             "if_accept": operation_dic[operation],
         }
         effect = time * 0.1
-        msg_rsc = {}
-        msg_rsc.update(
-            {
-                "msgCnt": self.msg_VIR["msgCnt"],
-                "id": self.msg_VIR["id"],
-                "secMark": self.msg_VIR["secMark"],
-                "refPos": self.msg_VIR["refPos"],
-                "coordinates": {
-                    "vehId": self.msg_VIR["id"],
-                    "driveSuggestion": {
-                        "suggestion": operation,
-                        "lifeTime": int(effect),
-                    },
-                    "pathGuidance": [],
-                    "info": 0,
+        msg_rsc = {
+            "msgCnt": self.msg_vir["msgCnt"],
+            "id": self.msg_vir["id"],
+            "secMark": self.msg_vir["secMark"],
+            "refPos": self.msg_vir["refPos"],
+            "coordinates": {
+                "vehId": self.msg_vir["id"],
+                "driveSuggestion": {
+                    "suggestion": operation,
+                    "lifeTime": int(effect),
                 },
-            }
-        )
+                "pathGuidance": [],
+                "info": 0,
+            },
+        }
+
         return msg_rsc, show_info
