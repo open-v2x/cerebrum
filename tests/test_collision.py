@@ -11,7 +11,7 @@
 #   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #   License for the specific language governing permissions and limitations
 #   under the License.
-
+import asyncio
 from scenario_algo.algo_lib import collision_warning
 
 
@@ -186,9 +186,9 @@ def test_TTC_collsion_prediction():
     pred = collision_warning.CollisionWarning(
         v2v_conflict_index=collision_warning.ConflictIndex.TTC
     )
-    _, event_list, last_timestamp, _, _ = pred.run(
+    _, event_list, last_timestamp, _, _ = asyncio.run(pred.run(
         his_frames, latest_frame, last_timestamp
-    )
+    ))
 
     assert len(event_list) == 1
     assert event_list[0]["ego"] == "ab8756de"
@@ -371,9 +371,9 @@ def test_PSD_collsion_prediction():
     pred = collision_warning.CollisionWarning(
         v2v_conflict_index=collision_warning.ConflictIndex.PSD
     )
-    _, event_list, last_timestamp, _, _ = pred.run(
+    _, event_list, last_timestamp, _, _ = asyncio.run(pred.run(
         his_frames, latest_frame, last_timestamp
-    )
+    ))
 
     assert len(event_list) == 1
     assert event_list[0]["ego"] == "ab8756de"

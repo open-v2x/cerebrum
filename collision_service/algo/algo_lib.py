@@ -24,8 +24,7 @@ from enum import unique
 import itertools
 import math
 import numpy as np
-from pre_process_ai_algo.algo_lib import utils as process_tools
-from scenario_algo.algo_lib import utils
+from collision_service import utils
 from typing import List
 
 
@@ -76,7 +75,7 @@ MinDataDuration = 1.5  # 至少有多少秒的数据才计算车辆的动力学�
 class Base:
     """Super class of collision warning class."""
 
-    async def run(
+    def run(
         self, context_frames: dict, current_frame: dict, last_timestamp: int
     ) -> tuple:
         """External call function."""
@@ -187,7 +186,7 @@ class CollisionWarning(Base):
             TrajectoryPredictModel.CTRV: self._calc_traj_heading_ctr,
         }
 
-    async def run(
+    def run(
         self, context_frames: dict, current_frame: dict, last_timestamp: int
     ) -> tuple:
         """External call function.
@@ -226,7 +225,7 @@ class CollisionWarning(Base):
         self._event_list: List[dict] = []
         self._collision_warning_message: List[dict] = []
         self._current_frame = current_frame
-        id_set, last_timestamp = process_tools.frames_combination(
+        id_set, last_timestamp = utils.frames_combination(
             context_frames, self._current_frame, last_timestamp
         )
         if not (self._icw and self._vrucw):
@@ -270,6 +269,7 @@ class CollisionWarning(Base):
     def _v2v_collision_check(self, motors_info: dict) -> None:
         if not self._icw:
             return None
+
         for ego_key, other_key in itertools.combinations(
             motors_info.keys(), 2
         ):
@@ -537,6 +537,7 @@ class CollisionWarning(Base):
             ct = CollisionType.RearEndConflict
         else:
             ct = CollisionType.SideConflict
+
         cur_sec_mark = (motor["timeStamp"][-1] * 1000) % utils.MaxSecMark
         et = EventType.VulnerableTrafficParticipant
         motor_size = {

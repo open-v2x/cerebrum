@@ -96,6 +96,7 @@ class DataProcessing:
         self._collision_warning_dispatch = {
             "disable": False,
             "collision_warning": self._collision_warning,
+            "external": self._collision_warning,
         }
         self._reverse_driving_warning_dispatch = {
             "disable": False,
