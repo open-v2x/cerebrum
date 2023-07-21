@@ -223,6 +223,7 @@ class App:
             self.process._overspeed_warning,
             self.process._reverse_driving_warning,
             self.svc._dnp,
+            self.process._collision_warning,
         ]
         for external_connect in external_connect_list:
             if (

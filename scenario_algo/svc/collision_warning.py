@@ -19,9 +19,13 @@ from common import modules
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
+from scenario_algo import collision_external
 from scenario_algo.svc import Base
 
+
 collision_warning = modules.algorithms.collision_warning.module
+if modules.algorithms.collision_warning.external_bool:
+    collision_warning = getattr(collision_external, "collision")
 
 
 class CollisionWarning(Base):
@@ -91,10 +95,9 @@ class CollisionWarning(Base):
             else {}
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
-        cwm, events, last_ts, motors_trajs, vptc_trajs = self._exe.run(
+        cwm, events, last_ts, motors_trajs, vptc_trajs = await self._exe.run(
             context_frames, latest_frame, last_ts
         )
-
         await self._kv.set(
             self.TRAJS_KEY.format(rsu),
             {"motors": motors_trajs, "vptc": vptc_trajs},

@@ -16,8 +16,8 @@
 
 import numpy as np
 
-OvertakingTime = 9000
-MinTrackLength = 3
+OvertakingTime = 9000  # 通用超车所需时间
+MinTrackLength = 3  # 计算期望历史轨迹最小长度
 
 
 class DoNotPass:

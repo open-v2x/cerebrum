@@ -20,11 +20,13 @@ import json
 from pydantic import BaseModel  # type:ignore
 
 from reverse_driving_service.algo.algo_lib import ReverseDrivingWarning
+from reverse_driving_service import constants
 from reverse_driving_service.grpc_server import reverse_driving_grpc_pb2
 from reverse_driving_service.grpc_server import reverse_driving_grpc_pb2_grpc
 from starlette.websockets import WebSocketDisconnect  # type:ignore
 from typing import List
 import uvicorn  # type:ignore
+
 
 app = FastAPI()
 
@@ -120,7 +122,7 @@ async def startup_event():
     reverse_driving_grpc_pb2_grpc.add_ReverseDrivingGrpcServicer_to_server(
         ReverseDriving(), server
     )
-    listen_addr = "0.0.0.0:28309"
+    listen_addr = f"0.0.0.0:{constants.GRPC_PORT}"
     server.add_insecure_port(listen_addr)
     await server.start()
     print(f"Starting server on {listen_addr}")
@@ -129,4 +131,4 @@ async def startup_event():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app=app, host="0.0.0.0", port=28307)
+    uvicorn.run(app=app, host="0.0.0.0", port=constants.HTTP_PORT)

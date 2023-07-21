@@ -19,11 +19,11 @@ from common import modules
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
-from scenario_algo import external
+from scenario_algo import overspeed_external
 
 overspeed_warning = modules.algorithms.overspeed_warning.module
 if modules.algorithms.overspeed_warning.external_bool:
-    overspeed_warning = getattr(external, "overspeed_warning")
+    overspeed_warning = getattr(overspeed_external, "overspeed_warning")
 
 
 class OverspeedWarning:

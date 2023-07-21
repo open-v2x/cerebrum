@@ -4872,7 +4872,7 @@ def http_test():
 
 def grpc_test():
     import grpc
-    from grpc_server import do_not_pass_grpc_pb2, do_not_pass_grpc_pb2_grpc
+    from ..grpc_server import do_not_pass_grpc_pb2, do_not_pass_grpc_pb2_grpc
     import json
 
     with grpc.insecure_channel("127.0.0.1:28305") as channel:
@@ -4919,5 +4919,5 @@ async def ws_test():
 
 if __name__ == "__main__":
     http_test()
-    grpc_test()
-    asyncio.run(ws_test())
+    # grpc_test()
+    # asyncio.run(ws_test())

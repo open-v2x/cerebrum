@@ -17,13 +17,14 @@ from fastapi import FastAPI  # type:ignore
 from fastapi import WebSocket
 import grpc.aio  # type:ignore
 import json
-from algo.algo_lib import DoNotPass
+from do_not_pass_service.algo.algo_lib import DoNotPass
 from grpc_server import do_not_pass_grpc_pb2
 from grpc_server import do_not_pass_grpc_pb2_grpc
 from pydantic import BaseModel  # type:ignore
 from starlette.websockets import WebSocketDisconnect  # type:ignore
 from typing import List
 import uvicorn  # type:ignore
+from do_not_pass_service import constants
 
 app = FastAPI()
 
@@ -111,7 +112,7 @@ async def startup_event():
     do_not_pass_grpc_pb2_grpc.add_DoNotPassGrpcServicer_to_server(
         DoNotPassGrpc(), server
     )
-    listen_addr = "0.0.0.0:28305"
+    listen_addr = f"0.0.0.0:{constants.GRPC_PORT})"
     server.add_insecure_port(listen_addr)
     await server.start()
     print(f"Starting server on {listen_addr}")
@@ -120,4 +121,4 @@ async def startup_event():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app=app, host="0.0.0.0", port=28304)
+    uvicorn.run(app=app, host="0.0.0.0", port=constants.HTTP_PORT)

@@ -18,8 +18,8 @@ from common import modules
 import grpc.aio  # type: ignore
 import json
 from post_process_algo import post_process
-from scenario_algo.external import over_speed_grpc_pb2
-from scenario_algo.external import over_speed_grpc_pb2_grpc
+from scenario_algo.overspeed_external import over_speed_grpc_pb2
+from scenario_algo.overspeed_external import over_speed_grpc_pb2_grpc
 from websockets.client import connect
 
 

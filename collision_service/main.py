@@ -11,25 +11,24 @@
 #   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #   License for the specific language governing permissions and limitations
 #   under the License.
-"""OverSpeed Service."""
+"""DoNotPass Service."""
 import asyncio
 from fastapi import FastAPI  # type:ignore
 from fastapi import WebSocket
 import grpc.aio  # type:ignore
 import json
-from overspeed_warning_service.algo.algo_lib import OverSpeedWarning
-from overspeed_warning_service import constants
-from overspeed_warning_service.grpc_server import over_speed_grpc_pb2
-from overspeed_warning_service.grpc_server import over_speed_grpc_pb2_grpc
+from collision_service.algo.algo_lib import CollisionWarning
+from grpc_server import collision_grpc_pb2
+from grpc_server import collision_grpc_pb2_grpc
 from pydantic import BaseModel  # type:ignore
 from starlette.websockets import WebSocketDisconnect  # type:ignore
-from typing import List
+from typing import List, Dict, Any
 import uvicorn  # type:ignore
-
+from collision_service import constants
 
 app = FastAPI()
 
-over_speed = OverSpeedWarning()
+collision = CollisionWarning()
 
 
 class ConnectionManager:
@@ -61,20 +60,27 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-class OverSpeedModel(BaseModel):
+class CollisionModel(BaseModel):
     """model."""
 
     context_frames: dict
     current_frame: dict
     last_timestamp: int
-    speed_limits: dict
 
 
-@app.post("/over_speed")
-async def post(data: OverSpeedModel):
+@app.post("/collision")
+async def post(data: CollisionModel):
     """http."""
-    osw, show_info = over_speed.run(**data.dict())
-    return {"osw": osw, "info": show_info}
+    msg, show_info, last_timestamp, motors_trajs, vptc_trajs = collision.run(
+        **data.dict()
+    )
+    return {
+        "msg": msg,
+        "info": show_info,
+        "last_timestamp": last_timestamp,
+        "motors_trajs": motors_trajs,
+        "vptc_trajs": vptc_trajs,
+    }
 
 
 @app.websocket("/ws")
@@ -85,25 +91,45 @@ async def websocket_endpoint(
     await manager.connect(websocket)
     try:
         while True:
-            data = await websocket.receive_text()
-            data = json.loads(data)
-            osw, show_info = over_speed.run(**data)  # type: ignore
+            data = await websocket.receive_json()
+            msg, show_info, last_timestamp, motors_trajs, vptc_trajs = collision.run(**data)  # type: ignore
             await manager.send_personal_message(
-                dict(osw=osw, info=show_info), websocket
+                dict(
+                    msg=msg,
+                    info=show_info,
+                    last_timestamp=last_timestamp,
+                    motors_trajs=motors_trajs,
+                    vptc_trajs=vptc_trajs,
+                ),
+                websocket,
             )
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
 
-class OverSpeed(over_speed_grpc_pb2_grpc.OverSpeedGrpcServicer):
+class DoNotPassGrpc(collision_grpc_pb2_grpc.CollisionGrpcServicer):
     """grpc server."""
 
-    async def over_speed(self, request, context):
+    async def collision(self, request, context):
         """Grpc server."""
         data = json.loads(request.data)
-        osw, show_info = over_speed.run(**data)
-        return over_speed_grpc_pb2.OverSpeedResponse(
-            data=json.dumps({"osw": osw, "info": show_info})
+        (
+            msg,
+            show_info,
+            last_timestamp,
+            motors_trajs,
+            vptc_trajs,
+        ) = collision.run(**data)
+        return collision_grpc_pb2.CollisionResponse(
+            data=json.dumps(
+                {
+                    "msg": msg,
+                    "info": show_info,
+                    "last_timestamp": last_timestamp,
+                    "motors_trajs": motors_trajs,
+                    "vptc_trajs": vptc_trajs,
+                }
+            )
         )
 
 
@@ -111,8 +137,8 @@ class OverSpeed(over_speed_grpc_pb2_grpc.OverSpeedGrpcServicer):
 async def startup_event():
     """Grpc connect."""
     server = grpc.aio.server()
-    over_speed_grpc_pb2_grpc.add_OverSpeedGrpcServicer_to_server(
-        OverSpeed(), server
+    collision_grpc_pb2_grpc.add_CollisionGrpcServicer_to_server(
+        DoNotPassGrpc(), server
     )
     listen_addr = f"0.0.0.0:{constants.GRPC_PORT}"
     server.add_insecure_port(listen_addr)
