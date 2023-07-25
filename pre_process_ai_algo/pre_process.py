@@ -115,6 +115,7 @@ class DataProcessing:
         self._slowspeed_warning_dispatch = {
             "disable": False,
             "slowspeed_warning": self._slowspeed_warning,
+            "external": self._slowspeed_warning,
         }
 
     async def run(
