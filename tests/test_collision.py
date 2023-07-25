@@ -186,9 +186,9 @@ def test_TTC_collsion_prediction():
     pred = collision_warning.CollisionWarning(
         v2v_conflict_index=collision_warning.ConflictIndex.TTC
     )
-    _, event_list, last_timestamp, _, _ = asyncio.run(pred.run(
-        his_frames, latest_frame, last_timestamp
-    ))
+    _, event_list, last_timestamp, _, _ = asyncio.run(
+        pred.run(his_frames, latest_frame, last_timestamp)
+    )
 
     assert len(event_list) == 1
     assert event_list[0]["ego"] == "ab8756de"
@@ -371,9 +371,9 @@ def test_PSD_collsion_prediction():
     pred = collision_warning.CollisionWarning(
         v2v_conflict_index=collision_warning.ConflictIndex.PSD
     )
-    _, event_list, last_timestamp, _, _ = asyncio.run(pred.run(
-        his_frames, latest_frame, last_timestamp
-    ))
+    _, event_list, last_timestamp, _, _ = asyncio.run(
+        pred.run(his_frames, latest_frame, last_timestamp)
+    )
 
     assert len(event_list) == 1
     assert event_list[0]["ego"] == "ab8756de"

@@ -16,9 +16,7 @@
 
 import numpy as np
 import pandas as pd
-from post_process_algo import post_process
-from pre_process_ai_algo.algo_lib import utils as process_tools
-from scenario_algo.algo_lib import utils
+from slowspeed_service import utils
 from typing import List
 
 
@@ -28,11 +26,12 @@ MinDataDuration = 1.5  # 至少有多少秒的数据才计算车辆的动力学�
 class Base:
     """Super class of overspeed warning class."""
 
-    async def run(
+    def run(
         self,
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
+        speed_limits: dict,
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
@@ -41,11 +40,12 @@ class Base:
 class SlowspeedWarning(Base):
     """Scenario of OverSpeed Warning."""
 
-    async def run(
+    def run(
         self,
         context_frames: dict,
         current_frame: dict,
         last_timestamp: int,
+        speed_limits: dict,
     ) -> tuple:
         """External call function.
 
@@ -72,15 +72,16 @@ class SlowspeedWarning(Base):
         self._show_info: List[dict] = []
         self._slowspeed_warning_message: List[dict] = []
         self._current_frame = current_frame
+        self._speed_limits = speed_limits
 
-        id_set, last_timestamp = process_tools.frames_combination(
+        id_set, last_timestamp = utils.frames_combination(
             context_frames, self._current_frame, last_timestamp
         )
 
-        # 只检查机动车是否超速
+        # 只检查机动车是否慢行
         check_ptc = ["motors"]
         ptc_info: dict = {"motors": {}}
-        # 分别计算机动车、非机动车、行人的运动学信息，用于检查车辆超速情况
+        # 分别计算机动车、非机动车、行人的运动学信息，用于检查车辆慢行情况
         motors, non_motors, pedestrians = self._filter_ptcs(
             context_frames, last_timestamp, id_set
         )
@@ -190,7 +191,7 @@ class SlowspeedWarning(Base):
         ).tolist()
 
     def _get_min_speed_limit(self, lane):
-        return post_process.speed_limits.get(lane, {}).get(
+        return self._speed_limits.get(str(lane), {}).get(
             "vehicleMinSpeed", None
         )
 

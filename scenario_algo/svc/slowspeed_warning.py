@@ -19,8 +19,11 @@ from common import modules
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
+from scenario_algo import slowspeed_external
 
 slowspeed_warning = modules.algorithms.slowspeed_warning.module  # type: ignore
+if modules.algorithms.slowspeed_warning.external_bool:
+    slowspeed_warning = getattr(slowspeed_external, "slowspeed_warning")
 
 
 class SlowspeedWarning:
@@ -49,7 +52,7 @@ class SlowspeedWarning:
             else {}
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
-        ssw, show_info, last_ts = self._exe.run(
+        ssw, show_info, last_ts = await self._exe.run(
             context_frames, latest_frame, last_ts
         )
         post_process.convert_for_reverse_visual(show_info, rsu_id)
