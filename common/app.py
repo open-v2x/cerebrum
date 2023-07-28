@@ -225,6 +225,7 @@ class App:
             self.svc._dnp,
             self.process._collision_warning,
             self.process._slowspeed_warning,
+            self.process._congestion_warning,
         ]
         for external_connect in external_connect_list:
             if (

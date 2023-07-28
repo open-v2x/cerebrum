@@ -106,6 +106,7 @@ class DataProcessing:
         self._congestion_warning_dispatch = {
             "disable": False,
             "congestion_warning": self._congestion_warning,
+            "external": self._congestion_warning,
         }
         self._overspeed_warning_dispatch = {
             "disable": False,

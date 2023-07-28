@@ -21,8 +21,11 @@ import orjson as json
 import os
 from post_process_algo import post_process
 from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
+from scenario_algo import congestion_external
 
 congestion_warning = modules.algorithms.congestion_warning.module
+if modules.algorithms.congestion_warning.external_bool:
+    congestion_warning = getattr(congestion_external, "congestion_warning")
 
 
 class CongestionWarning:
@@ -88,7 +91,7 @@ class CongestionWarning:
             else {}
         )
         last_ts = his_info["last_ts"] if his_info.get("last_ts") else 0
-        cgw, show_info, last_ts, CG_KEY = self._exe.run(
+        cgw, show_info, last_ts, CG_KEY = await self._exe.run(
             context_frames,
             latest_frame,
             last_ts,
