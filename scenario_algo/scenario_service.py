@@ -84,7 +84,7 @@ class Service:
                     else "disable"
                 ),
                 "cooperative_lane_change": (
-                    modules.algorithms.cooperative_lane_change.algo
+                    "cooperative_lane_change"
                     if modules.algorithms.cooperative_lane_change.enable
                     else "disable"
                 ),

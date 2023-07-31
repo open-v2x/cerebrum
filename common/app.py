@@ -226,6 +226,7 @@ class App:
             self.process._collision_warning,
             self.process._slowspeed_warning,
             self.process._congestion_warning,
+            self.svc._clc,
         ]
         for external_connect in external_connect_list:
             if (
