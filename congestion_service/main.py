@@ -11,24 +11,24 @@
 #   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #   License for the specific language governing permissions and limitations
 #   under the License.
-"""Slow Speed Service."""
+"""Congestion Service."""
 import asyncio
 from fastapi import FastAPI  # type:ignore
 from fastapi import WebSocket
 import grpc.aio  # type:ignore
 import json
-from slowspeed_service.algo.algo_lib import SlowspeedWarning
-from grpc_server import slowspeed_grpc_pb2
-from grpc_server import slowspeed_grpc_pb2_grpc
+from congestion_service.algo.algo_lib import CongestionWarning
+from grpc_server import congestion_grpc_pb2
+from grpc_server import congestion_grpc_pb2_grpc
 from pydantic import BaseModel  # type:ignore
 from starlette.websockets import WebSocketDisconnect  # type:ignore
 from typing import List, Dict, Any
 import uvicorn  # type:ignore
-from slowspeed_service import constants
+from congestion_service import constants
 
 app = FastAPI()
 
-slow_speed = SlowspeedWarning()
+congestion = CongestionWarning()
 
 
 class ConnectionManager:
@@ -60,23 +60,28 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-class SlowSpeedModel(BaseModel):
+class CongestionModel(BaseModel):
     """model."""
 
     context_frames: dict
     current_frame: dict
     last_timestamp: int
-    speed_limits: dict
+    rsu: str
+    min_con_range: list
+    mid_con_range: list
+    max_con_range: list
+    lane_info: dict
 
 
-@app.post("/slowspeed")
-async def post(data: SlowSpeedModel):
+@app.post("/congestion")
+async def post(data: CongestionModel):
     """http."""
-    msg, show_info, last_timestamp = slow_speed.run(**data.dict())
+    msg, show_info, last_timestamp, cg_key = congestion.run(**data.dict())
     return {
         "msg": msg,
         "info": show_info,
         "last_timestamp": last_timestamp,
+        "cg_key": cg_key,
     }
 
 
@@ -89,12 +94,13 @@ async def websocket_endpoint(
     try:
         while True:
             data = await websocket.receive_json()
-            msg, show_info, last_timestamp = slow_speed.run(**data)  # type: ignore
+            msg, show_info, last_timestamp, cg_key = congestion.run(**data)  # type: ignore
             await manager.send_personal_message(
                 dict(
                     msg=msg,
                     info=show_info,
                     last_timestamp=last_timestamp,
+                    cg_key=cg_key,
                 ),
                 websocket,
             )
@@ -102,23 +108,25 @@ async def websocket_endpoint(
         manager.disconnect(websocket)
 
 
-class SlowSpeedGrpc(slowspeed_grpc_pb2_grpc.SlowSpeedGrpcServicer):
+class CongestionGrpc(congestion_grpc_pb2_grpc.CongestionGrpcServicer):
     """grpc server."""
 
-    async def slow_speed(self, request, context):
+    async def congestion(self, request, context):
         """Grpc server."""
         data = json.loads(request.data)
         (
             msg,
             show_info,
             last_timestamp,
-        ) = slow_speed.run(**data)
-        return slowspeed_grpc_pb2.SlowSpeedResponse(
+            cg_key,
+        ) = congestion.run(**data)
+        return congestion_grpc_pb2.CongestionResponse(
             data=json.dumps(
                 {
                     "msg": msg,
                     "info": show_info,
                     "last_timestamp": last_timestamp,
+                    "cg_key": cg_key,
                 }
             )
         )
@@ -128,8 +136,8 @@ class SlowSpeedGrpc(slowspeed_grpc_pb2_grpc.SlowSpeedGrpcServicer):
 async def startup_event():
     """Grpc connect."""
     server = grpc.aio.server()
-    slowspeed_grpc_pb2_grpc.add_SlowSpeedGrpcServicer_to_server(
-        SlowSpeedGrpc(), server
+    congestion_grpc_pb2_grpc.add_CongestionGrpcServicer_to_server(
+        CongestionGrpc(), server
     )
     listen_addr = f"0.0.0.0:{constants.GRPC_PORT}"
     server.add_insecure_port(listen_addr)

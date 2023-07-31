@@ -16,9 +16,8 @@
 
 import numpy as np
 import pandas as pd
-from post_process_algo import post_process
-from pre_process_ai_algo.algo_lib import utils as process_tools
-from scenario_algo.algo_lib import utils
+
+from congestion_service import utils
 from typing import Dict
 from typing import List
 
@@ -29,7 +28,7 @@ MinDataDuration = 1.5  # 至少有多少秒的数据才计算车辆的动力学�
 class Base:
     """Super class of congestion warning class."""
 
-    async def run(
+    def run(
         self,
         context_frames: dict,
         current_frame: dict,
@@ -38,6 +37,7 @@ class Base:
         min_con_range: list,
         mid_con_range: list,
         max_con_range: list,
+        lane_info: dict,
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
@@ -48,7 +48,7 @@ class CongestionWarning(Base):
 
     CG_KEY = "cg.{}"
 
-    async def run(
+    def run(
         self,
         context_frames: dict,
         current_frame: dict,
@@ -57,6 +57,7 @@ class CongestionWarning(Base):
         min_con_range: list,
         mid_con_range: list,
         max_con_range: list,
+        lane_info: dict,
     ) -> tuple:
         """External call function.
 
@@ -87,8 +88,9 @@ class CongestionWarning(Base):
         self._show_info: List[dict] = []
         self._congestion_warning_message: List[dict] = []
         self._current_frame = current_frame
+        self._lane_info = lane_info
 
-        id_set, last_timestamp = process_tools.frames_combination(
+        id_set, last_timestamp = utils.frames_combination(
             context_frames, self._current_frame, last_timestamp
         )
 
@@ -242,7 +244,7 @@ class CongestionWarning(Base):
         ).tolist()
 
     def _get_direction(self, lane):
-        return post_process.lane_info[lane]
+        return self._lane_info[str(lane)]
 
     def _build_cgw_event(self, lane_info: dict, id: str) -> tuple:
         info_for_show, info_for_cgw = self._message_generate(lane_info, id)
