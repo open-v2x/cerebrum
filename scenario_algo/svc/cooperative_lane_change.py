@@ -19,8 +19,13 @@ from common import modules
 import orjson as json
 from post_process_algo import post_process
 from pre_process_ai_algo.algo_lib.utils import HIS_INFO_KEY
+from scenario_algo import cooperative_lane_change_external
 
 cooperative_lane_change = modules.algorithms.cooperative_lane_change.module
+if modules.algorithms.cooperative_lane_change.external_bool:
+    cooperative_lane_change = getattr(
+        cooperative_lane_change_external, "cooperative_lane_change"
+    )
 
 
 class CooperativeLaneChange:
@@ -47,8 +52,7 @@ class CooperativeLaneChange:
         current_frame = (
             his_info["latest_frame"] if his_info.get("latest_frame") else {}
         )
-
-        msg_rsc, info_for_show = self._exe.run(
+        msg_rsc, info_for_show = await self._exe.run(
             convert_info, context_frames, current_frame, params
         )
         self._mqtt.publish(

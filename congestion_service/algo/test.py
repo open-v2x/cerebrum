@@ -215,7 +215,7 @@ if __name__ == "__main__":
         mid_con_range=mid_con_range,
         max_con_range=max_con_range,
         lane_info=lane_info,
-        )
+    )
 
     print(msg_ == msg)
     print(show_info_ == show_info)

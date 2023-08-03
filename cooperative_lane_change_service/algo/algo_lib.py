@@ -15,18 +15,19 @@
 """Scenario of Cooperative Lane Change."""
 
 import numpy as np
-from post_process_algo import post_process
+from cooperative_lane_change_service import utils
+from pyproj import Transformer
 
 
 class Base:
     """Super class of CooperativeLaneChange class."""
 
-    async def run(
+    def run(
         self,
         transform_info: list,
         context_frames: dict = {},
         latest_frame: dict = {},
-        msg_VIR: dict = {},
+        msg_vir: dict = {},
     ) -> tuple:
         """External call function."""
         raise NotImplementedError
@@ -60,12 +61,12 @@ class CooperativeLaneChange(Base):
     def __init__(self) -> None:
         """Class initialization."""
 
-    async def run(
+    def run(
         self,
         transform_info: list,
         context_frames: dict = {},
         latest_frame: dict = {},
-        msg_VIR: dict = {},
+        msg_vir: dict = {},
     ) -> tuple:
         """External call function.
 
@@ -90,11 +91,13 @@ class CooperativeLaneChange(Base):
         information for visualization
 
         """
-        self._transform_info = transform_info
+        self._transform_info = [
+            Transformer.from_crs("epsg:4326", "epsg:2416")
+        ] + transform_info
         self._transformer = self._transform_info[0]
         self.context_frames = context_frames
         self.latest_frame = latest_frame
-        self.msg_VIR = msg_VIR
+        self.msg_VIR = msg_vir
         self.vehId = self._id_get()
         valid = self._if_valid()
         if valid is False:
@@ -226,7 +229,9 @@ class CooperativeLaneChange(Base):
         vec0 = np.array([0, -1])
         l_vect = np.sqrt(vect.dot(vect))
         l_vec0 = np.sqrt(vec0.dot(vec0))
+
         cos_ = (vect.dot(vec0)) / (l_vect * l_vec0)
+
         angle = np.arccos(cos_) * 180 / np.pi / 0.0125  # type: ignore
         angle0 = self.latest_frame[id1]["heading"]
         d_angle = abs(angle - angle0)
@@ -270,7 +275,7 @@ class CooperativeLaneChange(Base):
             py = last_y - v * 0.1 * np.cos(h * 0.0125 / 180 * np.pi)
             last_x, last_y = px, py
             g_path.append({"x": float(px), "y": float(py)})
-            lat, lon = post_process.coordinate_tf_inverse(
+            lat, lon = utils.coordinate_tf_inverse(
                 py + self._transform_info[2],
                 px + self._transform_info[1],
                 self._transformer,
