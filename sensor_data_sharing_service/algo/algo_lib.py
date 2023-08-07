@@ -15,18 +15,18 @@
 """Scenario of Sensor Data Sharing."""
 
 import numpy as np
-from post_process_algo import post_process
-from pre_process_ai_algo.algo_lib.utils import MaxSecMark
-from scenario_algo.algo_lib import utils
+from sensor_data_sharing_service import utils
+from sensor_data_sharing_service import constants
 import shapely.geometry as geo  # type: ignore
 import time
 from typing import List
+from pyproj import Transformer
 
 
 class Base:
     """Super class of SensorDataSharing class."""
 
-    async def run(
+    def run(
         self,
         motor_kinematics: dict,
         vptc_kinematics: dict,
@@ -63,7 +63,7 @@ class SensorDataSharing(Base):
         self._path_radius = 10
         self._min_dis = 0.3
 
-    async def run(
+    def run(
         self,
         motor_kinematics: dict,
         vptc_kinematics: dict,
@@ -99,29 +99,31 @@ class SensorDataSharing(Base):
 
         """
         self._speed_threshold = 2.8
-        self._transform_info = transform_info
+        self._transform_info = [
+            Transformer.from_crs("epsg:4326", "epsg:2416")
+        ] + transform_info
         self._transformer = self._transform_info[0]
         self._msg_SSM = {
             "msgCnt": int(msg_VIR["msgCnt"]),
             "id": msg_VIR["intAndReq"]["reqs"]["targetRSU"],
             "equipmentType": 1,
             "sensorPos": sensor_pos,
-            "secMark": int(time.time() * 1000 % MaxSecMark),
+            "secMark": int(time.time() * 1000 % constants.MAXSECMARK),
             "egoPos": msg_VIR["refPos"],
             "egoId": msg_VIR["id"],
             "participants": [],
             "obstacles": [],
         }
+        self._time_stamp = int(time.time() * 1000)
         self._add_participants(msg_VIR, motor_kinematics, vptc_kinematics)
         self._add_obstacles(rsi)
-        self._time_stamp = int(time.time() * 1000)
 
         return self._msg_SSM, self._info_for_show
 
     def _add_participants(
         self, msg_VIR: dict, motor_kinematics: dict, vptc_kinematics: dict
     ):
-        self.ego_y, self.ego_x = post_process.coordinate_tf(
+        self.ego_y, self.ego_x = utils.coordinate_tf(
             msg_VIR["refPos"]["lat"],
             msg_VIR["refPos"]["lon"],
             self._transformer,
@@ -161,9 +163,7 @@ class SensorDataSharing(Base):
         for i, traj in enumerate(requested_traj):
             his_t[i] = i
             his_lon[i], his_lat[i] = traj["lon"], traj["lat"]
-        his_y, his_x = post_process.coordinate_tf(
-            his_lat, his_lon, self._transformer
-        )
+        his_y, his_x = utils.coordinate_tf(his_lat, his_lon, self._transformer)
         his_x -= self._transform_info[1]
         his_y -= self._transform_info[2]
         if self._is_speed_enough(his_x, his_y, his_t):
@@ -282,13 +282,13 @@ class SensorDataSharing(Base):
     def _traj_predict(self, obj_info: dict) -> tuple:
         his_x = np.array(obj_info["x"]) + self._transform_info[1]
         his_y = np.array(obj_info["y"]) + self._transform_info[2]
-        his_lat, his_lon = post_process.coordinate_tf_inverse(
+        his_lat, his_lon = utils.coordinate_tf_inverse(
             his_y, his_x, self._transformer
         )
         predicted_traj = np.array(obj_info["traj_point"])
         predicted_x = predicted_traj[:, 0]
         predicted_y = predicted_traj[:, 1]
-        predicted_lat, predicted_lon = post_process.coordinate_tf_inverse(
+        predicted_lat, predicted_lon = utils.coordinate_tf_inverse(
             predicted_y + self._transform_info[2],
             predicted_x + self._transform_info[1],
             self._transformer,
