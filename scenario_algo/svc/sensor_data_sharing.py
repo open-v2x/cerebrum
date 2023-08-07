@@ -18,9 +18,15 @@ from common import consts
 from common import modules
 import orjson as json
 from post_process_algo import post_process
+from scenario_algo import sensor_data_sharing_external
 from scenario_algo.svc.collision_warning import CollisionWarning
 
+
 sensor_data_sharing = modules.algorithms.sensor_data_sharing.module
+if modules.algorithms.sensor_data_sharing.external_bool:
+    sensor_data_sharing = getattr(
+        sensor_data_sharing_external, "sensor_data_sharing"
+    )
 
 
 class SensorDataSharing:
@@ -53,7 +59,7 @@ class SensorDataSharing:
         sensor_pos = post_process.rsu_info[rsu_id]["pos"].copy()
         sensor_pos["lon"] = int(sensor_pos["lon"] * consts.CoordinateUnit)
         sensor_pos["lat"] = int(sensor_pos["lat"] * consts.CoordinateUnit)
-        msg_ssm, info_for_show = self._exe.run(
+        msg_ssm, info_for_show = await self._exe.run(
             motor_traj, vptc_traj, rsi, params, sensor_pos, convert_info
         )
         if info_for_show:

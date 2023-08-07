@@ -79,7 +79,7 @@ class Service:
             if sm_and_cfg.get("cfg")
             else {
                 "sensor_data_sharing": (
-                    modules.algorithms.sensor_data_sharing.algo
+                    "sensor_data_sharing"
                     if modules.algorithms.sensor_data_sharing.enable
                     else "disable"
                 ),
